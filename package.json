@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "mastering-dynamic-client-side-scripting-with-javascript",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,14 +17,15 @@
     "react-router": "^7.5.3"
   },
   "devDependencies": {
-    "@react-router/dev": "^7.5.3",
+    "@cloudflare/vite-plugin": "^1.9.4",
+    "@react-router/dev": "^7.6.3",
     "@tailwindcss/vite": "^4.1.4",
     "@types/node": "^20",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
-    "vite": "^6.3.3",
+    "vite": "^6.3.5",
     "vite-tsconfig-paths": "^5.1.4"
   }
 }
