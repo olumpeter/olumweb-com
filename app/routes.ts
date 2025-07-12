@@ -5,6 +5,6 @@ import {
 } from '@react-router/dev/routes'
 
 export default [
-  index('routes/home.jsx'),
-  route('/what-is-javascript', 'routes/what-is-javascript.jsx'),
+  index('routes/home.tsx'),
+  route('/what-is-javascript', 'routes/what-is-javascript.tsx'),
 ] satisfies RouteConfig
