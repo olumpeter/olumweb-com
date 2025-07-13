@@ -85,4 +85,5 @@ This template comes with [Tailwind CSS](https://tailwindcss.com/) already config
 ---
 
 Built with ❤️ using React Router.
+
 # build-a-fullstack-ui-with-typeScript-react-tailwind-css-and-react-router-v7

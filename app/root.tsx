@@ -1,109 +1,132 @@
 import {
   isRouteErrorResponse,
-  NavLink,
+  Link,
+  Links,
   Outlet,
   Scripts,
   ScrollRestoration,
 } from 'react-router'
 
 import type { Route } from './+types/root'
-import './app.css'
 
-export function Layout({ children }: { children: React.ReactNode }) {
+import './app.css'
+import faviconAssetUrl from '~/assets/favicon.svg?url'
+import logoAssetUrl from '~/assets/logo.png?url'
+
+export function links() {
+  return [
+    { rel: 'icon', type: 'image/svg+xml', href: faviconAssetUrl },
+  ]
+}
+
+export function Document({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <div className="flex flex-col min-h-screen bg-white text-gray-900 font-sans">
-      {/* Header */}
-      <header className="h-16 bg-blue-600 text-white flex items-center justify-center px-6">
-        <h1 className="text-lg font-semibold">
-          Build a Fullstack UI with TypeScript, React, Tailwind CSS &
-          React Router v7
-        </h1>
+    <html lang="en" className="h-full overflow-x-hidden">
+      <head>
+        <title>Awesome Web Dev Exercises</title>
+        <meta
+          name="description"
+          content="Learn how to Build a Fullstack UI with TypeScript, React, Tailwind CSS & React Router"
+        />
+        <meta charSet="utf-8" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1"
+        />
+        <Links />
+      </head>
+      <body className="h-full font-sans">
+        {children}
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  )
+}
+
+function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col min-h-screen bg-white text-gray-900">
+      <header className="h-16 bg-blue-600 text-white flex items-center justify-between px-6">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-lg font-semibold hover:underline"
+        >
+          <img
+            src={logoAssetUrl}
+            alt="Olum Web Dev Logo"
+            className="w-10 h-10 bg-white rounded-full p-1 shadow-md"
+          />
+          <span>Olum Web Dev</span>
+        </Link>
       </header>
 
-      {/* Main Section */}
-      <div className="flex flex-1">
-        {/* Sidebar */}
-        <aside className="w-64 shrink-0 bg-slate-50 text-gray-700 border-r border-gray-200 px-5 py-6 h-full overflow-y-auto">
-          <nav className="space-y-3">
-            {/* Sidebar Heading as NavLink */}
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                `block mb-4 font-bold uppercase tracking-wide transition-colors ${
-                  isActive
-                    ? 'text-blue-700 text-lg'
-                    : 'text-gray-800 text-base hover:text-blue-600'
-                }`
-              }
-            >
-              Exercises
-            </NavLink>
+      <main className="flex flex-1 px-4 sm:px-6 lg:px-8">
+        {children}
+      </main>
 
-            {/* Sidebar Links */}
-            <NavLink
-              to="/what-is-javascript"
-              className={({ isActive }) =>
-                `block px-3 py-2 rounded-md text-sm font-medium ${
-                  isActive
-                    ? 'text-white bg-blue-600'
-                    : 'text-blue-600 hover:bg-blue-50'
-                }`
-              }
-            >
-              What is JavaScript?
-            </NavLink>
-
-            {/* Add more NavLinks here if needed */}
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 px-8 py-10 max-w-screen-lg mx-auto">
-          {children}
-        </main>
-      </div>
-
-      {/* Footer */}
-      <footer className="h-16 bg-blue-50 text-blue-700 flex items-center justify-center">
-        <span className="text-sm">
-          &copy; 2025 OlumCodeCamp All rights reserved.
-        </span>
+      <footer className="h-16 bg-blue-50 text-blue-700 flex items-center justify-center text-sm">
+        &copy; 2025 Olum Web Dev. All rights reserved.
       </footer>
-      <Scripts />
-      <ScrollRestoration />
     </div>
   )
 }
 
 export default function App() {
-  return <Outlet />
+  return (
+    <Document>
+      <Layout>
+        <Outlet />
+      </Layout>
+    </Document>
+  )
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = 'Oops!'
-  let details = 'An unexpected error occurred.'
-  let stack: string | undefined
+  const title = isRouteErrorResponse(error)
+    ? error.status === 404
+      ? '404: Not Found'
+      : `${error.status} ${error.statusText}`
+    : 'Something went wrong'
 
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? '404' : 'Error'
-    details =
-      error.status === 404
-        ? 'The requested page could not be found.'
-        : error.statusText || details
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message
-    stack = error.stack
-  }
+  const description = isRouteErrorResponse(error)
+    ? error.status === 404
+      ? 'The page you’re looking for does not exist.'
+      : error.statusText
+    : error instanceof Error
+    ? error.message
+    : 'Unknown error'
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <Document>
+      <Layout>
+        <div className="flex flex-1 items-center justify-center px-6 py-16 text-center">
+          <div className="max-w-md">
+            <h1 className="text-4xl font-bold text-blue-700 mb-4">
+              {title}
+            </h1>
+            <p className="text-lg text-gray-700 mb-6">
+              {description}
+            </p>
+            <Link
+              to="/"
+              className="inline-block px-6 py-3 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition"
+            >
+              Go Home
+            </Link>
+
+            {error instanceof Error && (
+              <pre className="mt-8 text-left text-sm text-red-700 bg-red-50 border border-red-200 rounded p-4 overflow-x-auto">
+                <code>{error.stack}</code>
+              </pre>
+            )}
+          </div>
+        </div>
+      </Layout>
+    </Document>
   )
 }
