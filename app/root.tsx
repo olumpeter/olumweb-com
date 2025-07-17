@@ -1,21 +1,39 @@
+import { useState } from 'react'
 import {
   isRouteErrorResponse,
   Link,
   Links,
+  NavLink,
   Outlet,
   Scripts,
   ScrollRestoration,
 } from 'react-router'
+import { Menu, X } from 'lucide-react'
 
 import type { Route } from './+types/root'
 
-import './app.css'
+import '~/styles/app.css'
 import faviconAssetUrl from '~/assets/favicon.svg?url'
 import logoAssetUrl from '~/assets/logo.png?url'
+import { ScrollToTopOnNavigation } from './components/ScrollToTopOnNavigation'
+import { FloatingScrollToTopButton } from './components/FloatingScrollToTopButton'
+import { SidebarProvider } from './context/SidebarContext'
+
+const headerNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+  [
+    'block text-sm font-medium cursor-pointer leading-[64px] h-16 px-4 font-sans antialiased text-nowrap',
+    isActive
+      ? 'text-white font-semibold'
+      : 'text-white hover:text-yellow-100',
+  ].join(' ')
 
 export function links() {
   return [
     { rel: 'icon', type: 'image/svg+xml', href: faviconAssetUrl },
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    },
   ]
 }
 
@@ -49,9 +67,11 @@ export function Document({
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
+  const [isHeaderNavOpen, setIsHeaderNavOpen] = useState(false)
+
   return (
     <div className="flex flex-col min-h-screen bg-white text-gray-900">
-      <header className="h-16 bg-blue-600 text-white flex items-center justify-between px-6">
+      <header className="z-40 h-16 bg-blue-600 text-white flex items-center justify-between px-6">
         <Link
           to="/"
           className="flex items-center gap-2 text-lg font-semibold hover:underline"
@@ -61,8 +81,70 @@ function Layout({ children }: { children: React.ReactNode }) {
             alt="Olum Web Dev Logo"
             className="w-10 h-10 bg-white rounded-full p-1 shadow-md"
           />
-          <span>Olum Web Dev</span>
+          <span>Olum Web</span>
         </Link>
+
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex gap-4">
+          <NavLink to="/exercises" className={headerNavLinkClass}>
+            Exercises
+          </NavLink>
+        </nav>
+
+        {/* Mobile Toggle */}
+        <button
+          className={`md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full border transition
+          ${
+            isHeaderNavOpen
+              ? 'border-white bg-blue-500'
+              : 'border-white/30 hover:border-white hover:bg-blue-500 focus:border-white focus:bg-blue-500'
+          }
+          focus:outline-none focus:ring-2 focus:ring-white
+        `}
+          onClick={() => setIsHeaderNavOpen((prev) => !prev)}
+          aria-label="Toggle navigation"
+        >
+          {isHeaderNavOpen ? (
+            <X
+              size={24}
+              className="text-white group-hover:text-white group-focus:text-white transition"
+            />
+          ) : (
+            <Menu
+              size={24}
+              className="text-white group-hover:text-white group-focus:text-white transition"
+            />
+          )}
+        </button>
+
+        {/* Mobile Dropdown Nav */}
+        {isHeaderNavOpen && (
+          <div
+            className="
+            absolute top-16 left-0 w-full z-30 md:hidden 
+            bg-blue-600 
+            shadow-md box-border
+            transition-all duration-300 ease-in-out
+          "
+          >
+            <nav className="flex flex-col divide-y divide-blue-400">
+              <NavLink
+                to="/"
+                className="block px-4 py-3 text-sm text-white hover:bg-blue-700 transition-colors duration-200 ease-in-out border-b border-b-blue-400"
+                onClick={() => setIsHeaderNavOpen(false)}
+              >
+                Home
+              </NavLink>
+              <NavLink
+                to="/exercises"
+                className="block px-4 py-3 text-sm text-white hover:bg-blue-700 transition-colors duration-200 ease-in-out border-b border-b-blue-400"
+                onClick={() => setIsHeaderNavOpen(false)}
+              >
+                Exercises
+              </NavLink>
+            </nav>
+          </div>
+        )}
       </header>
 
       <main className="flex flex-1 px-4 sm:px-6 lg:px-8">
@@ -70,7 +152,7 @@ function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       <footer className="h-16 bg-blue-50 text-blue-700 flex items-center justify-center text-sm">
-        &copy; 2025 Olum Web Dev. All rights reserved.
+        &copy; 2025 Olum Web. All rights reserved.
       </footer>
     </div>
   )
@@ -79,9 +161,13 @@ function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Document>
-      <Layout>
-        <Outlet />
-      </Layout>
+      <ScrollToTopOnNavigation />
+      <SidebarProvider>
+        <Layout>
+          <Outlet />
+        </Layout>
+      </SidebarProvider>
+      <FloatingScrollToTopButton />
     </Document>
   )
 }

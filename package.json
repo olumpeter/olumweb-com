@@ -1,11 +1,10 @@
 {
-  "name": "build-a-fullstack-ui-with-typescript-react-tailwind-css-and-react-router-v7",
+  "name": "olumweb",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "react-router dev",
     "build": "react-router build",
-    "preview": "vite preview",
+    "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
@@ -13,19 +12,20 @@
     "@react-router/node": "^7.5.3",
     "@react-router/serve": "^7.5.3",
     "isbot": "^5.1.27",
+    "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router": "^7.5.3"
+    "react-router": "^7.6.3"
   },
   "devDependencies": {
-    "@react-router/dev": "^7.6.3",
+    "@react-router/dev": "^7.5.3",
     "@tailwindcss/vite": "^4.1.4",
     "@types/node": "^20",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
-    "vite": "^6.3.5",
+    "vite": "^6.3.3",
     "vite-tsconfig-paths": "^5.1.4"
   }
 }
