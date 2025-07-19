@@ -1,10 +1,10 @@
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router'
-import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react'
 
+import { MobileSidebarToggle } from '~/components/MobileSidebarToggle'
 import { ScrollHeaderContext } from '~/context/ScrollContext'
 import { useSidebar } from '~/context/SidebarContext'
-import { MobileSidebarToggle } from '~/components/MobileSidebarToggle'
 
 const sidebarNavLinkClass = ({ isActive }: { isActive: boolean }) =>
   [
@@ -26,10 +26,15 @@ export default function Exercises() {
   })
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     function handleScroll() {
       setIsScrolledPastHeader(window.scrollY >= 64)
     }
+
     window.addEventListener('scroll', handleScroll)
+    handleScroll() // Run once on mount in browser
+
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 

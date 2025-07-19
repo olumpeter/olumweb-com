@@ -1,5 +1,6 @@
-import { useMediaQuery } from '~/utils/useMediaQuery'
 import { BookOpenCheck } from 'lucide-react'
+
+import { useMediaQuery } from '~/utils/useMediaQuery'
 
 export default function ExercisesHome() {
   const isMobile = useMediaQuery('(max-width: 767px)') // Tailwind `md` breakpoint

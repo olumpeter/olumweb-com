@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { MobileSidebarToggle } from '~/components/MobileSidebarToggle'
 import { OnThisPageDropdown } from '~/components/OnThisPageDropdown'
 import { useScrollHeader } from '~/context/ScrollContext'
-import { MobileSidebarToggle } from '~/components/MobileSidebarToggle'
 
 const MAX_DISPLAY_MESSAGES = 10
 const MAX_MESSAGES = 20

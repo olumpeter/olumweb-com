@@ -1,6 +1,6 @@
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useRef, useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, ChevronUp } from 'lucide-react'
 
 type Props = {
   items: { href: string; label: string }[]
@@ -21,6 +21,8 @@ export function OnThisPageDropdown({ items }: Props) {
   }
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     if (isOpen) {
       updateDropdownTop()
       window.addEventListener('scroll', updateDropdownTop)

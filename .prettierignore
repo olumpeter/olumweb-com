@@ -1,0 +1,34 @@
+# Node modules and build outputs
+node_modules
+build
+dist
+coverage
+
+# Logs
+*.log
+
+# Environment and system files
+.env*
+.DS_Store
+Thumbs.db
+
+# Package manager files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# React Router framework-specific
+.react-router/types/
+
+# Public/static assets
+public/*
+static/*
+
+# Ignore compiled output
+*.min.js
+*.bundle.js
+*.d.ts
+
+# VSCode and IDE configs
+.vscode/*
+.idea/*

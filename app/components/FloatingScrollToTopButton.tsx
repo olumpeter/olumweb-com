@@ -9,6 +9,8 @@ export function FloatingScrollToTopButton() {
   }
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     function handleScrollToTop() {
       const y = window.scrollY
       setIsVisible(y > 300)

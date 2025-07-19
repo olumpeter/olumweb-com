@@ -1,9 +1,9 @@
 import { Link } from 'react-router'
 
-import tsLogo512 from '~/assets/ts_logo_512.svg?url'
 import reactLogoAssetUrl from '~/assets/react_logo.svg'
-import tailwindCSSLogoAssetUrl from '~/assets/tailwind_css_logo.svg?url'
 import rrv7LogoLightAssetUrl from '~/assets/rrv7_logo_light.svg?url'
+import tailwindCSSLogoAssetUrl from '~/assets/tailwind_css_logo.svg?url'
+import tsLogo512 from '~/assets/ts_logo_512.svg?url'
 
 export default function Home() {
   return (
