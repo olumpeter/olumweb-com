@@ -2,13 +2,13 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router'
 
 export function ScrollToTopOnNavigation() {
-  const location = useLocation()
+	const location = useLocation()
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
+	useEffect(() => {
+		if (typeof window === 'undefined') return
 
-    window.scrollTo({ top: 0, behavior: 'auto' })
-  }, [location.pathname])
+		window.scrollTo({ top: 0, behavior: 'auto' })
+	}, [location.pathname])
 
-  return null
+	return null
 }

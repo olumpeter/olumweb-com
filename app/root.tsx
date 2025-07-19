@@ -197,8 +197,8 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 			? 'The page you’re looking for does not exist.'
 			: error.statusText
 		: error instanceof Error
-		? error.message
-		: 'Unknown error'
+			? error.message
+			: 'Unknown error'
 
 	return (
 		<Document>
