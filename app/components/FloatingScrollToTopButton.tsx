@@ -26,9 +26,7 @@ export function FloatingScrollToTopButton() {
 	return (
 		<button
 			onClick={handleScrollToTop}
-			className='
-          fixed bottom-6 right-6 z-40 p-3 bg-blue-600 text-white 
-          rounded-full shadow-md hover:bg-blue-700 transition'
+			className='fixed right-6 bottom-6 z-40 rounded-full bg-blue-600 p-3 text-white shadow-md transition hover:bg-blue-700'
 			aria-label='Scroll to top'
 		>
 			<ArrowUp size={20} />

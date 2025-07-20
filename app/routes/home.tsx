@@ -64,23 +64,23 @@ const tools = [
 
 export default function Home() {
 	return (
-		<div className='max-w-3xl mx-auto px-4 py-16 text-center text-gray-800'>
-			<h1 className='text-4xl sm:text-5xl font-bold leading-tight text-blue-700 mb-6'>
+		<div className='mx-auto max-w-3xl px-4 py-16 text-center text-gray-800'>
+			<h1 className='mb-6 text-4xl leading-tight font-bold text-blue-700 sm:text-5xl'>
 				🚀 Learn Web Development the Modern Way
 			</h1>
 
-			<p className='text-lg text-gray-700 mb-6'>
+			<p className='mb-6 text-lg text-gray-700'>
 				This isn't just another tutorial. It’s a hands-on journey to building
 				real projects with the exact tools used in professional teams:
 			</p>
 
-			<ul className='text-left text-gray-600 mb-8 list-disc list-inside space-y-2'>
+			<ul className='mb-8 list-inside list-disc space-y-2 text-left text-gray-600'>
 				{tools.map(({ name, description, logoUrl }) => (
 					<li key={name} className='flex items-start gap-3'>
 						<img
 							src={logoUrl}
 							alt={`${name} Logo`}
-							className='w-6 h-6 mt-1 rounded shadow'
+							className='mt-1 h-6 w-6 rounded shadow'
 						/>
 						<span>
 							<strong>{name}</strong> {description}
@@ -89,19 +89,19 @@ export default function Home() {
 				))}
 			</ul>
 
-			<p className='text-lg text-gray-700 mb-10'>
+			<p className='mb-10 text-lg text-gray-700'>
 				If you want to deeply understand how modern websites are built, this is
 				the perfect place to start.
 			</p>
 
-			<div className='bg-gray-50 border border-gray-200 rounded-lg shadow p-6'>
-				<p className='text-base text-gray-700 mb-2'>
+			<div className='rounded-lg border border-gray-200 bg-gray-50 p-6 shadow'>
+				<p className='mb-2 text-base text-gray-700'>
 					✅ Ready to get your hands dirty? Start with the first project:
 				</p>
-				<p className='text-2xl mb-4'>👇</p>
+				<p className='mb-4 text-2xl'>👇</p>
 				<Link
 					to='/exercises'
-					className='inline-block px-6 py-3 text-white font-medium rounded bg-blue-600 hover:bg-blue-700 transition'
+					className='inline-block rounded bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700'
 				>
 					Start the Journey
 				</Link>

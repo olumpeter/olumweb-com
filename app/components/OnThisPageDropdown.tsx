@@ -71,7 +71,7 @@ export function OnThisPageDropdown({ items }: Props) {
 				createPortal(
 					<div
 						ref={menuRef}
-						className='absolute z-50 mx-4 w-[calc(100vw-2rem)] max-w-full overflow-x-hidden overflow-y-scroll rounded-md shadow-lg bg-white border border-gray-200 py-2 text-sm'
+						className='absolute z-50 mx-4 w-[calc(100vw-2rem)] max-w-full overflow-x-hidden overflow-y-scroll rounded-md border border-gray-200 bg-white py-2 text-sm shadow-lg'
 						style={{
 							position: 'absolute',
 							top: dropdownTop,

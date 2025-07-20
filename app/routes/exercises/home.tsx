@@ -7,15 +7,15 @@ export default function ExercisesHome() {
 
 	return (
 		<div className='flex flex-col items-center justify-center px-4 py-12 text-center'>
-			<div className='mb-6 rounded-full bg-blue-100 p-4 animate-bounce'>
+			<div className='mb-6 animate-bounce rounded-full bg-blue-100 p-4'>
 				<BookOpenCheck className='h-8 w-8 text-blue-700' />
 			</div>
 
-			<h2 className='text-lg font-semibold text-gray-800 mb-2'>
+			<h2 className='mb-2 text-lg font-semibold text-gray-800'>
 				Ready to learn JavaScript?
 			</h2>
 
-			<p className='text-sm text-gray-600 max-w-xs'>
+			<p className='max-w-xs text-sm text-gray-600'>
 				{isMobile ? (
 					<>
 						Click the{' '}

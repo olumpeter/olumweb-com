@@ -72,8 +72,8 @@ function Layout({ children }: { children: React.ReactNode }) {
 	const [isHeaderNavOpen, setIsHeaderNavOpen] = useState(false)
 
 	return (
-		<div className='flex flex-col min-h-screen bg-white text-gray-900'>
-			<header className='z-40 h-16 bg-blue-600 text-white flex items-center justify-between px-6'>
+		<div className='flex min-h-screen flex-col bg-white text-gray-900'>
+			<header className='z-40 flex h-16 items-center justify-between bg-blue-600 px-6 text-white'>
 				<Link
 					to='/'
 					className='flex items-center gap-2 text-lg font-semibold hover:underline'
@@ -81,13 +81,13 @@ function Layout({ children }: { children: React.ReactNode }) {
 					<img
 						src={logoAssetUrl}
 						alt='Olum Web Logo'
-						className='w-10 h-10 bg-white rounded-full p-1 shadow-md'
+						className='h-10 w-10 rounded-full bg-white p-1 shadow-md'
 					/>
 					<span>Olum Web</span>
 				</Link>
 
 				{/* Desktop Nav */}
-				<nav className='hidden md:flex gap-4'>
+				<nav className='hidden gap-4 md:flex'>
 					<NavLink
 						to='/'
 						end
@@ -107,40 +107,30 @@ function Layout({ children }: { children: React.ReactNode }) {
 
 				{/* Mobile Toggle */}
 				<button
-					className={`md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full border transition
-          ${
+					className={`inline-flex h-10 w-10 items-center justify-center rounded-full border transition md:hidden ${
 						isHeaderNavOpen
 							? 'border-white bg-blue-500'
 							: 'border-white/30 hover:border-white hover:bg-blue-500 focus:border-white focus:bg-blue-500'
-					}
-          focus:outline-none focus:ring-2 focus:ring-white
-        `}
+					} focus:ring-2 focus:ring-white focus:outline-none`}
 					onClick={() => setIsHeaderNavOpen(prev => !prev)}
 					aria-label='Toggle navigation'
 				>
 					{isHeaderNavOpen ? (
 						<X
 							size={24}
-							className='text-white group-hover:text-white group-focus:text-white transition'
+							className='text-white transition group-hover:text-white group-focus:text-white'
 						/>
 					) : (
 						<Menu
 							size={24}
-							className='text-white group-hover:text-white group-focus:text-white transition'
+							className='text-white transition group-hover:text-white group-focus:text-white'
 						/>
 					)}
 				</button>
 
 				{/* Mobile Dropdown Nav */}
 				{isHeaderNavOpen && (
-					<div
-						className='
-            absolute top-16 left-0 w-full z-30 md:hidden 
-            bg-blue-600 
-            shadow-md box-border
-            transition-all duration-300 ease-in-out
-          '
-					>
+					<div className='absolute top-16 left-0 z-30 box-border w-full bg-blue-600 shadow-md transition-all duration-300 ease-in-out md:hidden'>
 						<nav className='flex flex-col divide-y divide-blue-400'>
 							<NavLink
 								to='/'
@@ -164,7 +154,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 
 			<main className='flex flex-1 px-4 sm:px-6 lg:px-8'>{children}</main>
 
-			<footer className='h-16 bg-blue-50 text-blue-700 flex items-center justify-center text-sm'>
+			<footer className='flex h-16 items-center justify-center bg-blue-50 text-sm text-blue-700'>
 				&copy; 2025 Olum Web. All rights reserved.
 			</footer>
 		</div>
@@ -205,17 +195,17 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 			<Layout>
 				<div className='flex flex-1 items-center justify-center px-6 py-16 text-center'>
 					<div className='max-w-md'>
-						<h1 className='text-4xl font-bold text-blue-700 mb-4'>{title}</h1>
-						<p className='text-lg text-gray-700 mb-6'>{description}</p>
+						<h1 className='mb-4 text-4xl font-bold text-blue-700'>{title}</h1>
+						<p className='mb-6 text-lg text-gray-700'>{description}</p>
 						<Link
 							to='/'
-							className='inline-block px-6 py-3 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition'
+							className='inline-block rounded bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700'
 						>
 							Go Home
 						</Link>
 
 						{error instanceof Error && (
-							<pre className='mt-8 text-left text-sm text-red-700 bg-red-50 border border-red-200 rounded p-4 overflow-x-auto'>
+							<pre className='mt-8 overflow-x-auto rounded border border-red-200 bg-red-50 p-4 text-left text-sm text-red-700'>
 								<code>{error.stack}</code>
 							</pre>
 						)}

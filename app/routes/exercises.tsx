@@ -47,7 +47,7 @@ export default function Exercises() {
 			<div className='relative w-full'>
 				{/* Mobile Top Bar */}
 				<div
-					className={`md:hidden fixed left-0 z-30 w-screen h-12 bg-white border-b px-4 py-3 flex items-center justify-between ${
+					className={`fixed left-0 z-30 flex h-12 w-screen items-center justify-between border-b bg-white px-4 py-3 md:hidden ${
 						isScrolledPastHeader ? 'top-0 shadow-sm' : 'top-[64px]'
 					}`}
 				>
@@ -65,25 +65,19 @@ export default function Exercises() {
 
 				{/* Sidebar */}
 				<aside
-					className={`fixed md:static z-20 left-0 w-64 shrink-0
-            h-[calc(100vh-112px)] md:h-auto
-            bg-slate-50 border-r border-gray-200 overflow-y-auto px-5 py-6
-            transition-transform duration-300 ease-in-out transform
-            ${
-							isSidebarOpen
-								? isScrolledPastHeader
-									? 'top-[48px]'
-									: 'top-[112px]'
-								: '-translate-x-full'
-						}
-            ${isSidebarOpen ? 'translate-x-0' : ''} 
-            md:translate-x-0 md:block`}
+					className={`fixed left-0 z-20 h-[calc(100vh-112px)] w-64 shrink-0 transform overflow-y-auto border-r border-gray-200 bg-slate-50 px-5 py-6 transition-transform duration-300 ease-in-out md:static md:h-auto ${
+						isSidebarOpen
+							? isScrolledPastHeader
+								? 'top-[48px]'
+								: 'top-[112px]'
+							: '-translate-x-full'
+					} ${isSidebarOpen ? 'translate-x-0' : ''} md:block md:translate-x-0`}
 				>
 					<nav className='space-y-3'>
 						<div>
 							<button
 								onClick={() => toggleSection('javascriptExercises')}
-								className='flex items-center justify-between w-full font-semibold text-gray-600 mb-1'
+								className='mb-1 flex w-full items-center justify-between font-semibold text-gray-600'
 							>
 								<span>JavaScript Exercises</span>
 								{openSections.javascriptExercises ? (
@@ -112,10 +106,9 @@ export default function Exercises() {
 
 				{/* Main Content */}
 				<main
-					className={`relative flex-1 transition-all duration-300 ease-in-out px-4 
-            sm:px-6 lg:px-8 py-10 max-w-screen-lg mx-auto pt-16 md:pt-0 ${
-							isSidebarOpen ? 'md:ml-0 ml-64' : ''
-						}`}
+					className={`relative mx-auto max-w-screen-lg flex-1 px-4 py-10 pt-16 transition-all duration-300 ease-in-out sm:px-6 md:pt-0 lg:px-8 ${
+						isSidebarOpen ? 'ml-64 md:ml-0' : ''
+					}`}
 				>
 					<Outlet />
 				</main>
