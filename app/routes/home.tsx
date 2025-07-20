@@ -1,9 +1,66 @@
 import { Link } from 'react-router'
 
-import reactLogoAssetUrl from '~/assets/react_logo.svg'
+import eslintIcon from '~/assets/eslint-icon.svg?url'
+import nodeJSLogoGreen from '~/assets/node-js-logo-green.svg?url'
+import npmLogo from '~/assets/npm-logo-red.svg?url'
+import prettierAvatarDark from '~/assets/prettier-avatar-dark.svg?url'
+import reactLogoAssetUrl from '~/assets/react_logo.svg?url'
 import rrv7LogoLightAssetUrl from '~/assets/rrv7_logo_light.svg?url'
 import tailwindCSSLogoAssetUrl from '~/assets/tailwind_css_logo.svg?url'
 import tsLogo512 from '~/assets/ts_logo_512.svg?url'
+import vscodeLogo from '~/assets/vscode-logo.svg?url'
+
+const tools = [
+	{
+		name: 'TypeScript',
+		description: 'for confidence and scalability',
+		logoUrl: tsLogo512,
+	},
+	{
+		name: 'React',
+		description: 'for component-driven UIs',
+		logoUrl: reactLogoAssetUrl,
+	},
+	{
+		name: 'Tailwind CSS',
+		description: 'for rapid styling',
+		logoUrl: tailwindCSSLogoAssetUrl,
+	},
+	{
+		name: 'React Router (Framework Mode)',
+		description: 'for modern routing with data loading and mutations',
+		logoUrl: rrv7LogoLightAssetUrl,
+	},
+	{
+		name: 'Node.js',
+		description:
+			'as the JavaScript runtime that powers tooling like package managers, dev servers, and build tools',
+		logoUrl: nodeJSLogoGreen,
+	},
+	{
+		name: 'NPM',
+		description:
+			'for installing dependencies, running scripts, and managing your JavaScript tooling',
+		logoUrl: npmLogo,
+	},
+	{
+		name: 'ESLint',
+		description: 'to catch common bugs and enforce consistent code quality',
+		logoUrl: eslintIcon,
+	},
+	{
+		name: 'Prettier',
+		description:
+			'to automatically format your code so you can focus on logic, not styling',
+		logoUrl: prettierAvatarDark,
+	},
+	{
+		name: 'VS Code',
+		description:
+			'as the lightweight yet powerful code editor that supercharges your development workflow',
+		logoUrl: vscodeLogo,
+	},
+]
 
 export default function Home() {
 	return (
@@ -18,47 +75,18 @@ export default function Home() {
 			</p>
 
 			<ul className='text-left text-gray-600 mb-8 list-disc list-inside space-y-2'>
-				<li className='flex items-start gap-3'>
-					<img
-						src={tsLogo512}
-						alt='TypeScript Logo'
-						className='w-6 h-6 mt-1 rounded shadow'
-					/>
-					<span>
-						<strong>TypeScript</strong> for confidence and scalability
-					</span>
-				</li>
-				<li className='flex items-start gap-3'>
-					<img
-						src={reactLogoAssetUrl}
-						alt='React Logo'
-						className='w-6 h-6 mt-1 rounded shadow'
-					/>
-					<span>
-						<strong>React</strong> for component-driven UIs
-					</span>
-				</li>
-				<li className='flex items-start gap-3'>
-					<img
-						src={tailwindCSSLogoAssetUrl}
-						alt='Tailwind CSS Logo'
-						className='w-6 h-6 mt-1 rounded shadow'
-					/>
-					<span>
-						<strong>Tailwind CSS</strong> for rapid styling
-					</span>
-				</li>
-				<li className='flex items-start gap-3'>
-					<img
-						src={rrv7LogoLightAssetUrl}
-						alt='React Router v7 Logo'
-						className='w-6 h-6 mt-1 rounded shadow'
-					/>
-					<span>
-						<strong>React Router v7</strong> (Framework Mode) for modern routing
-						with data loading and mutations
-					</span>
-				</li>
+				{tools.map(({ name, description, logoUrl }) => (
+					<li key={name} className='flex items-start gap-3'>
+						<img
+							src={logoUrl}
+							alt={`${name} Logo`}
+							className='w-6 h-6 mt-1 rounded shadow'
+						/>
+						<span>
+							<strong>{name}</strong> {description}
+						</span>
+					</li>
+				))}
 			</ul>
 
 			<p className='text-lg text-gray-700 mb-10'>
