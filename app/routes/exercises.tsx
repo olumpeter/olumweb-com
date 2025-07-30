@@ -15,7 +15,7 @@ const sidebarNavLinkClass = ({ isActive }: { isActive: boolean }) =>
 	].join(' ')
 
 export default function Exercises() {
-	const [isScrolledPastHeader, setIsScrolledPastHeader] = useState(false)
+	const [hasScrolledPastHeader, setHasScrolledPastHeader] = useState(false)
 	const { isSidebarOpen, setIsSidebarOpen } = useSidebar()
 
 	const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -26,7 +26,7 @@ export default function Exercises() {
 		if (typeof window === 'undefined') return
 
 		function handleScroll() {
-			setIsScrolledPastHeader(window.scrollY >= 64)
+			setHasScrolledPastHeader(window.scrollY >= 64)
 		}
 
 		window.addEventListener('scroll', handleScroll)
@@ -43,12 +43,12 @@ export default function Exercises() {
 	}
 
 	return (
-		<ScrollHeaderContext.Provider value={isScrolledPastHeader}>
+		<ScrollHeaderContext.Provider value={hasScrolledPastHeader}>
 			<div className='relative w-full'>
 				{/* Mobile Top Bar */}
 				<div
 					className={`fixed left-0 z-30 flex h-12 w-screen items-center justify-between border-b bg-white px-4 py-3 md:hidden ${
-						isScrolledPastHeader ? 'top-0 shadow-sm' : 'top-[64px]'
+						hasScrolledPastHeader ? 'top-0 shadow-sm' : 'top-[64px]'
 					}`}
 				>
 					<MobileSidebarToggle />
@@ -67,7 +67,7 @@ export default function Exercises() {
 				<aside
 					className={`fixed left-0 z-20 h-[calc(100vh-112px)] w-64 shrink-0 transform overflow-y-auto border-r border-gray-200 bg-slate-50 px-5 py-6 transition-transform duration-300 ease-in-out md:static md:h-auto ${
 						isSidebarOpen
-							? isScrolledPastHeader
+							? hasScrolledPastHeader
 								? 'top-[48px]'
 								: 'top-[112px]'
 							: '-translate-x-full'

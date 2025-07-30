@@ -22,7 +22,7 @@ export default tseslint.config(
 
 	// Base config for all JS/TS files (not type-aware)
 	{
-		files: ['**/*.{js,ts,tsx}'],
+		files: ['**/*.{js,jsx,ts,tsx}'],
 		plugins: {
 			import: eslintPluginImport,
 			'unused-imports': eslintPluginUnusedImports,
@@ -97,6 +97,10 @@ export default tseslint.config(
 			'@typescript-eslint/no-explicit-any': 'warn',
 			'@typescript-eslint/no-empty-object-type': 'warn',
 			'@typescript-eslint/no-namespace': 'warn',
+			'@typescript-eslint/no-confusing-void-expression': [
+				'warn',
+				{ ignoreArrowShorthand: true, ignoreVoidOperator: false },
+			],
 		},
 	},
 )

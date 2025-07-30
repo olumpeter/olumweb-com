@@ -74,17 +74,23 @@ export default function Home() {
 				real projects with the exact tools used in professional teams:
 			</p>
 
-			<ul className='mb-8 list-inside list-disc space-y-2 text-left text-gray-600'>
+			<ul className='mb-8 space-y-4 text-left text-gray-600'>
 				{tools.map(({ name, description, logoUrl }) => (
-					<li key={name} className='flex items-start gap-3'>
+					<li
+						key={name}
+						className='flex items-start gap-3 rounded-md p-2 transition hover:bg-gray-100'
+					>
 						<img
 							src={logoUrl}
 							alt={`${name} Logo`}
 							className='mt-1 h-6 w-6 rounded shadow'
 						/>
-						<span>
-							<strong>{name}</strong> {description}
-						</span>
+						<div>
+							<strong className='block font-semibold text-gray-800'>
+								{name}
+							</strong>
+							<p className='text-sm text-gray-600'>{description}</p>
+						</div>
 					</li>
 				))}
 			</ul>
@@ -95,7 +101,7 @@ export default function Home() {
 			</p>
 
 			<div className='rounded-lg border border-gray-200 bg-gray-50 p-6 shadow'>
-				<p className='mb-2 text-base text-gray-700'>
+				<p className='mb-2 text-lg text-gray-700'>
 					✅ Ready to get your hands dirty? Start with the first project:
 				</p>
 				<p className='mb-4 text-2xl'>👇</p>

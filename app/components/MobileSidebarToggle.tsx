@@ -24,7 +24,7 @@ export function MobileSidebarToggle() {
 					<Menu size={20} className='text-blue-700 group-hover:text-blue-900' />
 				)}
 			</span>
-			<span>All exercises</span>
+			<span>All Exercises</span>
 		</button>
 	)
 }

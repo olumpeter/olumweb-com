@@ -1,5 +1,5 @@
 import { Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import {
 	isRouteErrorResponse,
 	Link,
@@ -18,7 +18,7 @@ import type { Route } from './+types/root'
 
 import '~/styles/app.css'
 import faviconAssetUrl from '~/assets/favicon.svg?url'
-import logoAssetUrl from '~/assets/logo.png?url'
+import olumWebLogoAssetUrl from '~/assets/olumWebLogo.png?url'
 
 const headerNavLinkClass = ({ isActive }: { isActive: boolean }) =>
 	[
@@ -27,6 +27,9 @@ const headerNavLinkClass = ({ isActive }: { isActive: boolean }) =>
 			? 'text-yellow-300 font-semibold'
 			: 'text-white hover:text-yellow-100',
 	].join(' ')
+
+const mobileMenuToggleIconClass =
+	'text-white transition-transform duration-200 ease-in-out group-hover:text-yellow-300 group-focus:text-yellow-300'
 
 const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
 	[
@@ -40,13 +43,22 @@ export function links() {
 	return [
 		{ rel: 'icon', type: 'image/svg+xml', href: faviconAssetUrl },
 		{
+			rel: 'preconnect',
+			href: 'https://fonts.googleapis.com',
+		},
+		{
+			rel: 'preconnect',
+			href: 'https://fonts.gstatic.com',
+			crossOrigin: 'anonymous',
+		},
+		{
 			rel: 'stylesheet',
 			href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
 		},
 	]
 }
 
-export function Document({ children }: { children: React.ReactNode }) {
+function Document({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang='en' className='h-full overflow-x-hidden'>
 			<head>
@@ -56,10 +68,10 @@ export function Document({ children }: { children: React.ReactNode }) {
 					content='Learn how to Build a Fullstack UI with TypeScript, React, Tailwind CSS & React Router'
 				/>
 				<meta charSet='utf-8' />
-				<meta name='viewport' content='width=device-width, initial-scale=1' />
+				<meta name='viewport' content='width=device-width, initial-scale=1.0' />
 				<Links />
 			</head>
-			<body className='h-full font-sans'>
+			<body className='min-h-screen font-sans'>
 				{children}
 				<ScrollRestoration />
 				<Scripts />
@@ -69,7 +81,7 @@ export function Document({ children }: { children: React.ReactNode }) {
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
-	const [isHeaderNavOpen, setIsHeaderNavOpen] = useState(false)
+	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
 	return (
 		<div className='flex min-h-screen flex-col bg-white text-gray-900'>
@@ -78,11 +90,15 @@ function Layout({ children }: { children: React.ReactNode }) {
 					to='/'
 					className='flex items-center gap-2 text-lg font-semibold hover:underline'
 				>
-					<img
-						src={logoAssetUrl}
-						alt='Olum Web Logo'
-						className='h-10 w-10 rounded-full bg-white p-1 shadow-md'
-					/>
+					<span className='flex h-10 w-10 items-center justify-between rounded-full bg-white p-1 shadow-md'>
+						<img
+							src={olumWebLogoAssetUrl}
+							alt='Olum Web Logo'
+							loading='eager'
+							decoding='async'
+							className='h-full w-full object-contain transition-opacity duration-300 ease-in-out'
+						/>
+					</span>
 					<span>Olum Web</span>
 				</Link>
 
@@ -92,58 +108,52 @@ function Layout({ children }: { children: React.ReactNode }) {
 						to='/'
 						end
 						className={({ isActive }) => headerNavLinkClass({ isActive })}
-						onClick={() => setIsHeaderNavOpen(false)}
+						onClick={() => setIsMobileMenuOpen(false)}
 					>
 						Home
 					</NavLink>
 					<NavLink
 						to='/exercises'
 						className={({ isActive }) => headerNavLinkClass({ isActive })}
-						onClick={() => setIsHeaderNavOpen(false)}
+						onClick={() => setIsMobileMenuOpen(false)}
 					>
 						Exercises
 					</NavLink>
 				</nav>
 
-				{/* Mobile Toggle */}
+				{/* Mobile Menu Toggle Button */}
 				<button
-					className={`inline-flex h-10 w-10 items-center justify-center rounded-full border transition md:hidden ${
-						isHeaderNavOpen
-							? 'border-white bg-blue-500'
-							: 'border-white/30 hover:border-white hover:bg-blue-500 focus:border-white focus:bg-blue-500'
-					} focus:ring-2 focus:ring-white focus:outline-none`}
-					onClick={() => setIsHeaderNavOpen(prev => !prev)}
-					aria-label='Toggle navigation'
+					onClick={() => setIsMobileMenuOpen(prev => !prev)}
+					className={`group inline-flex h-10 w-10 items-center justify-center rounded-full border transition-transform duration-200 ease-in-out ${
+						isMobileMenuOpen
+							? 'border-white bg-blue-600 shadow-inner'
+							: 'border-white/30 bg-transparent shadow-md hover:border-white hover:bg-blue-600 hover:shadow-lg focus:border-white focus:bg-blue-600'
+					} hover:scale-105 focus:ring-2 focus:ring-yellow-300 focus:outline-none active:scale-95`}
+					aria-label='Mobile Menu Toggle Button'
 				>
-					{isHeaderNavOpen ? (
-						<X
-							size={24}
-							className='text-white transition group-hover:text-white group-focus:text-white'
-						/>
+					{isMobileMenuOpen ? (
+						<X size={24} className={mobileMenuToggleIconClass} />
 					) : (
-						<Menu
-							size={24}
-							className='text-white transition group-hover:text-white group-focus:text-white'
-						/>
+						<Menu size={24} className={mobileMenuToggleIconClass} />
 					)}
 				</button>
 
-				{/* Mobile Dropdown Nav */}
-				{isHeaderNavOpen && (
+				{/* Dropdown navigation shown only on mobile when menu is open */}
+				{isMobileMenuOpen && (
 					<div className='absolute top-16 left-0 z-30 box-border w-full bg-blue-600 shadow-md transition-all duration-300 ease-in-out md:hidden'>
 						<nav className='flex flex-col divide-y divide-blue-400'>
 							<NavLink
 								to='/'
 								end
 								className={mobileNavLinkClass}
-								onClick={() => setIsHeaderNavOpen(false)}
+								onClick={() => setIsMobileMenuOpen(false)}
 							>
 								Home
 							</NavLink>
 							<NavLink
 								to='/exercises'
 								className={mobileNavLinkClass}
-								onClick={() => setIsHeaderNavOpen(false)}
+								onClick={() => setIsMobileMenuOpen(false)}
 							>
 								Exercises
 							</NavLink>
@@ -154,8 +164,12 @@ function Layout({ children }: { children: React.ReactNode }) {
 
 			<main className='flex flex-1 px-4 sm:px-6 lg:px-8'>{children}</main>
 
-			<footer className='flex h-16 items-center justify-center bg-blue-50 text-sm text-blue-700'>
-				&copy; 2025 Olum Web. All rights reserved.
+			<footer className='flex h-16 items-center justify-center gap-1 bg-blue-50 text-sm text-blue-700'>
+				<span>&copy; {new Date().getFullYear()}</span>
+				<Link to='/' className='font-medium hover:underline'>
+					Olum Web.
+				</Link>
+				<span>All rights reserved.</span>
 			</footer>
 		</div>
 	)
@@ -176,19 +190,32 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-	const title = isRouteErrorResponse(error)
-		? error.status === 404
-			? '404: Not Found'
-			: `${error.status} ${error.statusText}`
-		: 'Something went wrong'
+	let title: string
 
-	const description = isRouteErrorResponse(error)
-		? error.status === 404
-			? 'The page you’re looking for does not exist.'
-			: error.statusText
-		: error instanceof Error
-			? error.message
-			: 'Unknown error'
+	if (isRouteErrorResponse(error)) {
+		if (error.status === 404) {
+			title = '404: Not Found'
+		} else {
+			title = `${error.status} ${error.statusText}`
+		}
+	} else {
+		title = 'Something went wrong'
+	}
+
+	let description: string
+
+	if (isRouteErrorResponse(error)) {
+		if (error.status === 404) {
+			description = `The page you're looking for does not exist.`
+		} else {
+			description = error.statusText
+		}
+	} else if (error instanceof Error) {
+		description = error.message
+	} else {
+		console.error('Unknown error type:', error)
+		description = 'Unknown error'
+	}
 
 	return (
 		<Document>
@@ -203,7 +230,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 						>
 							Go Home
 						</Link>
-
 						{error instanceof Error && (
 							<pre className='mt-8 overflow-x-auto rounded border border-red-200 bg-red-50 p-4 text-left text-sm text-red-700'>
 								<code>{error.stack}</code>
