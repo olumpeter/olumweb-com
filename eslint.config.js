@@ -1,6 +1,5 @@
 // eslint.config.js
 import tseslint from 'typescript-eslint'
-import js from '@eslint/js'
 import eslintPluginImport from 'eslint-plugin-import'
 import eslintPluginUnusedImports from 'eslint-plugin-unused-imports'
 
@@ -37,6 +36,8 @@ export default tseslint.config(
 				{ varsIgnorePattern: '^_', argsIgnorePattern: '^_' },
 			],
 			'unused-imports/no-unused-imports': 'warn',
+
+			// 🔧 Import order: fixes and auto-sorts imports nicely
 			'import/order': [
 				'warn',
 				{
@@ -60,7 +61,7 @@ export default tseslint.config(
 		},
 	},
 
-	// Type-aware rules, all set to 'warn'
+	// Type-aware rules (all set to 'warn')
 	...tseslint.configs.recommendedTypeChecked,
 	{
 		files: ['**/*.{ts,tsx}'],
