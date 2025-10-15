@@ -10,10 +10,6 @@ import {
 	ScrollRestoration,
 } from 'react-router'
 
-import { FloatingScrollToTopButton } from './components/FloatingScrollToTopButton'
-import { ScrollToTopOnNavigation } from './components/ScrollToTopOnNavigation'
-import { SidebarProvider } from './context/SidebarContext'
-
 import type { Route } from './+types/root'
 
 import '~/styles/app.css'
@@ -178,13 +174,9 @@ function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
 	return (
 		<Document>
-			<ScrollToTopOnNavigation />
-			<SidebarProvider>
-				<Layout>
-					<Outlet />
-				</Layout>
-			</SidebarProvider>
-			<FloatingScrollToTopButton />
+			<Layout>
+				<Outlet />
+			</Layout>
 		</Document>
 	)
 }

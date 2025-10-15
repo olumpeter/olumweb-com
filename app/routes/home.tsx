@@ -106,7 +106,7 @@ export default function Home() {
 				</p>
 				<p className='mb-4 text-2xl'>👇</p>
 				<Link
-					to='/exercises'
+					to='#'
 					className='inline-block rounded bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700'
 				>
 					Start the Journey
