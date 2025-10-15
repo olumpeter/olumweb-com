@@ -58,7 +58,7 @@ function Document({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang='en' className='h-full overflow-x-hidden'>
 			<head>
-				<title>Awesome Web Dev Exercises</title>
+				<title>Olum Web</title>
 				<meta
 					name='description'
 					content='Learn how to Build a Fullstack UI with TypeScript, React, Tailwind CSS & React Router'
@@ -108,13 +108,6 @@ function Layout({ children }: { children: React.ReactNode }) {
 					>
 						Home
 					</NavLink>
-					<NavLink
-						to='/exercises'
-						className={({ isActive }) => headerNavLinkClass({ isActive })}
-						onClick={() => setIsMobileMenuOpen(false)}
-					>
-						Exercises
-					</NavLink>
 				</nav>
 
 				{/* Mobile Menu Toggle Button */}
@@ -145,13 +138,6 @@ function Layout({ children }: { children: React.ReactNode }) {
 								onClick={() => setIsMobileMenuOpen(false)}
 							>
 								Home
-							</NavLink>
-							<NavLink
-								to='/exercises'
-								className={mobileNavLinkClass}
-								onClick={() => setIsMobileMenuOpen(false)}
-							>
-								Exercises
 							</NavLink>
 						</nav>
 					</div>
