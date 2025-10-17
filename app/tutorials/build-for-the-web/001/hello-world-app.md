@@ -69,15 +69,15 @@ published: true
   confident **writing and running TypeScript programs, understanding the project
   structure, and previewing your app in the browser**.
 
-- This tutorial is the perfect starting point if you want to **learn modern
-  TypeScript development in a web environment** while using a **scaffolded React
-  Router project** to simplify setup.
+- This tutorial is the perfect starting point if you want to **learn modern web
+  development using TypeScript** while using a **scaffolded React Router
+  project** to simplify setup.
 
 ---
 
 ## 🎯 What You'll Build
 
-- By the end of this tutorial, you'll have a simple web app that shows a red
+- By the end of this **tutorial**, you'll have a simple web app that shows a red
   **"Hello, World!"** message styled with **Tailwind CSS** and running on
   **React Router v7 Framework Mode**.
 
@@ -85,7 +85,7 @@ published: true
 
 ![Final result showing red Hello World heading in browser](./images/hello-world-app-final-result.png)
 
-- You'll build this from scratch using:
+- You'll **build** this from **scratch** using:
   - **TypeScript** for type-safe code.
   - **React Router v7 Framework Mode** for app structure.
   - **Tailwind CSS** for styling.
@@ -94,7 +94,7 @@ published: true
 
 ## 🛠 Setting Up Your Coding Environment
 
-- In this tutorial, you'll use **Visual Studio Code (VS Code)** with an
+- In this **tutorial**, you'll use **Visual Studio Code (VS Code)** with an
   **integrated Bash terminal** as your **Integrated Development Environment
   (IDE)**.
 - Make sure you have **VS Code** and **Git Bash** installed on your computer
