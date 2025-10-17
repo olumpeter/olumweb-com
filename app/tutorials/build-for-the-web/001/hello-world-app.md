@@ -1,4 +1,4 @@
-<!--  
+<!--
 
 ---
 title: >
@@ -115,7 +115,7 @@ node -v
 **Output:**
 
 ```bash
-v23.11.0
+v23.x.x
 ```
 
 - 👀 If you see an error such as:
@@ -126,8 +126,23 @@ v23.11.0
 node: command not found
 ```
 
-- 👉 If Node.js isn't installed, visit [nodejs.org ↗](https://nodejs.org) to
-  download and set it up before continuing.
+It means **Node.js isn't installed** on your computer.
+
+- 👉 To fix it:
+  1. Visit nodejs.org ↗.
+  2. Download the **LTS (Long-Term Support)** version for your operating system
+     — it’s the most stable option for beginners.
+  3. Run the installer and follow the setup steps.
+  4. After installation, open a **new terminal** and verify Node.js is
+     installed:
+
+  ```node
+  node - v
+  ```
+
+  You should see a version number like v20.x.x.
+
+- 🎯 Once you see the version number, you're ready to continue!
 
 - 👉 To stay organized, go to your desktop and create a new folder called
   **TypeScript Projects**.
