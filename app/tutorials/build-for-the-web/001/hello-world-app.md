@@ -66,8 +66,8 @@ published: true
   with **TypeScript** & **Node.js** using **React Router v7 Framework Mode**.
 
 - We'll keep it **hands-on** and **beginner-friendly**, so by the end, you'll be
-  confident **writing and running TypeScript programs, understanding the project
-  structure, and previewing your app in the browser**.
+  confident **building a web page, understanding the project structure, and
+  previewing your app in the browser**.
 
 - This tutorial is the perfect starting point if you want to **learn modern web
   development using TypeScript** while using a **scaffolded React Router
