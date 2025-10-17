@@ -110,15 +110,11 @@ node -v
 
 - 👀 You should see an output like this if Node.js is installed:
 
-**Output:**
-
 ```bash
 v23.11.0
 ```
 
 - 👀 If you see an error such as:
-
-**Output:**
 
 ```bash
 node: command not found
