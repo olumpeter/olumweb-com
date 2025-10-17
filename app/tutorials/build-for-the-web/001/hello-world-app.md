@@ -231,7 +231,7 @@ npm run dev
 🚀 With your development server running successfully, let's now clean up the
 default scaffold so we can start fresh.
 
-- ✏️ Before building _Your First Hello World App_, let's tidy up the default
+- ✏️ Before building **Your First Hello World App**, let's tidy up the default
   scaffold.
 - Replace the code in the **app/routes/home.tsx** file with the following React
   code:
