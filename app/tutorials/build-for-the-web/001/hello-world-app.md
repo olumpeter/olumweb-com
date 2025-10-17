@@ -86,9 +86,9 @@ published: true
 ![Final result showing red Hello World heading in browser](./images/hello-world-app-final-result.png)
 
 - You'll build this from scratch using:
-  - **TypeScript** for type-safe code
-  - **React Router v7 Framework Mode** for app structure
-  - **Tailwind CSS** for styling
+  - **TypeScript** for type-safe code.
+  - **React Router v7 Framework Mode** for app structure.
+  - **Tailwind CSS** for styling.
 
 ---
 
@@ -115,7 +115,7 @@ node -v
 **Output:**
 
 ```bash
-v23.x.x
+v23.11.0
 ```
 
 - 👀 If you see an error such as:
@@ -140,7 +140,7 @@ It means **Node.js isn't installed** on your computer.
   node - v
   ```
 
-  You should see a version number like v20.x.x.
+  You should see a version number like v23.11.0.
 
 - 🎯 Once you see the version number, you're ready to continue!
 
