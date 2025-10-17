@@ -1,18 +1,40 @@
-<!-- omit in toc --> # Build Your First Hello World App with TypeScript & Node.js Using React Router v7 Framework Mode
+---
+title: >
+  Build for the Web: 001 — Hello World App with TypeScript, Node.js & React
+  Router v7
+subtitle: PRACTICAL WEB PROGRAMMING FOR TOTAL BEGINNERS
+description: >
+  Learn how to set up a TypeScript + Node.js project using React Router v7
+  Framework Mode. Perfect for beginners looking to build their first web app.
+slug: 'build-for-the-web-001-hello-world-app'
+series: 'Build for the Web'
+tutorialNumber: 1
+date: 2025-10-13
+author: 'Peter Olum'
+tags:
+  - TypeScript
+  - React
+  - Tailwind CSS
+  - React Router v7 Framework Mode
+  - Node.js
+  - Modern Web Development
+readingTime: '8 min'
+published: true
+---
 
-<!-- omit in toc --> ### *A hands-on beginner's guide to TypeScript, Node.js, and React Router Framework Mode.*
+<!-- omit in toc --> # Build for the Web: 001 — Hello World App with TypeScript, Node.js & React Router v7
+
+<!-- omit in toc --> ### _PRACTICAL WEB PROGRAMMING FOR TOTAL BEGINNERS_
 
 ---
 
-<!-- omit in toc -->## Table of Contents
+<!-- omit in toc --> ## Table of Contents
 
-- [💡 Guide emojis](#-guide-emojis)
+- [💡 Guide Emojis](#-guide-emojis)
 - [🧭 Introduction](#-introduction)
 - [🛠 Setting Up Your Coding Environment](#-setting-up-your-coding-environment)
 
----
-
-## 💡 Guide emojis
+## 💡 Guide Emojis
 
 - 👉 means it's your turn to **take action** in VS Code, the terminal, or the
   web browser.
