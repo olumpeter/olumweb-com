@@ -35,7 +35,7 @@ published: true
 
 ---
 
-<h2>Table of Contents</h2>
+<h2>Table of Content</h2>
 
 - [💡 Guide Emojis](#-guide-emojis)
 - [🧭 Introduction](#-introduction)
