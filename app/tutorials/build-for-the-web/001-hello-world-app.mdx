@@ -31,6 +31,8 @@ published: true
 	Router v7
 </h1>
 
+---
+
 <h2><i>PRACTICAL WEB PROGRAMMING FOR TOTAL BEGINNERS</i></h1>
 
 ---
@@ -55,6 +57,8 @@ published: true
 - 🚀 means **you’ve reached a new milestone** — time to move to the next step or
   section.
 
+---
+
 ## 🧭 Introduction
 
 - In this tutorial, you'll learn how to **build** your first **Hello World App**
@@ -75,8 +79,6 @@ published: true
   (IDE)**.
 - Make sure you have **VS Code** and **Git Bash** installed on your computer
   before proceeding.
-
----
 
 - 👉 If you already have **VS Code** installed, open it and run the following
   command in the terminal to check whether **Node.js** is installed:
@@ -108,8 +110,6 @@ node: command not found
 - 👉 If Node.js isn't installed, visit [nodejs.org ↗](https://nodejs.org) to
   download and set it up before continuing.
 
----
-
 - 👉 To stay organized, go to your desktop and create a new folder called
   **TypeScript Projects**.
 - To do this:
@@ -120,8 +120,6 @@ node: command not found
 <!--
 🎬 B-roll: show creating folder "TypeScript Projects" on desktop
 -->
-
----
 
 - Then, open the **TypeScript Projects** folder in **VS Code** by:
   1. Open **Visual Studio Code**.
@@ -136,8 +134,6 @@ node: command not found
 - You can also use the shortcut **Ctrl+K, Ctrl+O** (Windows/Linux) or **Cmd+K,
   Cmd+O** (Mac) to open a folder quickly.
 
----
-
 - The **TypeScript Projects** folder is where you'll **build** your first
   **Hello World App** with **TypeScript** & **Node.js** using **React Router v7
   Framework Mode**.
@@ -145,8 +141,6 @@ node: command not found
 <!--
 > 🎬 B-roll: pointing at the TypeScript Opened project in VS Code
 -->
-
----
 
 - 🚀 Now that your environment is ready, let's move on to creating your first
   real project.
@@ -164,14 +158,10 @@ npx create-react-router@latest 001-typescript-basics
 🎬 B-roll: running the above command in the terminal
 -->
 
----
-
 - 👀 The installation may take a while depending on your **internet speed**.
 - 👀 Once the **installation** completes, you should see a new folder named
   **001-typescript-basics**, and **output** in the terminal indicating that the
   project has been successfully created.
-
----
 
 - 👉 Navigate to the **001-typescript-basics** folder with this command:
 
@@ -183,8 +173,6 @@ cd 001-typescript-basics
 🎬 B-roll: showing the **001-typescript-basics** folder in VS Code and running cd 001-typescript-basics
 -->
 
----
-
 - Inside your **001-typescript-basics** project folder, you'll notice an **app**
   directory — this is where your **routes**, **layouts**, and **components**
   live.
@@ -192,8 +180,6 @@ cd 001-typescript-basics
 <!--
 🎬 B-roll: showing the app folder in VS Code Explorer
 -->
-
----
 
 - Let's start the development server to preview the app in the browser.
 - 👉 Run the following command in your terminal:
@@ -206,8 +192,6 @@ npm run dev
 🎬 B-roll: running the above command in the terminal
 -->
 
----
-
 - 👉 Once the server starts, open your browser and go to http://localhost:5173.
 - 👀 You should now see the default React Router welcome page — this confirms
   your environment is set up correctly.
@@ -216,12 +200,8 @@ npm run dev
 🎬 B-roll: showing browser with http://localhost:5173 open and displaying the default app
 -->
 
----
-
 🚀 With your development server running successfully, let's now clean up the
 default scaffold so we can start fresh.
-
----
 
 - ✏️ Before building _Your First Hello World App_, let's tidy up the default
   scaffold.
@@ -238,16 +218,12 @@ export default function Home() {
 }
 ```
 
----
-
 - 🗑️ Now you can go ahead and delete the **welcome** folder and everything that
   comes with it, since we're no longer using it.
 
 <!--
 > 🎬 B-roll: deleting the welcome folder in VS Code Explorer
 -->
-
----
 
 - ✏️ Replace the code in the **app/app.css** file with the following code:
 
@@ -268,8 +244,6 @@ export default function Home() {
 	}
 }
 ```
-
----
 
 - Starting with **TypeScript 7**, the following options in your
   **tsconfig.json** are **deprecated**:
@@ -323,8 +297,6 @@ export default function Home() {
 
 - 💡 Tip: You can safely remove `"baseUrl"` and `"paths"` later once React
   Router supports an official import alias pattern.
-
----
 
 - You're going to use **TailwindCSS** to style **Your First Hello World App**.
 - 👉 To make sure TailwindCSS is working, add the following classes to the
