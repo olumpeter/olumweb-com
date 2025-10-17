@@ -330,12 +330,13 @@ export default function Home() {
 - 👉 To make sure TailwindCSS is working, add the following classes to the
   `<h1>` element in **app/routes/home.tsx**.
 
-```tsx
+```diff
 // app/routes/home.tsx
 export default function Home() {
 	return (
 		<>
-			<h1 className='text-4xl font-bold text-red-600'>Hello, World!</h1>
+-			<h1>Hello, World!</h1>
++			<h1 className='text-4xl font-bold text-red-600'>Hello, World!</h1>
 		</>
 	)
 }
