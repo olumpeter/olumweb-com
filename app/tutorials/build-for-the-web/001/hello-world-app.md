@@ -27,7 +27,7 @@ published: true
 -->
 
 <h1>
-	Build for the Web: 001 - Hello World App with TypeScript, Node.js & React
+	Build for the Web: 001 — Hello World App with TypeScript, Node.js & React
 	Router v7
 </h1>
 
