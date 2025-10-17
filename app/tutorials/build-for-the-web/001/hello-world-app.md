@@ -4,7 +4,7 @@
 title: >
   Build for the Web: 001 — Hello World App with TypeScript, Node.js & React
   Router v7
-subtitle: PRACTICAL WEB PROGRAMMING FOR TOTAL BEGINNERS
+subtitle: PRACTICAL MODERN WEB PROGRAMMING FOR TOTAL BEGINNERS
 description: >
   Learn how to set up a TypeScript + Node.js project using React Router v7
   Framework Mode. Perfect for beginners looking to build their first web app.
@@ -31,7 +31,7 @@ published: true
 	Router v7
 </h1>
 
-<h2><i>PRACTICAL WEB PROGRAMMING FOR TOTAL BEGINNERS</i></h1>
+<h2><i>PRACTICAL MODERN WEB PROGRAMMING FOR TOTAL BEGINNERS</i></h1>
 
 ---
 
