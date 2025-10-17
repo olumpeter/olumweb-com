@@ -129,7 +129,7 @@ node: command not found
 It means **Node.js isn't installed** on your computer.
 
 - 👉 To fix it:
-  1. Visit nodejs.org ↗.
+  1. Visit [nodejs.org ↗](nodejs.org).
   2. Download the **LTS (Long-Term Support)** version for your operating system
      — it’s the most stable option for beginners.
   3. Run the installer and follow the setup steps.
