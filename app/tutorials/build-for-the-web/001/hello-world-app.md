@@ -179,13 +179,13 @@ It means **Node.js isn't installed** on your computer.
 - 🚀 Now that your environment is ready, let's move on to creating your first
   real project.
 - Since most real-world apps start from a scaffold, we'll use the **React Router
-  v7 Framework Mode** template — it comes with **TypeScript** and TailwindCSS
-  already set up.
+  v7 Framework Mode** template — it comes with **TypeScript** and
+  **TailwindCSS** already set up.
 - 👉 Run the following command in your terminal to **scaffold a new React Router
-  v7 Framework Mode project** in a folder named **001-typescript-basics**:
+  v7 Framework Mode project** in a folder named **001-hello-world-app**:
 
 ```bash
-npx create-react-router@latest 001-typescript-basics
+npx create-react-router@latest 001-hello-world-app
 ```
 
 <!--
@@ -194,20 +194,20 @@ npx create-react-router@latest 001-typescript-basics
 
 - 👀 The installation may take a while depending on your **internet speed**.
 - 👀 Once the **installation** completes, you should see a new folder named
-  **001-typescript-basics**, and **output** in the terminal indicating that the
+  **001-hello-world-app**, and **output** in the terminal indicating that the
   project has been successfully created.
 
-- 👉 Navigate to the **001-typescript-basics** folder with this command:
+- 👉 Navigate to the **001-hello-world-app** folder with this command:
 
 ```bash
-cd 001-typescript-basics
+cd 001-hello-world-app
 ```
 
 <!--
-🎬 B-roll: showing the **001-typescript-basics** folder in VS Code and running cd 001-typescript-basics
+🎬 B-roll: showing the **001-hello-world-app** folder in VS Code and running cd 001-hello-world-app
 -->
 
-- Inside your **001-typescript-basics** project folder, you'll notice an **app**
+- Inside your **001-hello-world-app** project folder, you'll notice an **app**
   directory — this is where your **routes**, **layouts**, and **components**
   live.
 
