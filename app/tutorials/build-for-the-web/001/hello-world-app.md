@@ -22,12 +22,6 @@ readingTime: '8 min'
 published: true
 ---
 
-<h1>Build for the Web: 001 — Hello World App with TypeScript, Node.js & React Router v7</h1>
-
-<h3><i>PRACTICAL MODERN WEB PROGRAMMING FOR TOTAL BEGINNERS</i></h3>
-
-![Screenshot of final Hello World app in browser with red heading](./images/hello-world-app-final-result.jpg)
-
 ---
 
 <h2>Table of Contents</h2>

@@ -1,4 +1,7 @@
 @import 'tailwindcss';
+@import 'highlight.js/styles/night-owl.css';
+
+@plugin "@tailwindcss/typography";
 
 @theme {
 	--font-sans:
@@ -10,5 +13,42 @@
 	html,
 	body {
 		font-family: var(--font-sans);
+	}
+}
+
+@layer components {
+	.prose a {
+		color: #0969da; /* GitHub blue links */
+		text-decoration: none;
+	}
+
+	.prose a:hover {
+		text-decoration: underline;
+	}
+
+	.prose code {
+		background-color: #f6f8fa; /* GitHub code bg */
+		padding: 0.2em 0.4em;
+		border-radius: 6px;
+		font-size: 0.9em;
+	}
+
+	.prose pre {
+		background-color: #0d1117; /* Night Owl background */
+		padding: 1rem;
+		border-radius: 0.5rem;
+		overflow-x: auto;
+		border-radius: 0.375rem; /* rounded-md */
+	}
+
+	.prose blockquote {
+		border-left: 4px solid #d0d7de;
+		padding-left: 1rem;
+		color: #6e7681;
+		font-style: italic;
+	}
+
+	.prose img {
+		border-radius: 0.5rem;
 	}
 }

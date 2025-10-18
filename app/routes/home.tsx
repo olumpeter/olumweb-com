@@ -1,14 +1,14 @@
 import { Link } from 'react-router'
 
-import eslintIcon from '~/assets/eslint-icon.svg?url'
-import nodeJSLogoGreen from '~/assets/node-js-logo-green.svg?url'
-import npmLogo from '~/assets/npm-logo-red.svg?url'
-import prettierAvatarDark from '~/assets/prettier-avatar-dark.svg?url'
-import reactLogoAssetUrl from '~/assets/react_logo.svg?url'
-import rrv7LogoLightAssetUrl from '~/assets/rrv7_logo_light.svg?url'
-import tailwindCSSLogoAssetUrl from '~/assets/tailwind_css_logo.svg?url'
-import tsLogo512 from '~/assets/ts_logo_512.svg?url'
-import vscodeLogo from '~/assets/vscode-logo.svg?url'
+import eslintIcon from '~/assets/home-page/eslint-icon.svg?url'
+import nodeJSLogoGreen from '~/assets/home-page/node-js-logo-green.svg?url'
+import npmLogo from '~/assets/home-page/npm-logo-red.svg?url'
+import prettierAvatarDark from '~/assets/home-page/prettier-avatar-dark.svg?url'
+import reactLogoAssetUrl from '~/assets/home-page/react_logo.svg?url'
+import rrv7LogoLightAssetUrl from '~/assets/home-page/rrv7_logo_light.svg?url'
+import tailwindCSSLogoAssetUrl from '~/assets/home-page/tailwind_css_logo.svg?url'
+import tsLogo512 from '~/assets/home-page/ts_logo_512.svg?url'
+import vscodeLogo from '~/assets/home-page/vscode-logo.svg?url'
 
 const tools = [
 	{
