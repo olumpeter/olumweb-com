@@ -1,5 +1,3 @@
-<!--
-
 ---
 title: >
   Build for the Web: 001 — Hello World App with TypeScript, Node.js & React
@@ -24,42 +22,55 @@ readingTime: '8 min'
 published: true
 ---
 
--->
-
 <h1>Build for the Web: 001 — Hello World App with TypeScript, Node.js & React Router v7</h1>
 
 <h3><i>PRACTICAL MODERN WEB PROGRAMMING FOR TOTAL BEGINNERS</i></h3>
 
-![Preview of final Hello World app](./images/hello-world-app-final-result.jpg)
+![Screenshot of final Hello World app in browser with red heading](./images/hello-world-app-final-result.jpg)
 
 ---
 
 <h2>Table of Contents</h2>
 
-- [💡 Guide Emojis](#-guide-emojis)
-- [🧭 Introduction](#-introduction)
-- [🎯 What You'll Build](#-what-youll-build)
-- [🛠 Setup Coding Environment](#-setup-coding-environment)
+- [Guide Emojis 💡](#guide-emojis-)
+- [Introduction 🧭](#introduction-)
+- [What You'll Build 🎯](#what-youll-build-)
+- [Setting Up Your Coding Environment 🧭](#setting-up-your-coding-environment-)
+  - [Install Node.js and VS Code](#install-nodejs-and-vs-code)
+  - [Create Your Project Folder](#create-your-project-folder)
+  - [Scaffold Your First React Router Project](#scaffold-your-first-react-router-project)
+- [Clean Up and Configure Your App 🧹](#clean-up-and-configure-your-app-)
+  - [Replace the Home Page Code](#replace-the-home-page-code)
+  - [Set Up Tailwind CSS](#set-up-tailwind-css)
+  - [Update TypeScript Config](#update-typescript-config)
+  - [Verify Tailwind CSS Works](#verify-tailwind-css-works)
+- [Wrap Up 🏁](#wrap-up-)
 
 ---
 
-## 💡 Guide Emojis
+## Guide Emojis 💡
 
-- 👉 means it's your turn to **take action** in VS Code, the terminal, or the
-  web browser.
-- 👀 means **pause and observe** what appears on your screen.
-- ✏️ means **edit or replace** code in a file.
-- 🗑️ means **delete** files, folders, or lines of code you no longer need.
-- ⚙️ means **configure** or **update project settings** such as `tsconfig.json`
-  or `vite.config.ts`.
-- 🎯 means **preview the goal or final output** you're working toward in this
-  tutorial.
-- 🚀 means **you’ve reached a new milestone** — time to move to the next step or
-  section.
+- These emojis act as your visual guide throughout the tutorial:
+  - 👉 means it’s your turn to **take action** — run a command, edit a file, or
+    click something.
+  - 👀 means **pause and observe** what appears on your screen or in the
+    browser.
+  - ✏️ means **edit**, **replace**, or **add** code in a file.
+  - 🗑️ means **delete** code, files, or folders you no longer need.
+  - ⚙️ means **configure project settings** such as `tsconfig.json`,
+    `vite.config.ts`, or `.env`.
+  - 🎯 means **preview your goal** — what the final result should look like at
+    this step.
+  - 🧹 means **clean up** — remove unnecessary code or tidy up your project.
+  - 🚀 means you’ve reached a **new milestone** — time to move on to the next
+    section.
+  - 💡 means you’re getting a **pro tip** or **extra insight** to help you
+    understand better.
+  - 🏁 means **wrap up** — you’ve completed the tutorial or section.
 
 ---
 
-## 🧭 Introduction
+## Introduction 🧭
 
 - In this tutorial, you'll learn how to **build your first Hello World App**
   with **TypeScript** & **Node.js** using a **React Router v7 Framework Mode**.
@@ -72,13 +83,13 @@ published: true
 
 ---
 
-## 🎯 What You'll Build
+## What You'll Build 🎯
 
 - By the end of this **tutorial**, you'll have a simple web app that shows a red
   **"Hello, World!"** message styled with **Tailwind CSS** and running on
   **React Router v7**.
 
-![Final result showing red Hello World heading in browser](./images/hello-world-app-final-result.jpg)
+![Screenshot of final Hello World app in browser with red heading](./images/hello-world-app-final-result.jpg)
 
 - You'll **build** this from **scratch** using:
   - **TypeScript** for type-safe code.
@@ -87,7 +98,9 @@ published: true
 
 ---
 
-## 🛠 Setting Up Your Coding Environment
+## Setting Up Your Coding Environment 🧭
+
+### Install Node.js and VS Code
 
 - In this **tutorial**, you'll use **Visual Studio Code (VS Code)** with an
   **integrated Bash terminal** as your **IDE**.
@@ -112,7 +125,7 @@ v23.11.0
 node: command not found
 ```
 
-It means **Node.js isn't installed** on your computer.
+That means **Node.js isn't installed** on your computer.
 
 - 👉 To fix it:
   1. Visit [nodejs.org ↗](nodejs.org).
@@ -123,6 +136,8 @@ It means **Node.js isn't installed** on your computer.
      Node.js is installed. 👀 You should see a version number like v23.11.0.
 
 - 🎯 Once you see the version number, you're ready to continue!
+
+### Create Your Project Folder
 
 - 👉 To stay organized, go to your desktop and create a new folder called
   **TypeScript Projects**.
@@ -147,12 +162,14 @@ It means **Node.js isn't installed** on your computer.
 🚀 Now that your environment is ready, let's move on to creating your first real
 project.
 
+### Scaffold Your First React Router Project
+
 - Since most real-world apps start from a scaffold, we'll use the **React Router
   v7 Framework Mode** template — it comes with **TypeScript** and **Tailwind
   CSS** already set up.
-- _React Router Framework Mode gives you a ready-to-use setup with file-based
-  routing, hot reloading, and a built-in development server. Perfect for
-  beginners learning modern web apps._
+- **React Router Framework Mode gives you a ready-to-use setup with file-based
+  routing, hot reloading, and a built-in development server — perfect for
+  beginners learning modern web apps.**
 - 👉 Run the following command in your terminal to **scaffold a new React Router
   v7 Framework Mode project** in a folder named **001-hello-world-app**:
 
@@ -165,16 +182,15 @@ npx create-react-router@latest 001-hello-world-app
   **001-hello-world-app**, and output in the terminal indicating that the
   project has been successfully created.
 
-- 💡 **Tip:** If you ever see errors about missing dependencies after
-  scaffolding, run the following command inside your project folder to install
-  them:
-
-```bash
-npm install
-```
-
-- 👀 This ensures all necessary packages are installed before running your
-  development server.
+> 💡 **Tip:** If you ever see errors about missing dependencies after
+> scaffolding, run:
+>
+> ```bash
+> npm install
+> ```
+>
+> This ensures all necessary packages are installed before running your dev
+> server.
 
 - 👉 Navigate to the **001-hello-world-app** folder with this command:
 
@@ -199,8 +215,18 @@ npm run dev
 - 👀 You should now see the default React Router welcome page — this confirms
   your environment is set up correctly.
 
+- 🎯 At this point, your app is running — but it still shows the default React
+  Router welcome screen. Next, you’ll clean it up and style your own **Hello,
+  World!** page.
+
+---
+
+## Clean Up and Configure Your App 🧹
+
 🚀 With your development server running successfully, let's now clean up the
 default scaffold so we can start fresh.
+
+### Replace the Home Page Code
 
 - ✏️ Replace the code in `app/routes/home.tsx` with the following React code:
 
@@ -216,6 +242,8 @@ export default function Home() {
 
 - 🗑️ Delete the **welcome** folder and all its contents, since we're no longer
   using it.
+
+### Set Up Tailwind CSS
 
 - ✏️ Replace the code in **app/app.css** with:
 
@@ -236,6 +264,8 @@ export default function Home() {
 	}
 }
 ```
+
+### Update TypeScript Config
 
 - ⚙ Update your **tsconfig.json** to prevent deprecation warnings:
 
@@ -263,6 +293,8 @@ export default function Home() {
 }
 ```
 
+### Verify Tailwind CSS Works
+
 - 👉 To verify Tailwind CSS, update `<h1>` in **app/routes/home.tsx**:
 
 ```diff
@@ -277,6 +309,18 @@ export default function Home() {
 ```
 
 - 👀 You should now see a **large red "Hello, World!"** heading in your browser.
-- 🚀 Congratulations! You’ve built your first TypeScript + React Router app.
+
+🚀 Congratulations! You've just completed your first fullstack-ready React React
+Router v7 Framework Mode app setup— the foundation for all your upcoming web
+projects.
+
+---
+
+## Wrap Up 🏁
+
+- You've just learned how to:
+  - Scaffold a fullstack-ready React Router v7 Framework Mode project.
+  - Add Tailwind CSS styling.
+  - Build and preview a TypeScript-powered "Hello, World!" web page.
 
 ---
