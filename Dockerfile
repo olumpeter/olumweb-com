@@ -1,22 +1,35 @@
-FROM node:20-alpine AS development-dependencies-env
-COPY . /app
+# ------------------------------
+# Stage 1 — Install dependencies
+# ------------------------------
+FROM node:20-alpine AS deps
 WORKDIR /app
+COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:20-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
+# ------------------------------
+# Stage 2 — Build app
+# ------------------------------
+FROM node:20-alpine AS build
 WORKDIR /app
-RUN npm ci --omit=dev
-
-FROM node:20-alpine AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
-WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 RUN npm run build
 
-FROM node:20-alpine
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
+# ------------------------------
+# Stage 3 — Production runner
+# ------------------------------
+FROM node:20-alpine AS runner
 WORKDIR /app
-CMD ["npm", "run", "start"]
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY --from=build /app/build ./build
+
+EXPOSE 3000
+
+# ✅ Serve using React Router’s built-in server
+CMD ["npx", "react-router-serve", "./build/server/index.js", "--host", "0.0.0.0", "--port", "3000"]
