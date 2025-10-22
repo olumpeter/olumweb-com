@@ -4,6 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import mdx from '@mdx-js/rollup'
 import matter from 'gray-matter'
+import rehypePrism from 'rehype-prism-plus'
+import remarkGfm from 'remark-gfm'
 
 /**
  * 🧩 Pre-transform plugin that strips YAML frontmatter
@@ -12,7 +14,7 @@ import matter from 'gray-matter'
 function stripFrontmatterPlugin(): PluginOption {
 	return {
 		name: 'strip-frontmatter',
-		enforce: 'pre' as const, // ✅ Type-safe literal
+		enforce: 'pre' as const,
 		transform(src, id) {
 			if (!id.endsWith('.mdx')) return
 			const { data, content } = matter(src)
@@ -26,10 +28,18 @@ function stripFrontmatterPlugin(): PluginOption {
 	}
 }
 
+/**
+ * 🎨 Prism One Dark Pro–style syntax highlighting
+ * rehype-prism-plus automatically adds <code class="language-js"> tokens.
+ * You can style them via CSS to match One Dark Pro.
+ */
 export default defineConfig({
 	plugins: [
 		stripFrontmatterPlugin(),
-		mdx(),
+		mdx({
+			remarkPlugins: [remarkGfm],
+			rehypePlugins: [rehypePrism],
+		}),
 		tailwindcss(),
 		reactRouter(),
 		tsconfigPaths(),

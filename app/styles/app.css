@@ -66,3 +66,87 @@
 .animate-slide-down {
 	animation: slide-down 0.2s ease-out forwards;
 }
+
+/* --------------------------------------------- */
+/* 🌈 One Dark Pro–Inspired Prism Styles          */
+/* --------------------------------------------- */
+code[class*='language-'],
+pre[class*='language-'] {
+	color: #abb2bf;
+	background: #282c34;
+	font-family: 'Fira Code', Consolas, 'Courier New', monospace;
+	font-size: 0.9rem;
+	text-shadow: none;
+	direction: ltr;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	line-height: 1.5;
+	tab-size: 2;
+	hyphens: none;
+	border-radius: 0.5rem;
+	overflow-x: auto;
+}
+
+/* Highlight colors (One Dark Pro palette) */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #5c6370;
+}
+
+.token.punctuation {
+	color: #abb2bf;
+}
+
+.token.selector,
+.token.tag {
+	color: #e06c75;
+}
+
+.token.property,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol {
+	color: #d19a66;
+}
+
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #98c379;
+}
+
+.token.operator,
+.token.entity,
+.token.url {
+	color: #56b6c2;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #c678dd;
+}
+
+.token.function,
+.token.class-name {
+	color: #61afef;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #e5c07b;
+}
+
+/* Line highlighting */
+pre[class*='language-']::selection,
+code[class*='language-']::selection {
+	background: #3e4451;
+}
