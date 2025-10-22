@@ -8,13 +8,23 @@ import type { Route } from './+types/$tutorialName'
 /* -------------------------------------------------------------------------- */
 const mdxComponents = {
 	h1: (props: any) => (
-		<h1 className='mt-8 mb-4 text-3xl font-bold' {...props} />
+		<h1
+			className='mt-6 mb-3 text-2xl font-bold sm:mt-8 sm:mb-4 sm:text-3xl'
+			{...props}
+		/>
 	),
 	h2: (props: any) => (
-		<h2 className='mt-6 mb-3 text-2xl font-semibold' {...props} />
+		<h2
+			className='mt-5 mb-2 text-xl font-semibold sm:mt-6 sm:mb-3 sm:text-2xl'
+			{...props}
+		/>
 	),
-	p: (props: any) => <p className='mb-4 leading-relaxed' {...props} />,
-	img: (props: any) => <img className='my-6 rounded-lg shadow-md' {...props} />,
+	p: (props: any) => (
+		<p className='mb-4 text-base leading-relaxed sm:text-lg' {...props} />
+	),
+	img: (props: any) => (
+		<img className='my-5 rounded-lg shadow-md sm:my-6' {...props} />
+	),
 }
 
 /* -------------------------------------------------------------------------- */
@@ -72,7 +82,7 @@ export default function TutorialPage({ loaderData }: Route.ComponentProps) {
 	}
 
 	return (
-		<main className='mx-auto max-w-3xl px-4 py-10 dark:bg-gray-900 dark:text-gray-100'>
+		<main className='mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10 dark:bg-gray-900 dark:text-gray-100'>
 			{frontmatter && (
 				<header className='mb-8'>
 					{frontmatter.title && (

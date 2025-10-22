@@ -64,17 +64,17 @@ const tools = [
 
 export default function Home() {
 	return (
-		<div className='mx-auto max-w-3xl px-4 py-16 text-center text-gray-800'>
-			<h1 className='mb-6 text-4xl leading-tight font-bold text-blue-700 sm:text-5xl'>
+		<div className='mx-auto max-w-3xl px-4 py-12 text-center text-gray-800 sm:py-16'>
+			<h1 className='mb-6 text-3xl leading-snug font-bold text-blue-700 sm:text-5xl'>
 				🚀 Learn Web Development the Modern Way
 			</h1>
 
-			<p className='mb-6 text-lg text-gray-700'>
+			<p className='mb-6 text-base text-gray-700 sm:text-lg'>
 				This isn't just another tutorial. It’s a hands-on journey to building
 				real projects with the exact tools used in professional teams:
 			</p>
 
-			<ul className='mb-8 space-y-4 text-left text-gray-600'>
+			<ul className='mb-10 space-y-3 text-left text-gray-700 sm:space-y-4'>
 				{tools.map(({ name, description, logoUrl }) => (
 					<li
 						key={name}
@@ -83,31 +83,31 @@ export default function Home() {
 						<img
 							src={logoUrl}
 							alt={`${name} Logo`}
-							className='mt-1 h-6 w-6 rounded shadow'
+							className='mt-1 h-6 w-6 flex-shrink-0 rounded'
 						/>
 						<div>
-							<strong className='block font-semibold text-gray-800'>
-								{name}
-							</strong>
-							<p className='text-sm text-gray-600'>{description}</p>
+							<strong className='block font-semibold'>{name}</strong>
+							<p className='text-sm text-gray-600 sm:text-base'>
+								{description}
+							</p>
 						</div>
 					</li>
 				))}
 			</ul>
 
-			<p className='mb-10 text-lg text-gray-700'>
+			<p className='mb-8 text-base text-gray-700 sm:text-lg'>
 				If you want to deeply understand how modern websites are built, this is
 				the perfect place to start.
 			</p>
 
-			<div className='rounded-lg border border-gray-200 bg-gray-50 p-6 shadow'>
-				<p className='mb-2 text-lg text-gray-700'>
+			<div className='rounded-lg border border-gray-200 bg-gray-50 p-5 shadow sm:p-6'>
+				<p className='mb-2 text-base text-gray-700 sm:text-lg'>
 					✅ Ready to get your hands dirty? Start with the first project:
 				</p>
-				<p className='mb-4 text-2xl'>👇</p>
+				<p className='mb-4 text-xl sm:text-2xl'>👇</p>
 				<Link
 					to='./tutorials/build-for-the-web/001/hello-world-app'
-					className='inline-block rounded bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700'
+					className='inline-block rounded bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-700 sm:px-6 sm:text-base'
 				>
 					Start the Journey
 				</Link>

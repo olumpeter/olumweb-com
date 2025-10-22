@@ -63,7 +63,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 	return (
 		<div className='flex min-h-screen flex-col bg-white text-gray-900'>
 			<header className='z-40 w-full bg-blue-600 text-white'>
-				<div className='mx-auto flex max-w-7xl flex-wrap items-center justify-between px-4 py-2 sm:px-6 lg:px-8'>
+				<div className='mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 lg:px-8'>
 					{/* Logo + Brand */}
 					<Link
 						to='/'
@@ -128,7 +128,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 
 				{/* Mobile Dropdown Menu */}
 				{isMobileMenuOpen && (
-					<div className='w-full bg-blue-600 shadow-md md:hidden'>
+					<div className='animate-slide-down w-full bg-blue-600 shadow-md md:hidden'>
 						<nav className='flex flex-col divide-y divide-blue-400'>
 							<NavLink
 								to='/'
@@ -151,7 +151,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 				)}
 			</header>
 
-			<main className='flex flex-1 px-4 sm:px-6 lg:px-8'>{children}</main>
+			<main className='flex-1 px-4 py-8 sm:px-6 lg:px-8'>{children}</main>
 
 			<footer className='flex h-16 items-center justify-center gap-1 bg-blue-50 text-sm text-blue-700'>
 				<span>&copy; {new Date().getFullYear()}</span>
