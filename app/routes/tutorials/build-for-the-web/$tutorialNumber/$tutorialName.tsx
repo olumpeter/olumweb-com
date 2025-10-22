@@ -1,96 +1,95 @@
-import fs from 'fs'
-import path from 'path'
-
-import matter from 'gray-matter'
-import Markdown from 'react-markdown'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeRaw from 'rehype-raw'
-import remarkGfm from 'remark-gfm'
-
+import * as React from 'react'
+import { MDXProvider } from '@mdx-js/react'
+import { tutorials } from './tutorials'
 import type { Route } from './+types/$tutorialName'
 
-// Make sure to import Night Owl CSS once in your global entry or app.css
-// import 'highlight.js/styles/night-owl.css';
+/* -------------------------------------------------------------------------- */
+/* 🧱 Custom MDX component styles (Tailwind + prose integration)              */
+/* -------------------------------------------------------------------------- */
+const mdxComponents = {
+	h1: (props: any) => (
+		<h1 className='mt-8 mb-4 text-3xl font-bold' {...props} />
+	),
+	h2: (props: any) => (
+		<h2 className='mt-6 mb-3 text-2xl font-semibold' {...props} />
+	),
+	p: (props: any) => <p className='mb-4 leading-relaxed' {...props} />,
+	img: (props: any) => <img className='my-6 rounded-lg shadow-md' {...props} />,
+}
 
-export function loader({ params }: Route.LoaderArgs) {
+/* -------------------------------------------------------------------------- */
+/* 🧠 Loader — dynamically imports MDX & reads injected frontmatter           */
+/* -------------------------------------------------------------------------- */
+export async function loader({ params }: Route.LoaderArgs) {
 	const { tutorialNumber, tutorialName } = params
 
-	if (typeof tutorialNumber !== 'string' || typeof tutorialName !== 'string') {
+	if (!tutorialNumber || !tutorialName) {
 		throw new Response('Invalid tutorial path', { status: 400 })
 	}
 
-	const filePath = path.join(
-		process.cwd(),
-		'app/tutorials/build-for-the-web',
-		tutorialNumber,
-		`${tutorialName}.md`,
-	)
+	const key = `${tutorialNumber}/${tutorialName}`
+	const importFunc = tutorials[key as keyof typeof tutorials]
 
-	if (!fs.existsSync(filePath)) {
+	if (!importFunc) {
 		throw new Response('Tutorial not found', { status: 404 })
 	}
 
-	const fileContent = fs.readFileSync(filePath, 'utf8')
-	const { data: frontMatter, content: body } = matter(fileContent)
+	const mod = await importFunc()
+	const frontmatter =
+		(mod as { frontmatter?: Record<string, any> }).frontmatter ?? null
 
-	// Rewrite relative image paths to /app/assets/... for browser access
-	const updatedBody = body.replace(
-		/!\[([^\]]*)]\((\.\/images\/[^\)]+)\)/g,
-		(_: string, alt: string, relPath: string) => {
-			const fileName = relPath.split('/').pop() ?? ''
-			const assetsPath = `/app/assets/tutorials/build-for-the-web/${tutorialNumber}/${tutorialName}/images/${fileName}`
-			return `![${alt}](${assetsPath})`
-		},
-	)
-
-	return { frontMatter, updatedBody }
+	return { key, frontmatter }
 }
 
+/* -------------------------------------------------------------------------- */
+/* 🚀 Component — renders MDX tutorial with metadata header                   */
+/* -------------------------------------------------------------------------- */
 export default function TutorialPage({ loaderData }: Route.ComponentProps) {
-	const { frontMatter, updatedBody } = loaderData
+	const { key, frontmatter } = loaderData
+	const [Component, setComponent] = React.useState<React.ComponentType | null>(
+		null,
+	)
+
+	React.useEffect(() => {
+		let isMounted = true
+		const importFunc = tutorials[key as keyof typeof tutorials]
+
+		if (!importFunc) return
+
+		importFunc()
+			.then(mod => {
+				if (isMounted) setComponent(() => mod.default)
+			})
+			.catch(err => console.error('⚠️ Failed to load tutorial module:', err))
+
+		return () => {
+			isMounted = false
+		}
+	}, [key])
+
+	if (!Component) {
+		return <p className='px-4 py-10 text-center'>Loading tutorial...</p>
+	}
 
 	return (
 		<main className='mx-auto max-w-3xl px-4 py-10 dark:bg-gray-900 dark:text-gray-100'>
-			{frontMatter?.title && (
+			{frontmatter && (
 				<header className='mb-8'>
-					<h1 className='mb-2 text-4xl font-bold'>{frontMatter.title}</h1>
-					{frontMatter.subtitle && (
-						<p className='text-lg text-gray-500 italic dark:text-gray-400'>
-							{frontMatter.subtitle}
+					{frontmatter.title && (
+						<h1 className='mb-2 text-4xl font-bold'>{frontmatter.title}</h1>
+					)}
+					{frontmatter.subtitle && (
+						<p className='text-gray-500 italic dark:text-gray-400'>
+							{frontmatter.subtitle}
 						</p>
 					)}
 				</header>
 			)}
 
-			<article className='prose prose-lg dark:prose-invert prose-headings:scroll-mt-20'>
-				<Markdown
-					remarkPlugins={[remarkGfm]}
-					rehypePlugins={[rehypeRaw, rehypeHighlight]}
-					components={{
-						img: ({ ...props }) => (
-							<img
-								{...props}
-								className='h-auto max-w-full rounded-md shadow-sm'
-							/>
-						),
-						table: ({ ...props }) => (
-							<div className='overflow-x-auto'>
-								<table
-									{...props}
-									className='w-full table-auto border-collapse'
-								/>
-							</div>
-						),
-						code: ({ className, ...props }) => (
-							<code
-								{...props}
-								className={`rounded px-1 py-0.5 font-mono text-sm ${className ?? ''}`}
-							/>
-						),
-					}}
-				>
-					{updatedBody}
-				</Markdown>
+			<article className='prose dark:prose-invert prose-img:rounded-lg'>
+				<MDXProvider components={mdxComponents}>
+					<Component />
+				</MDXProvider>
 			</article>
 		</main>
 	)
