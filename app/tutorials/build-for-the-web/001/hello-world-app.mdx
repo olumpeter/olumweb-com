@@ -32,42 +32,23 @@ import helloWorldAppFinalResultUrl from '/app/assets/tutorials/build-for-the-web
 
 ---
 
-<h2>Table of Contents</h2>
-
-- [Guide Emojis 💡](#guide-emojis-)
-- [Introduction 🧭](#introduction-)
-- [What You'll Build 🎯](#what-youll-build-)
-- [Setting Up Your Coding Environment 🧭](#setting-up-your-coding-environment-)
-  - [Install Node.js and VS Code](#install-nodejs-and-vs-code)
-  - [Create Your Project Folder](#create-your-project-folder)
-  - [Scaffold Your First React Router Project](#scaffold-your-first-react-router-project)
-- [Clean Up and Configure Your App 🧹](#clean-up-and-configure-your-app-)
-  - [Replace the Home Page Code](#replace-the-home-page-code)
-  - [Set Up Tailwind CSS](#set-up-tailwind-css)
-  - [Update TypeScript Config](#update-typescript-config)
-  - [Verify Tailwind CSS Works](#verify-tailwind-css-works)
-- [Wrap Up 🏁](#wrap-up-)
+## Table of Contents
 
 ---
 
 ## Guide Emojis 💡
 
 - These emojis act as your visual guide throughout the tutorial:
-  - 👉 means it’s your turn to **take action** — run a command, edit a file, or
-    click something.
-  - 👀 means **pause and observe** what appears on your screen or in the
-    browser.
+  - 👉 means it’s your turn to **take action** — run a command, edit a file, or click something.
+  - 👀 means **pause and observe** what appears on your screen or in the browser.
   - ✏️ means **edit**, **replace**, or **add** code in a file.
   - 🗑️ means **delete** code, files, or folders you no longer need.
-  - ⚙️ means **configure project settings** such as `tsconfig.json`,
-    `vite.config.ts`, or `.env`.
-  - 🎯 means **preview your goal** — what the final result should look like at
-    this step.
+  - ⚙️ means **configure project settings** such as `tsconfig.json`, `vite.config.ts`, or `.env`.
+  - 🎯 means **preview your goal** — what the final result should look like at this step.
   - 🧹 means **clean up** — remove unnecessary code or tidy up your project.
-  - 🚀 means you’ve reached a **new milestone** — time to move on to the next
-    section.
-  - 💡 means you’re getting a **pro tip** or **extra insight** to help you
-    understand better.
+  - 🚀 means you’ve reached a **new milestone** — time to move on to the next section.
+  - 💡 means you’re getting a **pro tip** or **extra insight** to help you understand better.
+  - 🏗️ means **set up or scaffold** — you’re creating a new folder, file, or project structure.
   - 🏁 means **wrap up** — you’ve completed the tutorial or section.
 
 ---
@@ -106,7 +87,7 @@ import helloWorldAppFinalResultUrl from '/app/assets/tutorials/build-for-the-web
 
 ## Setting Up Your Coding Environment 🧭
 
-### Install Node.js and VS Code
+### Install Node.js and VS Code ⚙️
 
 - In this **tutorial**, you'll use **Visual Studio Code (VS Code)** with an
   **integrated Bash terminal** as your **IDE**.
@@ -143,7 +124,7 @@ That means **Node.js isn't installed** on your computer.
 
 - 🎯 Once you see the version number, you're ready to continue!
 
-### Create Your Project Folder
+### Create Your Project Folder 🏗️
 
 - 👉 To stay organized, go to your desktop and create a new folder called
   **TypeScript Projects**.
@@ -168,7 +149,7 @@ That means **Node.js isn't installed** on your computer.
 🚀 Now that your environment is ready, let's move on to creating your first real
 project.
 
-### Scaffold Your First React Router Project
+### Scaffold Your First React Router Project 🏗️
 
 - Since most real-world apps start from a scaffold, we'll use the **React Router
   v7 Framework Mode** template — it comes with **TypeScript** and **Tailwind
@@ -232,7 +213,7 @@ npm run dev
 🚀 With your development server running successfully, let's now clean up the
 default scaffold so we can start fresh.
 
-### Replace the Home Page Code
+### Replace the Home Page Code ✏️
 
 - ✏️ Replace the code in `app/routes/home.tsx` with the following React code:
 
@@ -249,7 +230,7 @@ export default function Home() {
 - 🗑️ Delete the **welcome** folder and all its contents, since we're no longer
   using it.
 
-### Set Up Tailwind CSS
+### Set Up Tailwind CSS ⚙️
 
 - ✏️ Replace the code in **app/app.css** with:
 
@@ -271,7 +252,7 @@ export default function Home() {
 }
 ```
 
-### Update TypeScript Config
+### Update TypeScript Config ⚙️
 
 - ⚙ Update your **tsconfig.json** to prevent deprecation warnings:
 
@@ -299,7 +280,7 @@ export default function Home() {
 }
 ```
 
-### Verify Tailwind CSS Works
+### Verify Tailwind CSS Works 👀
 
 - 👉 To verify Tailwind CSS, update `<h1>` in **app/routes/home.tsx**:
 

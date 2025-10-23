@@ -150,3 +150,52 @@ pre[class*='language-']::selection,
 code[class*='language-']::selection {
 	background: #3e4451;
 }
+
+/* ------------------------------------------------ */
+/* 🧭 Kent-Pure Table of Contents (no lines)        */
+/* ------------------------------------------------ */
+
+/* Make sure long section titles wrap cleanly */
+.prose .toc,
+.prose h2:contains('Table of Contents') + ul {
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+
+/* On mobile, add soft spacing and clear separation */
+@media (max-width: 640px) {
+	.prose h2:contains('Table of Contents') + ul {
+		border-left: none; /* remove vertical line for cleaner look */
+		padding-left: 0;
+		margin: 0.5rem 0 1rem 0;
+	}
+
+	.prose h2 + ul > li {
+		margin: 0.4rem 0;
+	}
+
+	.prose h2 + ul > li > a {
+		font-size: 1rem;
+	}
+
+	/* Slightly increase spacing for touch targets */
+	.prose h2 + ul ul li {
+		padding-left: 1rem;
+	}
+
+	.prose h2 + ul ul li a {
+		font-size: 0.95rem;
+	}
+
+	/* Use a subtler bullet color on dark backgrounds */
+	.dark .prose h2 + ul ul li::before {
+		color: rgb(96 165 250);
+	}
+}
+
+/* On medium screens and above, restore classic layout */
+@media (min-width: 641px) {
+	.prose h2:contains('Table of Contents') + ul {
+		max-width: 90%;
+	}
+}

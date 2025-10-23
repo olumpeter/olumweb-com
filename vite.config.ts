@@ -4,21 +4,21 @@ import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import mdx from '@mdx-js/rollup'
 import matter from 'gray-matter'
-import remarkGfm from 'remark-gfm'
 import remarkSlug from 'remark-slug'
-import remarkAutolinkHeadings from 'remark-autolink-headings'
-import rehypePrism from 'rehype-prism-plus'
+import remarkToc from 'remark-toc'
+import rehypePrismPlus from 'rehype-prism-plus'
 
 /**
- * 🧩 Pre-transform plugin that strips YAML frontmatter
+ * 🧹 Strip YAML frontmatter and inject as JS export
  */
 function stripFrontmatterPlugin(): PluginOption {
 	return {
 		name: 'strip-frontmatter',
-		enforce: 'pre' as const,
+		enforce: 'pre',
 		transform(src, id) {
 			if (!id.endsWith('.mdx')) return
 			const { data, content } = matter(src)
+
 			return {
 				code: `${content}\n\nexport const frontmatter = ${JSON.stringify(
 					data,
@@ -32,25 +32,24 @@ function stripFrontmatterPlugin(): PluginOption {
 }
 
 export default defineConfig({
+	optimizeDeps: {
+		exclude: ['rehype-prism-plus', '@mdx-js/react'],
+	},
 	plugins: [
 		stripFrontmatterPlugin(),
 		mdx({
-			// 👇 TypeScript fix: cast to `any`
 			remarkPlugins: [
-				remarkGfm as any,
-				remarkSlug as any,
+				remarkSlug,
 				[
-					remarkAutolinkHeadings as any,
+					remarkToc,
 					{
-						behavior: 'append',
-						linkProperties: {
-							className: 'heading-anchor',
-							'aria-hidden': 'true',
-						},
+						heading: 'Table of Contents', // this is the marker heading
+						tight: true,
+						maxDepth: 3,
 					},
 				],
 			],
-			rehypePlugins: [rehypePrism as any],
+			rehypePlugins: [rehypePrismPlus],
 		}),
 		tailwindcss(),
 		reactRouter(),

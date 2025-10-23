@@ -19,6 +19,12 @@ const mdxComponents = {
 			{...props}
 		/>
 	),
+	h3: (props: any) => (
+		<h3
+			className='mt-4 mb-2 text-lg font-semibold sm:mt-5 sm:mb-3 sm:text-xl'
+			{...props}
+		/>
+	),
 	p: (props: any) => (
 		<p className='mb-4 text-base leading-relaxed sm:text-lg' {...props} />
 	),
@@ -28,7 +34,7 @@ const mdxComponents = {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 🧠 Loader — dynamically imports MDX & reads injected frontmatter           */
+/* 🧠 Loader — dynamically imports MDX & reads injected frontmatter + TOC      */
 /* -------------------------------------------------------------------------- */
 export async function loader({ params }: Route.LoaderArgs) {
 	const { tutorialNumber, tutorialName } = params
@@ -41,21 +47,28 @@ export async function loader({ params }: Route.LoaderArgs) {
 	const importFunc = tutorials[key as keyof typeof tutorials]
 
 	if (!importFunc) {
+		console.error('❌ No tutorial import function found for key:', key)
 		throw new Response('Tutorial not found', { status: 404 })
 	}
 
-	const mod = await importFunc()
-	const frontmatter =
-		(mod as { frontmatter?: Record<string, any> }).frontmatter ?? null
+	try {
+		const mod = await importFunc()
+		const frontmatter =
+			(mod as { frontmatter?: Record<string, any> }).frontmatter ?? null
+		const toc = (mod as { toc?: any[] }).toc ?? []
 
-	return { key, frontmatter }
+		return { key, frontmatter, toc }
+	} catch (error) {
+		console.error('⚠️ Loader failed to import MDX file:', error)
+		throw new Response('Failed to load tutorial content', { status: 500 })
+	}
 }
 
 /* -------------------------------------------------------------------------- */
-/* 🚀 Component — renders MDX tutorial with metadata header                   */
+/* 🚀 Component — renders MDX tutorial with metadata header + TOC              */
 /* -------------------------------------------------------------------------- */
 export default function TutorialPage({ loaderData }: Route.ComponentProps) {
-	const { key, frontmatter } = loaderData
+	const { key, frontmatter, toc } = loaderData
 	const [Component, setComponent] = React.useState<React.ComponentType | null>(
 		null,
 	)
@@ -64,11 +77,19 @@ export default function TutorialPage({ loaderData }: Route.ComponentProps) {
 		let isMounted = true
 		const importFunc = tutorials[key as keyof typeof tutorials]
 
-		if (!importFunc) return
+		if (!importFunc) {
+			console.error('❌ No importFunc found for key:', key)
+			return
+		}
 
 		importFunc()
 			.then(mod => {
-				if (isMounted) setComponent(() => mod.default)
+				console.log('✅ Imported MDX module:', mod)
+				if (isMounted && mod?.default) {
+					~setComponent(() => mod.default)
+				} else {
+					console.error('❌ MDX module missing default export:', mod)
+				}
 			})
 			.catch(err => console.error('⚠️ Failed to load tutorial module:', err))
 
@@ -83,6 +104,7 @@ export default function TutorialPage({ loaderData }: Route.ComponentProps) {
 
 	return (
 		<main className='mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10 dark:bg-gray-900 dark:text-gray-100'>
+			{/* Frontmatter Header */}
 			{frontmatter && (
 				<header className='mb-8'>
 					{frontmatter.title && (
@@ -96,6 +118,31 @@ export default function TutorialPage({ loaderData }: Route.ComponentProps) {
 				</header>
 			)}
 
+			{/* Table of Contents */}
+			{toc && toc.length > 0 && (
+				<nav className='mb-8 border-l-2 border-blue-200 pl-4 text-sm leading-relaxed'>
+					<h2 className='mb-2 text-lg font-semibold text-blue-600'>
+						Table of Contents
+					</h2>
+					<ul className='space-y-1'>
+						{toc.map(item => (
+							<li
+								key={item.url}
+								className={['ml-0', 'ml-4', 'ml-8'][item.depth - 1] ?? 'ml-0'}
+							>
+								<a
+									href={item.url}
+									className='text-blue-600 hover:underline dark:text-blue-400'
+								>
+									{item.value}
+								</a>
+							</li>
+						))}
+					</ul>
+				</nav>
+			)}
+
+			{/* MDX Content */}
 			<article className='prose dark:prose-invert prose-img:rounded-lg'>
 				<MDXProvider components={mdxComponents}>
 					<Component />
