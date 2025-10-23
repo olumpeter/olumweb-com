@@ -27,18 +27,17 @@
 	}
 
 	.prose code {
-		background-color: #f6f8fa; /* GitHub code bg */
+		background-color: #f6f8fa;
 		padding: 0.2em 0.4em;
 		border-radius: 6px;
 		font-size: 0.9em;
 	}
 
 	.prose pre {
-		background-color: #0d1117; /* Night Owl background */
+		background-color: #0d1117;
 		padding: 1rem;
 		border-radius: 0.5rem;
 		overflow-x: auto;
-		border-radius: 0.375rem; /* rounded-md */
 	}
 
 	.prose blockquote {
@@ -77,35 +76,27 @@ pre[class*='language-'] {
 	font-family: 'Fira Code', Consolas, 'Courier New', monospace;
 	font-size: 0.9rem;
 	text-shadow: none;
-	direction: ltr;
 	text-align: left;
 	white-space: pre;
-	word-spacing: normal;
-	word-break: normal;
 	line-height: 1.5;
 	tab-size: 2;
-	hyphens: none;
 	border-radius: 0.5rem;
 	overflow-x: auto;
 }
 
-/* Highlight colors (One Dark Pro palette) */
 .token.comment,
 .token.prolog,
 .token.doctype,
 .token.cdata {
 	color: #5c6370;
 }
-
 .token.punctuation {
 	color: #abb2bf;
 }
-
 .token.selector,
 .token.tag {
 	color: #e06c75;
 }
-
 .token.property,
 .token.boolean,
 .token.number,
@@ -113,7 +104,6 @@ pre[class*='language-'] {
 .token.symbol {
 	color: #d19a66;
 }
-
 .token.attr-name,
 .token.string,
 .token.char,
@@ -121,64 +111,138 @@ pre[class*='language-'] {
 .token.inserted {
 	color: #98c379;
 }
-
 .token.operator,
 .token.entity,
 .token.url {
 	color: #56b6c2;
 }
-
 .token.atrule,
 .token.attr-value,
 .token.keyword {
 	color: #c678dd;
 }
-
 .token.function,
 .token.class-name {
 	color: #61afef;
 }
-
 .token.regex,
 .token.important,
 .token.variable {
 	color: #e5c07b;
 }
-
-/* Line highlighting */
 pre[class*='language-']::selection,
 code[class*='language-']::selection {
 	background: #3e4451;
 }
 
 /* ------------------------------------------------ */
-/* 🧭 Kent-Pure Table of Contents (no lines)        */
+/* 🧭 Kent-Pure Table of Contents (Improved UX)     */
 /* ------------------------------------------------ */
 
-/* Make sure long section titles wrap cleanly */
 .prose .toc,
 .prose h2:contains('Table of Contents') + ul {
 	word-break: break-word;
 	overflow-wrap: anywhere;
 }
 
-/* On mobile, add soft spacing and clear separation */
+/* Level 2 (h2) items */
+.prose h2 + ul > li {
+	margin: 0.35rem 0;
+}
+
+.prose h2 + ul > li > a {
+	display: inline-block;
+	padding: 0.25rem 0.5rem;
+	font-weight: 600;
+	color: rgb(37 99 235);
+	text-decoration: none;
+	transition:
+		color 0.2s ease,
+		background-color 0.2s ease,
+		transform 0.1s ease;
+	border-radius: 0.25rem;
+}
+
+/* Hover / touch feedback */
+.prose h2 + ul > li > a:hover {
+	color: rgb(29 78 216);
+	background-color: rgb(219 234 254 / 0.5);
+	transform: translateX(2px);
+}
+
+/* Touch active */
+.prose h2 + ul > li > a:active {
+	background-color: rgb(191 219 254 / 0.8);
+	transform: translateX(4px);
+}
+
+/* Active section (for future scrollspy use) */
+.prose h2 + ul > li > a.active,
+.prose h2 + ul > li > a[aria-current='true'] {
+	color: rgb(30 64 175);
+	font-weight: 700;
+	background-color: rgb(219 234 254 / 0.6);
+	border-left: 3px solid rgb(37 99 235);
+	padding-left: 0.75rem;
+}
+
+/* Nested lists (h3) */
+.prose h2 + ul ul {
+	margin-top: 0.25rem;
+	margin-left: 1rem;
+	padding-left: 0.75rem;
+	list-style: none;
+	border-left: none;
+}
+
+/* Level 3 items */
+.prose h2 + ul ul li {
+	position: relative;
+	padding-left: 0.75rem;
+	margin: 0.25rem 0;
+}
+
+.prose h2 + ul ul li::before {
+	content: '•';
+	position: absolute;
+	left: 0;
+	top: 0.15rem;
+	color: rgb(147 197 253);
+	font-size: 0.8em;
+	line-height: 1.6;
+}
+
+.prose h2 + ul ul li a {
+	font-weight: 400;
+	font-size: 0.9em;
+	color: rgb(59 130 246 / 0.85);
+	text-decoration: none;
+	transition:
+		color 0.2s ease,
+		background-color 0.2s ease;
+}
+
+.prose h2 + ul ul li a:hover {
+	color: rgb(30 64 175);
+	background-color: rgb(219 234 254 / 0.3);
+}
+
+/* ------------------------------------------------ */
+/* 📱 Mobile Optimizations                         */
+/* ------------------------------------------------ */
+
 @media (max-width: 640px) {
 	.prose h2:contains('Table of Contents') + ul {
-		border-left: none; /* remove vertical line for cleaner look */
+		border-left: none;
 		padding-left: 0;
 		margin: 0.5rem 0 1rem 0;
 	}
 
-	.prose h2 + ul > li {
-		margin: 0.4rem 0;
-	}
-
 	.prose h2 + ul > li > a {
 		font-size: 1rem;
+		padding: 0.4rem 0.6rem;
 	}
 
-	/* Slightly increase spacing for touch targets */
 	.prose h2 + ul ul li {
 		padding-left: 1rem;
 	}
@@ -187,13 +251,11 @@ code[class*='language-']::selection {
 		font-size: 0.95rem;
 	}
 
-	/* Use a subtler bullet color on dark backgrounds */
 	.dark .prose h2 + ul ul li::before {
 		color: rgb(96 165 250);
 	}
 }
 
-/* On medium screens and above, restore classic layout */
 @media (min-width: 641px) {
 	.prose h2:contains('Table of Contents') + ul {
 		max-width: 90%;
