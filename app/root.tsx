@@ -1,5 +1,5 @@
 import { Menu, X } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
 	isRouteErrorResponse,
 	Link,
@@ -8,6 +8,7 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	useLocation,
 } from 'react-router'
 
 import type { Route } from './+types/root'
@@ -19,10 +20,7 @@ import olumWebLogoAssetUrl from '~/assets/logos/olumWebLogo.png?url'
 export function links() {
 	return [
 		{ rel: 'icon', type: 'image/svg+xml', href: faviconAssetUrl },
-		{
-			rel: 'preconnect',
-			href: 'https://fonts.googleapis.com',
-		},
+		{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
 		{
 			rel: 'preconnect',
 			href: 'https://fonts.gstatic.com',
@@ -35,6 +33,9 @@ export function links() {
 	]
 }
 
+/* -------------------------------------------------------------------------- */
+/* 🧱 Document Wrapper                                                        */
+/* -------------------------------------------------------------------------- */
 function Document({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang='en' className='h-full overflow-x-hidden'>
@@ -48,7 +49,7 @@ function Document({ children }: { children: React.ReactNode }) {
 				<meta name='viewport' content='width=device-width, initial-scale=1.0' />
 				<Links />
 			</head>
-			<body className='min-h-screen font-sans'>
+			<body className='min-h-screen font-sans antialiased'>
 				{children}
 				<ScrollRestoration />
 				<Scripts />
@@ -57,14 +58,41 @@ function Document({ children }: { children: React.ReactNode }) {
 	)
 }
 
+/* -------------------------------------------------------------------------- */
+/* 🧭 Layout: Sticky Header + Navigation + Footer                              */
+/* -------------------------------------------------------------------------- */
 function Layout({ children }: { children: React.ReactNode }) {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+	const [isScrolled, setIsScrolled] = useState(false)
+	const location = useLocation()
+
+	// 🧠 Close mobile menu when route changes
+	useEffect(() => {
+		setIsMobileMenuOpen(false)
+	}, [location.pathname])
+
+	// 🌫️ Add shadow on scroll
+	useEffect(() => {
+		const handleScroll = () => setIsScrolled(window.scrollY > 10)
+		window.addEventListener('scroll', handleScroll)
+		return () => window.removeEventListener('scroll', handleScroll)
+	}, [])
+
+	const navLinks = [
+		{ to: '/', label: 'Home', end: true },
+		{ to: '/series', label: 'Series' },
+		{ to: '/about', label: 'About' },
+	]
 
 	return (
 		<div className='flex min-h-screen flex-col bg-white text-gray-900'>
-			<header className='z-40 w-full bg-blue-600 text-white'>
-				<div className='mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 lg:px-8'>
-					{/* Logo + Brand */}
+			<header
+				className={`sticky top-0 z-40 w-full bg-blue-600 text-white transition-shadow ${
+					isScrolled ? 'shadow-md' : ''
+				}`}
+			>
+				<div className='mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8'>
+					{/* 🪶 Logo + Brand */}
 					<Link
 						to='/'
 						className='flex flex-shrink-0 items-center gap-2 text-lg font-semibold hover:underline'
@@ -73,79 +101,91 @@ function Layout({ children }: { children: React.ReactNode }) {
 							<img
 								src={olumWebLogoAssetUrl}
 								alt='Olum Web Logo'
-								loading='eager'
-								decoding='async'
 								className='h-full w-full object-contain transition-opacity duration-300 ease-in-out'
 							/>
 						</span>
 						<span>Olum Web</span>
 					</Link>
 
-					{/* Desktop Nav */}
-					<nav className='hidden flex-1 justify-end gap-4 md:flex'>
-						<NavLink
-							to='/'
-							end
-							className={({ isActive }) =>
-								[
-									'block cursor-pointer px-4 font-sans text-sm leading-10 font-medium antialiased',
-									isActive
-										? 'font-semibold text-yellow-300'
-										: 'text-white hover:text-yellow-100',
-								].join(' ')
-							}
+					{/* 💻 Desktop Navigation */}
+					<nav className='hidden items-center gap-6 md:flex'>
+						{navLinks.map(({ to, label, end }) => (
+							<NavLink
+								key={to}
+								to={to}
+								end={end}
+								className={({ isActive }) =>
+									`transition-colors duration-150 hover:text-yellow-100 ${
+										isActive ? 'font-semibold text-yellow-300' : 'text-white'
+									}`
+								}
+							>
+								{label}
+							</NavLink>
+						))}
+
+						{/* 🚀 CTA Button */}
+						<Link
+							to='/series/build-for-the-web'
+							className='rounded bg-yellow-300 px-4 py-2 text-sm font-medium text-blue-800 hover:bg-yellow-400'
 						>
-							Home
-						</NavLink>
-						{/* Add more desktop links here */}
+							Start Learning
+						</Link>
 					</nav>
 
-					{/* Mobile Menu Toggle */}
+					{/* 📱 Mobile Menu Toggle */}
 					<div className='flex items-center md:hidden'>
 						<button
 							onClick={() => setIsMobileMenuOpen(prev => !prev)}
 							className={`group inline-flex h-10 w-10 items-center justify-center rounded-full border transition-transform duration-200 ease-in-out ${
 								isMobileMenuOpen
 									? 'border-white bg-blue-600 shadow-inner'
-									: 'border-white/30 bg-transparent shadow-md hover:border-white hover:bg-blue-600 hover:shadow-lg focus:border-white focus:bg-blue-600'
+									: 'border-white/30 bg-transparent shadow-md hover:border-white hover:bg-blue-600 hover:shadow-lg'
 							} hover:scale-105 focus:ring-2 focus:ring-yellow-300 focus:outline-none active:scale-95`}
-							aria-label='Mobile Menu Toggle Button'
+							aria-label='Mobile Menu Toggle'
 						>
 							{isMobileMenuOpen ? (
 								<X
 									size={24}
-									className='text-white transition-transform duration-200 ease-in-out group-hover:text-yellow-300 group-focus:text-yellow-300'
+									className='text-white group-hover:text-yellow-300'
 								/>
 							) : (
 								<Menu
 									size={24}
-									className='text-white transition-transform duration-200 ease-in-out group-hover:text-yellow-300 group-focus:text-yellow-300'
+									className='text-white group-hover:text-yellow-300'
 								/>
 							)}
 						</button>
 					</div>
 				</div>
 
-				{/* Mobile Dropdown Menu */}
+				{/* 📱 Mobile Dropdown Menu */}
 				{isMobileMenuOpen && (
 					<div className='animate-slide-down w-full bg-blue-600 shadow-md md:hidden'>
 						<nav className='flex flex-col divide-y divide-blue-400'>
-							<NavLink
-								to='/'
-								end
-								className={({ isActive }) =>
-									[
-										'block px-4 py-3 text-sm transition-colors duration-200 ease-in-out',
-										isActive
-											? 'bg-blue-700 font-semibold text-yellow-300'
-											: 'text-white hover:bg-blue-700',
-									].join(' ')
-								}
-								onClick={() => setIsMobileMenuOpen(false)}
+							{navLinks.map(({ to, label, end }) => (
+								<NavLink
+									key={to}
+									to={to}
+									end={end}
+									className={({ isActive }) =>
+										`block px-4 py-3 text-sm transition-colors duration-200 ease-in-out ${
+											isActive
+												? 'bg-blue-700 font-semibold text-yellow-300'
+												: 'text-white hover:bg-blue-700'
+										}`
+									}
+								>
+									{label}
+								</NavLink>
+							))}
+
+							<Link
+								to='/series/build-for-the-web'
+								className='block px-4 py-3 text-sm font-semibold text-yellow-300 hover:bg-blue-700'
 							>
-								Home
-							</NavLink>
-							{/* Add more mobile links here */}
+								Start Learning 🚀
+							</Link>
 						</nav>
 					</div>
 				)}
@@ -156,7 +196,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 			<footer className='flex h-16 items-center justify-center gap-1 bg-blue-50 text-sm text-blue-700'>
 				<span>&copy; {new Date().getFullYear()}</span>
 				<Link to='/' className='font-medium hover:underline'>
-					Olum Web.
+					Olum Web
 				</Link>
 				<span>All rights reserved.</span>
 			</footer>
@@ -164,6 +204,9 @@ function Layout({ children }: { children: React.ReactNode }) {
 	)
 }
 
+/* -------------------------------------------------------------------------- */
+/* ⚠️ Error Boundary                                                          */
+/* -------------------------------------------------------------------------- */
 export default function App() {
 	return (
 		<Document>
@@ -176,30 +219,20 @@ export default function App() {
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 	let title: string
-
-	if (isRouteErrorResponse(error)) {
-		if (error.status === 404) {
-			title = '404: Not Found'
-		} else {
-			title = `${error.status} ${error.statusText}`
-		}
-	} else {
-		title = 'Something went wrong'
-	}
-
 	let description: string
 
 	if (isRouteErrorResponse(error)) {
-		if (error.status === 404) {
-			description = `The page you're looking for does not exist.`
-		} else {
-			description = error.statusText
-		}
+		title = `${error.status}: ${error.statusText}`
+		description =
+			error.status === 404
+				? `The page you're looking for does not exist.`
+				: error.statusText
 	} else if (error instanceof Error) {
+		title = 'Something went wrong'
 		description = error.message
 	} else {
-		console.error('Unknown error type:', error)
-		description = 'Unknown error'
+		title = 'Unknown error'
+		description = 'An unexpected error occurred.'
 	}
 
 	return (

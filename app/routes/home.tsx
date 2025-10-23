@@ -106,7 +106,7 @@ export default function Home() {
 				</p>
 				<p className='mb-4 text-xl sm:text-2xl'>👇</p>
 				<Link
-					to='./tutorials/build-for-the-web/001/hello-world-app'
+					to='series/build-for-the-web'
 					className='inline-block rounded bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-700 sm:px-6 sm:text-base'
 				>
 					Start the Journey
