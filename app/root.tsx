@@ -1,5 +1,5 @@
 import { Menu, X } from 'lucide-react'
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
 	isRouteErrorResponse,
 	Link,
