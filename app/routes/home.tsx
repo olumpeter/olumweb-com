@@ -154,7 +154,7 @@ export default function Home() {
 
 						<div className='flex items-center justify-center pt-8'>
 							<Link
-								to='/series/build-for-the-web'
+								to='/learn/build-for-the-web'
 								className='inline-flex items-center justify-center transition
 									duration-150 ease-in-out rounded-[2.5rem] text-nowrap h-11
 									min-h-11 px-4 gap-[0.3em] text-[1.0625rem] leading-7
