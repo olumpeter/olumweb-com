@@ -1,0 +1,103 @@
+/* app/styles/base.css */
+
+/* ---------------------------------------------------
+   🌍 BASE STYLES (Semantic colors + dark mode)
+--------------------------------------------------- */
+@layer base {
+	:root {
+		color-scheme: light;
+
+		/* Overlay (modals, drawers) — LIGHT MODE */
+		--color-overlay: rgba(0, 0, 0, 0.38);
+
+		/* Semantic Colors — LIGHT MODE */
+		--color-background: var(--gray-50);
+		--color-surface: rgba(255, 255, 255, 0.75);
+		--color-surface-muted: rgba(255, 255, 255, 0.55);
+		--color-card: rgba(255, 255, 255, 0.88);
+		--color-muted: var(--gray-100);
+
+		--color-outline: rgba(0, 0, 0, 0.06);
+		--color-outline-strong: rgba(0, 0, 0, 0.1);
+
+		--color-foreground: var(--gray-900);
+		--color-foreground-muted: var(--gray-600);
+		--color-text-soft: var(--gray-700);
+		--color-hero-subtitle: var(--color-text-soft);
+		--color-section-label: var(--gray-600);
+
+		--surface-subtle: rgba(0, 0, 0, 0.04);
+		--surface-subtle-hover: rgba(0, 0, 0, 0.12);
+		--text-strong: rgba(0, 0, 0, 1);
+		--text-weak: rgba(0, 0, 0, 0.6);
+
+		--color-primary: #0969da;
+		--color-primary-hover: #0557b3;
+	}
+
+	/* ---------------------------
+     🌙 DARK MODE OVERRIDES
+  --------------------------- */
+	[data-theme='dark'] {
+		color-scheme: dark;
+
+		/* Overlay (modals, drawers) — DARK MODE */
+		--color-overlay: rgba(0, 0, 0, 0.2);
+
+		--color-background: #0d0d0d;
+		--color-surface: #141414;
+		--color-surface-muted: #1c1c1c;
+		--color-card: #181818;
+		--color-muted: #1f1f1f;
+
+		--color-outline: rgba(255, 255, 255, 0.12);
+		--color-outline-strong: rgba(255, 255, 255, 0.2);
+
+		--color-foreground: #f5f5f5;
+		--color-foreground-muted: #bbbbbb;
+		--color-text-soft: #aaaaaa;
+		--color-hero-subtitle: var(--color-text-soft);
+		--color-section-label: var(--gray-500);
+
+		--surface-subtle: rgba(255, 255, 255, 0.08);
+		--surface-subtle-hover: rgba(255, 255, 255, 0.18);
+		--text-strong: rgba(255, 255, 255, 1);
+		--text-weak: rgba(255, 255, 255, 0.65);
+
+		--color-primary: #3b82f6;
+		--color-primary-hover: #60a5fa;
+	}
+
+	/* Base HTML */
+	html,
+	body {
+		background-color: var(--color-background);
+		color: var(--color-foreground);
+		font-family: var(--font-sans);
+		font-size: 16px;
+		line-height: 1.6;
+		margin: 0;
+		padding: 0;
+		-webkit-font-smoothing: antialiased;
+		text-rendering: optimizeLegibility;
+	}
+
+	* {
+		box-sizing: border-box;
+		border-color: var(--color-outline);
+	}
+
+	a {
+		color: var(--color-primary);
+		text-decoration: none;
+		transition:
+			color 0.2s,
+			text-decoration-color 0.2s;
+	}
+
+	a:hover {
+		color: var(--color-primary-hover);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+}

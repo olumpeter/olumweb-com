@@ -1,26 +1,14 @@
 import { Menu, X } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import {
-	isRouteErrorResponse,
-	Link,
-	Links,
-	NavLink,
-	Outlet,
-	Scripts,
-	ScrollRestoration,
-	useLocation,
-} from 'react-router'
-
-import type { Route } from './+types/root'
+import { useEffect, useRef, useState } from 'react'
+import { Links, Link, Outlet, Scripts, ScrollRestoration } from 'react-router'
 
 import '~/styles/app.css'
-import faviconAssetUrl from '~/assets/favicons/favicon.svg?url'
-import olumWebLogoAssetUrl from '~/assets/logos/olumWebLogo.png?url'
+import Logo from './components/Logo'
+
+import Breadcrumbs, { useShouldShowBreadcrumbs } from '~/components/Breadcrumbs'
 
 export function links() {
 	return [
-		{ rel: 'icon', type: 'image/svg+xml', href: faviconAssetUrl },
-		{ rel: 'preconnect', href: 'https://fonts.googleapis.com' },
 		{
 			rel: 'preconnect',
 			href: 'https://fonts.gstatic.com',
@@ -28,28 +16,30 @@ export function links() {
 		},
 		{
 			rel: 'stylesheet',
-			href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+			href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300..900&display=swap',
 		},
 	]
 }
 
-/* -------------------------------------------------------------------------- */
-/* 🧱 Document Wrapper                                                        */
-/* -------------------------------------------------------------------------- */
 function Document({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang='en' className='h-full overflow-x-hidden'>
+		<html
+			lang='en'
+			// data-theme='dark'
+		>
 			<head>
-				<title>Olum Web</title>
-				<meta
-					name='description'
-					content='Learn how to Build a Fullstack UI with TypeScript, React, Tailwind CSS & React Router'
-				/>
 				<meta charSet='utf-8' />
-				<meta name='viewport' content='width=device-width, initial-scale=1.0' />
+				<meta
+					name='viewport'
+					content='width=device-width, initial-scale=1'
+				/>
+				<title>Olum Web</title>
 				<Links />
 			</head>
-			<body className='min-h-screen font-sans antialiased'>
+			<body
+				className='antialiased bg-(--color-background)
+					text-(--color-foreground)'
+			>
 				{children}
 				<ScrollRestoration />
 				<Scripts />
@@ -58,203 +48,208 @@ function Document({ children }: { children: React.ReactNode }) {
 	)
 }
 
-/* -------------------------------------------------------------------------- */
-/* 🧭 Layout: Sticky Header + Navigation + Footer                              */
-/* -------------------------------------------------------------------------- */
 function Layout({ children }: { children: React.ReactNode }) {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-	const [isScrolled, setIsScrolled] = useState(false)
-	const location = useLocation()
+	const shouldShowBreadcrumbs = useShouldShowBreadcrumbs()
 
-	// 🧠 Close mobile menu when route changes
+	const closeMobileMenu = () => setIsMobileMenuOpen(false)
+	const toggleMobileMenu = () => setIsMobileMenuOpen(open => !open)
+
+	// Body scroll lock (with cleanup)
 	useEffect(() => {
-		setIsMobileMenuOpen(false)
-	}, [location.pathname])
+		document.body.style.overflow = isMobileMenuOpen ? 'hidden' : ''
+		return () => {
+			document.body.style.overflow = ''
+		}
+	}, [isMobileMenuOpen])
 
-	// 🌫️ Add shadow on scroll
+	// Escape key closes drawer
 	useEffect(() => {
-		const handleScroll = () => setIsScrolled(window.scrollY > 10)
-		window.addEventListener('scroll', handleScroll)
-		return () => window.removeEventListener('scroll', handleScroll)
-	}, [])
+		if (!isMobileMenuOpen) return
 
-	const navLinks = [
-		{ to: '/', label: 'Home', end: true },
-		{ to: '/series', label: 'Series' },
-		{ to: '/about', label: 'About' },
-	]
+		function onKey(e: KeyboardEvent) {
+			if (e.key === 'Escape') closeMobileMenu()
+		}
+
+		window.addEventListener('keydown', onKey)
+		return () => window.removeEventListener('keydown', onKey)
+	}, [isMobileMenuOpen])
+
+	// Swipe-to-close (mobile)
+	const startX = useRef<number | null>(null)
+
+	const handleTouchStart = (e: React.TouchEvent) => {
+		startX.current = e.touches[0].clientX
+	}
+
+	const handleTouchMove = (e: React.TouchEvent) => {
+		if (!startX.current) return
+		const delta = e.touches[0].clientX - startX.current
+		if (delta > 60) {
+			closeMobileMenu()
+			startX.current = null
+		}
+	}
 
 	return (
-		<div className='flex min-h-screen flex-col bg-white text-gray-900'>
+		<div className='relative flex min-h-screen flex-col'>
+			{/* HEADER */}
 			<header
-				className={`sticky top-0 z-40 w-full bg-blue-600 text-white transition-shadow ${
-					isScrolled ? 'shadow-md' : ''
-				}`}
+				className='sticky top-0 z-(--z-header) border-b border-(--color-outline)
+					bg-(--color-surface) backdrop-blur'
 			>
-				<div className='mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8'>
-					{/* 🪶 Logo + Brand */}
+				<div
+					className='mx-auto flex h-14 max-w-6xl items-center justify-between
+						px-(--page-padding-inline)'
+				>
 					<Link
 						to='/'
-						className='flex flex-shrink-0 items-center gap-2 text-lg font-semibold hover:underline'
+						className='inline-flex items-center rounded-md px-2
+							hover:bg-(--color-outline)'
 					>
-						<span className='flex h-10 w-10 items-center justify-center rounded-full bg-white p-1 shadow-md'>
-							<img
-								src={olumWebLogoAssetUrl}
-								alt='Olum Web Logo'
-								className='h-full w-full object-contain transition-opacity duration-300 ease-in-out'
-							/>
-						</span>
-						<span>Olum Web</span>
+						<Logo className='h-5 w-auto' />
 					</Link>
 
-					{/* 💻 Desktop Navigation */}
-					<nav className='hidden items-center gap-6 md:flex'>
-						{navLinks.map(({ to, label, end }) => (
-							<NavLink
-								key={to}
-								to={to}
-								end={end}
-								className={({ isActive }) =>
-									`transition-colors duration-150 hover:text-yellow-100 ${
-										isActive ? 'font-semibold text-yellow-300' : 'text-white'
-									}`
-								}
-							>
-								{label}
-							</NavLink>
-						))}
-
-						{/* 🚀 CTA Button */}
+					{/* Desktop navigation */}
+					<nav className='hidden md:flex items-center gap-6 text-sm'>
 						<Link
-							to='/series/build-for-the-web'
-							className='rounded bg-yellow-300 px-4 py-2 text-sm font-medium text-blue-800 hover:bg-yellow-400'
+							to='/learn'
+							className='text-(--color-foreground-muted)
+								hover:text-(--color-foreground)'
 						>
-							Start Learning
+							All Learning Paths
+						</Link>
+
+						<Link
+							to='/about'
+							className='text-(--color-foreground-muted)
+								hover:text-(--color-foreground)'
+						>
+							About
 						</Link>
 					</nav>
 
-					{/* 📱 Mobile Menu Toggle */}
-					<div className='flex items-center md:hidden'>
-						<button
-							onClick={() => setIsMobileMenuOpen(prev => !prev)}
-							className={`group inline-flex h-10 w-10 items-center justify-center rounded-full border transition-transform duration-200 ease-in-out ${
-								isMobileMenuOpen
-									? 'border-white bg-blue-600 shadow-inner'
-									: 'border-white/30 bg-transparent shadow-md hover:border-white hover:bg-blue-600 hover:shadow-lg'
-							} hover:scale-105 focus:ring-2 focus:ring-yellow-300 focus:outline-none active:scale-95`}
-							aria-label='Mobile Menu Toggle'
-						>
-							{isMobileMenuOpen ? (
-								<X
-									size={24}
-									className='text-white group-hover:text-yellow-300'
-								/>
-							) : (
-								<Menu
-									size={24}
-									className='text-white group-hover:text-yellow-300'
-								/>
-							)}
-						</button>
-					</div>
+					{/* Mobile menu toggle */}
+					<button
+						onClick={toggleMobileMenu}
+						aria-label='Open menu'
+						aria-expanded={isMobileMenuOpen}
+						className='md:hidden inline-flex h-8 w-8 items-center justify-center
+							rounded-md text-(--color-foreground-muted)
+							hover:bg-(--color-outline)'
+					>
+						{isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+					</button>
 				</div>
-
-				{/* 📱 Mobile Dropdown Menu */}
-				{isMobileMenuOpen && (
-					<div className='animate-slide-down w-full bg-blue-600 shadow-md md:hidden'>
-						<nav className='flex flex-col divide-y divide-blue-400'>
-							{navLinks.map(({ to, label, end }) => (
-								<NavLink
-									key={to}
-									to={to}
-									end={end}
-									className={({ isActive }) =>
-										`block px-4 py-3 text-sm transition-colors duration-200 ease-in-out ${
-											isActive
-												? 'bg-blue-700 font-semibold text-yellow-300'
-												: 'text-white hover:bg-blue-700'
-										}`
-									}
-								>
-									{label}
-								</NavLink>
-							))}
-
-							<Link
-								to='/series/build-for-the-web'
-								className='block px-4 py-3 text-sm font-semibold text-yellow-300 hover:bg-blue-700'
-							>
-								Start Learning 🚀
-							</Link>
-						</nav>
-					</div>
-				)}
 			</header>
 
-			<main className='flex-1 px-4 py-8 sm:px-6 lg:px-8'>{children}</main>
+			{/* BREADCRUMBS */}
+			{shouldShowBreadcrumbs && (
+				<div className='border-b border-(--color-outline) bg-(--color-card)'>
+					<div
+						className='mx-auto max-w-6xl px-(--page-padding-inline) py-3
+							sm:py-2'
+					>
+						<Breadcrumbs />
+					</div>
+				</div>
+			)}
 
-			<footer className='flex h-16 items-center justify-center gap-1 bg-blue-50 text-sm text-blue-700'>
-				<span>&copy; {new Date().getFullYear()}</span>
-				<Link to='/' className='font-medium hover:underline'>
-					Olum Web
-				</Link>
-				<span>All rights reserved.</span>
+			{/* MAIN CONTENT */}
+			<main className='flex-1 bg-(--color-surface)'>{children}</main>
+
+			{/* FOOTER */}
+			<footer
+				className='border-t border-(--color-outline) bg-(--color-surface)
+					text-xs text-(--color-foreground-muted)'
+			>
+				<div
+					className='mx-auto max-w-6xl px-(--page-padding-inline) py-4
+						text-center'
+				>
+					© {new Date().getFullYear()} Olum Web
+				</div>
 			</footer>
+
+			{/* MOBILE OVERLAY */}
+			<div
+				className={`fixed inset-0 z-(--z-overlay) bg-(--color-overlay)
+					backdrop-blur-sm transition-opacity duration-200 lg:hidden
+					${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+				onClick={closeMobileMenu}
+			/>
+
+			{/* MOBILE DRAWER */}
+			<aside
+				role='dialog'
+				aria-modal='true'
+				aria-label='Mobile navigation'
+				onTouchStart={handleTouchStart}
+				onTouchMove={handleTouchMove}
+				className={`fixed top-14 bottom-0 left-0 z-(--z-drawer)
+					w-[min(85vw,20rem)] border-r border-(--color-outline)
+					bg-(--color-background) transition-transform duration-300
+					ease-[cubic-bezier(.32,.72,0,1)] lg:hidden
+					${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+			>
+				<nav
+					role='menu'
+					className='px-(--page-padding-inline) py-6'
+				>
+					<ul className='space-y-0.5'>
+						{/* All Learning Paths */}
+						<li
+							role='menuitem'
+							className='relative rounded-md before:pointer-events-none
+								before:absolute before:inset-y-0 before:left-1 before:right-1
+								before:rounded-md before:bg-(--surface-subtle) before:opacity-0
+								before:transition-opacity before:duration-200
+								hover:before:opacity-100 focus-visible:before:opacity-100
+								focus-visible:outline-none'
+						>
+							<Link
+								to='/learn'
+								onClick={closeMobileMenu}
+								className='relative z-10 block w-full px-3 py-2 text-sm
+									text-(--color-foreground-muted) no-underline
+									hover:no-underline'
+							>
+								All Learning Paths
+							</Link>
+						</li>
+
+						{/* About */}
+						<li
+							role='menuitem'
+							className='relative rounded-md before:pointer-events-none
+								before:absolute before:inset-y-0 before:left-1 before:right-1
+								before:rounded-md before:bg-(--surface-subtle) before:opacity-0
+								before:transition-opacity before:duration-200
+								hover:before:opacity-100 focus-visible:before:opacity-100
+								focus-visible:outline-none'
+						>
+							<Link
+								to='/about'
+								onClick={closeMobileMenu}
+								className='relative z-10 block w-full px-3 py-2 text-sm
+									text-(--color-foreground-muted) no-underline
+									hover:no-underline'
+							>
+								About
+							</Link>
+						</li>
+					</ul>
+				</nav>
+			</aside>
 		</div>
 	)
 }
 
-/* -------------------------------------------------------------------------- */
-/* ⚠️ Error Boundary                                                          */
-/* -------------------------------------------------------------------------- */
 export default function App() {
 	return (
 		<Document>
 			<Layout>
 				<Outlet />
-			</Layout>
-		</Document>
-	)
-}
-
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-	let title: string
-	let description: string
-
-	if (isRouteErrorResponse(error)) {
-		title = `${error.status}: ${error.statusText}`
-		description =
-			error.status === 404
-				? `The page you're looking for does not exist.`
-				: error.statusText
-	} else if (error instanceof Error) {
-		title = 'Something went wrong'
-		description = error.message
-	} else {
-		title = 'Unknown error'
-		description = 'An unexpected error occurred.'
-	}
-
-	return (
-		<Document>
-			<Layout>
-				<div className='flex flex-1 items-center justify-center px-6 py-16 text-center'>
-					<div className='max-w-md'>
-						<h1 className='mb-4 text-4xl font-bold text-blue-700'>{title}</h1>
-						<p className='mb-6 text-lg text-gray-700'>{description}</p>
-						<Link
-							to='/'
-							className='inline-block rounded bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700'
-						>
-							Go Home
-						</Link>
-						{error instanceof Error && (
-							<pre className='mt-8 overflow-x-auto rounded border border-red-200 bg-red-50 p-4 text-left text-sm text-red-700'>
-								<code>{error.stack}</code>
-							</pre>
-						)}
-					</div>
-				</div>
 			</Layout>
 		</Document>
 	)

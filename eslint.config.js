@@ -1,10 +1,10 @@
 // eslint.config.js
-import tseslint from 'typescript-eslint'
+import tseslint from '@typescript-eslint/eslint-plugin'
 import eslintPluginImport from 'eslint-plugin-import'
 import eslintPluginUnusedImports from 'eslint-plugin-unused-imports'
+import parser from '@typescript-eslint/parser'
 
-export default tseslint.config(
-	// Global ignores
+export default [
 	{
 		ignores: [
 			'**/node_modules/**',
@@ -19,89 +19,49 @@ export default tseslint.config(
 		],
 	},
 
-	// Base config for all JS/TS files (not type-aware)
+	// Base config for JS/TS
 	{
 		files: ['**/*.{js,jsx,ts,tsx}'],
 		plugins: {
+			'@typescript-eslint': tseslint,
 			import: eslintPluginImport,
 			'unused-imports': eslintPluginUnusedImports,
 		},
 		languageOptions: {
+			parser,
 			ecmaVersion: 'latest',
 			sourceType: 'module',
-		},
-		rules: {
-			'no-unused-vars': [
-				'warn',
-				{ varsIgnorePattern: '^_', argsIgnorePattern: '^_' },
-			],
-			'unused-imports/no-unused-imports': 'warn',
-
-			// 🔧 Import order: fixes and auto-sorts imports nicely
-			'import/order': [
-				'warn',
-				{
-					groups: [
-						'builtin', // e.g., fs, path
-						'external', // e.g., react, zod
-						'internal', // aliases like '~/components'
-						'parent', // ../
-						'sibling', // ./file
-						'index', // ./index
-						'object', // import foo = require(...)
-						'type', // import type {...}
-					],
-					'newlines-between': 'always',
-					alphabetize: {
-						order: 'asc',
-						caseInsensitive: true,
-					},
-				},
-			],
-		},
-	},
-
-	// Type-aware rules (all set to 'warn')
-	...tseslint.configs.recommendedTypeChecked,
-	{
-		files: ['**/*.{ts,tsx}'],
-		languageOptions: {
 			parserOptions: {
 				project: ['./tsconfig.json'],
 			},
 		},
 		rules: {
-			'@typescript-eslint/await-thenable': 'warn',
-			'@typescript-eslint/no-floating-promises': 'warn',
+			'no-unused-vars': 'off', // Disable default
 			'@typescript-eslint/no-unused-vars': [
 				'warn',
-				{ argsIgnorePattern: '^_' },
+				{ varsIgnorePattern: '^_', argsIgnorePattern: '^_' },
 			],
-			'@typescript-eslint/consistent-type-imports': [
-				'warn',
-				{ prefer: 'type-imports' },
-			],
-			'@typescript-eslint/no-misused-promises': [
+			'unused-imports/no-unused-imports': 'warn',
+
+			'@typescript-eslint/no-floating-promises': 'warn',
+
+			'import/order': [
 				'warn',
 				{
-					checksVoidReturn: true,
-					checksConditionals: true,
-					checksSpreads: true,
+					groups: [
+						'builtin',
+						'external',
+						'internal',
+						'parent',
+						'sibling',
+						'index',
+						'object',
+						'type',
+					],
+					'newlines-between': 'always',
+					alphabetize: { order: 'asc', caseInsensitive: true },
 				},
-			],
-			'@typescript-eslint/require-await': 'warn',
-			'@typescript-eslint/only-throw-error': 'off',
-			'@typescript-eslint/no-unsafe-assignment': 'warn',
-			'@typescript-eslint/no-unsafe-member-access': 'warn',
-			'@typescript-eslint/no-unsafe-call': 'warn',
-			'@typescript-eslint/no-unsafe-return': 'warn',
-			'@typescript-eslint/no-explicit-any': 'warn',
-			'@typescript-eslint/no-empty-object-type': 'warn',
-			'@typescript-eslint/no-namespace': 'warn',
-			'@typescript-eslint/no-confusing-void-expression': [
-				'warn',
-				{ ignoreArrowShorthand: true, ignoreVoidOperator: false },
 			],
 		},
 	},
-)
+]

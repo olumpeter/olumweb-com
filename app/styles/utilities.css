@@ -1,0 +1,37 @@
+/* app/styles/utilities.css */
+
+@utility container-type-inline-size {
+	container-type: inline-size;
+}
+
+@layer utilities {
+	/* Backgrounds */
+	.bg-background {
+		background-color: var(--color-background);
+	}
+	.bg-surface {
+		background-color: var(--color-surface);
+	}
+	.bg-card {
+		background-color: var(--color-card);
+	}
+
+	/* Text */
+	.text-foreground {
+		color: var(--color-foreground);
+	}
+	.text-foreground-muted {
+		color: var(--color-foreground-muted);
+	}
+	.text-text-soft {
+		color: var(--color-text-soft);
+	}
+
+	/* Borders */
+	.border-outline {
+		border-color: var(--color-outline);
+	}
+	.border-outline-strong {
+		border-color: var(--color-outline-strong);
+	}
+}
