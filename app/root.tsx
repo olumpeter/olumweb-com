@@ -104,10 +104,16 @@ function Layout({ children }: { children: React.ReactNode }) {
 				>
 					<Link
 						to='/'
-						className='inline-flex items-center rounded-md px-2
-							hover:bg-(--color-outline)'
+						onClick={closeMobileMenu}
+						aria-label='Go to homepage'
+						className='inline-flex h-8 items-center justify-center rounded-md
+							px-2 text-(--color-foreground) no-underline
+							hover:bg-(--color-outline) active:bg-transparent
+							focus-visible:outline-none focus-visible:ring-2
+							focus-visible:ring-(--color-outline)
+							[-webkit-tap-highlight-color:transparent]'
 					>
-						<Logo className='h-5 w-auto' />
+						<Logo className='h-5 w-auto pointer-events-none' />
 					</Link>
 
 					{/* Desktop navigation */}
