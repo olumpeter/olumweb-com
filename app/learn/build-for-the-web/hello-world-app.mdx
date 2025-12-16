@@ -78,7 +78,7 @@ node: command not found
 Node.js is not installed on your system.
 
 - 👉 To install it:
-  1. Visit [nodejs.org ↗](nodejs.org).
+  1. Visit [nodejs.org ↗](https://nodejs.org).
   2. Download the LTS (Long-Term Support) version for your operating system.
   3. Run the installer and follow the setup steps.
   4. Open a new terminal and run `node -v` again to confirm installation.
@@ -98,8 +98,8 @@ Node.js is not installed on your system.
 
 ### Scaffold Your First React Router Project 🏗️
 
-- Most real-world apps start from a scaffold. You’ll use the React Router v7
-  Framework Mode template, which includes TypeScript and Tailwind CSS.
+- React Router v7 Framework Mode gives you routing, data loading,
+  and fullstack structure without wiring everything yourself.
 - 👉 Run the following command to create a new project named `001-hello-world-app`:
 
 ```bash
@@ -139,6 +139,10 @@ npm run dev
 
 ## Clean Up and Configure Your App 🧹
 
+> 💡 Mental model  
+> In React Router Framework Mode, each file in `app/routes`
+> represents a page in your application.
+
 ### Replace the Home Page Code ✏️
 
 - ✏️ Replace the contents of app/routes/home.tsx with:
@@ -149,7 +153,8 @@ export default function Home() {
 }
 ```
 
-- 🗑️ Delete the welcome folder and its contents.
+- 🗑️ Delete the `app/routes/welcome` folder and its contents.
+  (It was part of the starter template.)
 
 ### Set Up Tailwind CSS ⚙️
 
@@ -203,3 +208,6 @@ export default function Home() {
   - Scaffold a React Router v7 Framework Mode project
   - Configure Tailwind CSS
   - Build and preview a TypeScript-powered Hello World app
+
+- This is your first real web app — and you built it the same way
+  professionals build production applications.
