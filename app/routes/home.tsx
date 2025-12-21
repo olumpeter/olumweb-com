@@ -63,17 +63,11 @@ export default function Home() {
 			<div className='mx-auto max-w-3xl px-(--page-padding-inline) py-16'>
 				{/* HERO */}
 				<section>
-					<h1
-						className='text-2xl sm:text-3xl lg:text-4xl font-semibold
-							tracking-tight leading-tight text-(--color-foreground)'
-					>
+					<h1 className='text-2xl leading-tight font-semibold tracking-tight text-(--color-foreground) sm:text-3xl lg:text-4xl'>
 						Build and ship full-stack web apps the modern way
 					</h1>
 
-					<p
-						className='mt-5 text-[clamp(1rem,0.9rem+0.4vw,1.15rem)]
-							leading-[1.65] text-(--color-hero-subtitle) max-w-[65ch]'
-					>
+					<p className='mt-5 max-w-[65ch] text-[clamp(1rem,0.9rem+0.4vw,1.15rem)] leading-[1.65] text-(--color-hero-subtitle)'>
 						Learn how to build real-world, modern web applications using React,
 						TypeScript, React Router, Node.js, Tailwind CSS, and more —
 						explained simply, clearly, and practically.
@@ -85,18 +79,12 @@ export default function Home() {
 					{Object.values(TECH_SECTIONS).map(section => (
 						<section key={section.title}>
 							{/* Section Title */}
-							<h2
-								className='text-sm leading-none font-semibold tracking-wide
-									uppercase mb-1 text-(--color-section-label)'
-							>
+							<h2 className='mb-1 text-sm leading-none font-semibold tracking-wide text-(--color-section-label) uppercase'>
 								{section.title}
 							</h2>
 
 							{/* Section Description */}
-							<p
-								className='text-[0.98rem] sm:text-[1.05rem] leading-relaxed
-									text-text-soft mb-6 max-w-prose'
-							>
+							<p className='text-text-soft mb-6 max-w-prose text-[0.98rem] leading-relaxed sm:text-[1.05rem]'>
 								{section.description}
 							</p>
 
@@ -105,21 +93,15 @@ export default function Home() {
 								{section.items.map(({ name, logoUrl }) => (
 									<li
 										key={name}
-										className='flex flex-col items-center gap-2 rounded-lg
-											bg-(--surface-subtle) border border-outline p-2'
+										className='border-outline flex flex-col items-center gap-2 rounded-lg border bg-(--surface-subtle) p-2'
 									>
 										<img
 											src={logoUrl}
 											alt={name}
-											className='h-11 w-11 rounded-md p-2 bg-white/90
-												dark:bg-white/10 border border-outline/60 shadow-sm'
+											className='border-outline/60 h-11 w-11 rounded-md border bg-white/90 p-2 shadow-sm dark:bg-white/10'
 										/>
 
-										<span
-											className='mt-1 text-[0.85rem] font-normal
-												text-foreground-muted/80 dark:text-foreground-muted/70
-												text-center tracking-wide leading-tight'
-										>
+										<span className='text-foreground-muted/80 dark:text-foreground-muted/70 mt-1 text-center text-[0.85rem] leading-tight font-normal tracking-wide'>
 											{name}
 										</span>
 									</li>
@@ -131,38 +113,17 @@ export default function Home() {
 			</div>
 
 			{/* CTA */}
-			<div
-				className='w-full max-w-360 mx-auto mb-24 px-8
-					container-type-inline-size'
-			>
-				<div
-					className='bg-(--surface-subtle) py-20 grid grid-cols-12 rounded-md'
-				>
-					<div
-						className='col-span-12 md:col-span-8 md:col-start-3 flex flex-col
-							px-4 md:px-0'
-					>
-						<h2
-							className='text-center font-medium text-(--color-foreground)
-								text-[clamp(1.75rem,calc(1.75rem+1.2vw),2.75rem)]
-								leading-[clamp(2.1rem,calc(2.1rem+1.5vw),3.2rem)]
-								tracking-[clamp(-0.03em,calc(-0.03em+0.015em*((90rem-100vw)/66.5625)),
-								-0.012em)]'
-						>
+			<div className='container-type-inline-size mx-auto mb-24 w-full max-w-360 px-8'>
+				<div className='grid grid-cols-12 rounded-md bg-(--surface-subtle) py-20'>
+					<div className='col-span-12 flex flex-col px-4 md:col-span-8 md:col-start-3 md:px-0'>
+						<h2 className='tracking-[clamp(-0.03em,calc(-0.03em+0.015em*((90rem-100vw)/66.5625)), -0.012em)] text-center text-[clamp(1.75rem,calc(1.75rem+1.2vw),2.75rem)] leading-[clamp(2.1rem,calc(2.1rem+1.5vw),3.2rem)] font-medium text-(--color-foreground)'>
 							You learn best by building. Let's begin.
 						</h2>
 
 						<div className='flex items-center justify-center pt-8'>
 							<Link
 								to='/learn/build-for-the-web'
-								className='inline-flex items-center justify-center transition
-									duration-150 ease-in-out rounded-[2.5rem] text-nowrap h-11
-									min-h-11 px-4 gap-[0.3em] text-[1.0625rem] leading-7
-									font-normal tracking-[-0.01em] bg-(--surface-subtle)
-									text-(--text-strong) hover:bg-(--surface-subtle-hover)
-									disabled:bg-(--surface-subtle) disabled:text-(--text-weak)
-									focus:outline-1 focus:outline-(--surface-subtle-hover)
-									outline-offset-2 no-underline hover:no-underline'
+								className='inline-flex h-11 min-h-11 items-center justify-center gap-[0.3em] rounded-[2.5rem] bg-(--surface-subtle) px-4 text-[1.0625rem] leading-7 font-normal tracking-[-0.01em] text-nowrap text-(--text-strong) no-underline outline-offset-2 transition duration-150 ease-in-out hover:bg-(--surface-subtle-hover) hover:no-underline focus:outline-1 focus:outline-(--surface-subtle-hover) disabled:bg-(--surface-subtle) disabled:text-(--text-weak)'
 							>
 								Start building
 							</Link>

@@ -36,7 +36,8 @@
     "remark-toc": "^9.0.0",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.0",
@@ -54,9 +55,8 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-unused-imports": "^4.1.4",
-    "prettier": "^3.6.2",
-    "prettier-plugin-classnames": "^0.8.5",
-    "prettier-plugin-tailwindcss": "^0.7.1",
+    "prettier": "^3.7.4",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "rehype-highlight": "^7.0.2",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",

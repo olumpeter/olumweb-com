@@ -36,10 +36,7 @@ function Document({ children }: { children: React.ReactNode }) {
 				<title>Olum Web</title>
 				<Links />
 			</head>
-			<body
-				className='antialiased bg-(--color-background)
-					text-(--color-foreground)'
-			>
+			<body className='bg-(--color-background) text-(--color-foreground) antialiased'>
 				{children}
 				<ScrollRestoration />
 				<Scripts />
@@ -94,42 +91,29 @@ function Layout({ children }: { children: React.ReactNode }) {
 	return (
 		<div className='relative flex min-h-screen flex-col'>
 			{/* HEADER */}
-			<header
-				className='sticky top-0 z-(--z-header) border-b border-(--color-outline)
-					bg-(--color-surface) backdrop-blur'
-			>
-				<div
-					className='mx-auto flex h-14 max-w-6xl items-center justify-between
-						px-(--page-padding-inline)'
-				>
+			<header className='sticky top-0 z-(--z-header) border-b border-(--color-outline) bg-(--color-surface) backdrop-blur'>
+				<div className='mx-auto flex h-14 max-w-6xl items-center justify-between px-(--page-padding-inline)'>
 					<Link
 						to='/'
 						onClick={closeMobileMenu}
 						aria-label='Go to homepage'
-						className='inline-flex h-8 items-center justify-center rounded-md
-							px-2 text-(--color-foreground) no-underline
-							hover:bg-(--color-outline) active:bg-transparent
-							focus-visible:outline-none focus-visible:ring-2
-							focus-visible:ring-(--color-outline)
-							[-webkit-tap-highlight-color:transparent]'
+						className='inline-flex h-8 items-center justify-center rounded-md px-2 text-(--color-foreground) no-underline [-webkit-tap-highlight-color:transparent] hover:bg-(--color-outline) focus-visible:ring-2 focus-visible:ring-(--color-outline) focus-visible:outline-none active:bg-transparent'
 					>
-						<Logo className='h-5 w-auto pointer-events-none' />
+						<Logo className='pointer-events-none h-5 w-auto' />
 					</Link>
 
 					{/* Desktop navigation */}
-					<nav className='hidden md:flex items-center gap-6 text-sm'>
+					<nav className='hidden items-center gap-6 text-sm md:flex'>
 						<Link
 							to='/learn'
-							className='text-(--color-foreground-muted)
-								hover:text-(--color-foreground)'
+							className='text-(--color-foreground-muted) hover:text-(--color-foreground)'
 						>
 							All Learning Paths
 						</Link>
 
 						<Link
 							to='/about'
-							className='text-(--color-foreground-muted)
-								hover:text-(--color-foreground)'
+							className='text-(--color-foreground-muted) hover:text-(--color-foreground)'
 						>
 							About
 						</Link>
@@ -140,9 +124,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 						onClick={toggleMobileMenu}
 						aria-label='Open menu'
 						aria-expanded={isMobileMenuOpen}
-						className='md:hidden inline-flex h-8 w-8 items-center justify-center
-							rounded-md text-(--color-foreground-muted)
-							hover:bg-(--color-outline)'
+						className='inline-flex h-8 w-8 items-center justify-center rounded-md text-(--color-foreground-muted) hover:bg-(--color-outline) md:hidden'
 					>
 						{isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
 					</button>
@@ -152,10 +134,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 			{/* BREADCRUMBS */}
 			{shouldShowBreadcrumbs && (
 				<div className='border-b border-(--color-outline) bg-(--color-card)'>
-					<div
-						className='mx-auto max-w-6xl px-(--page-padding-inline) py-3
-							sm:py-2'
-					>
+					<div className='mx-auto max-w-6xl px-(--page-padding-inline) py-3 sm:py-2'>
 						<Breadcrumbs />
 					</div>
 				</div>
@@ -165,23 +144,15 @@ function Layout({ children }: { children: React.ReactNode }) {
 			<main className='flex-1 bg-(--color-surface)'>{children}</main>
 
 			{/* FOOTER */}
-			<footer
-				className='border-t border-(--color-outline) bg-(--color-surface)
-					text-xs text-(--color-foreground-muted)'
-			>
-				<div
-					className='mx-auto max-w-6xl px-(--page-padding-inline) py-4
-						text-center'
-				>
+			<footer className='border-t border-(--color-outline) bg-(--color-surface) text-xs text-(--color-foreground-muted)'>
+				<div className='mx-auto max-w-6xl px-(--page-padding-inline) py-4 text-center'>
 					© {new Date().getFullYear()} Olum Web
 				</div>
 			</footer>
 
 			{/* MOBILE OVERLAY */}
 			<div
-				className={`fixed inset-0 z-(--z-overlay) bg-(--color-overlay)
-					backdrop-blur-sm transition-opacity duration-200 lg:hidden
-					${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+				className={`fixed inset-0 z-(--z-overlay) bg-(--color-overlay) backdrop-blur-sm transition-opacity duration-200 lg:hidden ${isMobileMenuOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
 				onClick={closeMobileMenu}
 			/>
 
@@ -192,11 +163,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 				aria-label='Mobile navigation'
 				onTouchStart={handleTouchStart}
 				onTouchMove={handleTouchMove}
-				className={`fixed top-14 bottom-0 left-0 z-(--z-drawer)
-					w-[min(85vw,20rem)] border-r border-(--color-outline)
-					bg-(--color-background) transition-transform duration-300
-					ease-[cubic-bezier(.32,.72,0,1)] lg:hidden
-					${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+				className={`fixed top-14 bottom-0 left-0 z-(--z-drawer) w-[min(85vw,20rem)] border-r border-(--color-outline) bg-(--color-background) transition-transform duration-300 ease-[cubic-bezier(.32,.72,0,1)] lg:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
 			>
 				<nav
 					role='menu'
@@ -206,19 +173,12 @@ function Layout({ children }: { children: React.ReactNode }) {
 						{/* All Learning Paths */}
 						<li
 							role='menuitem'
-							className='relative rounded-md before:pointer-events-none
-								before:absolute before:inset-y-0 before:left-1 before:right-1
-								before:rounded-md before:bg-(--surface-subtle) before:opacity-0
-								before:transition-opacity before:duration-200
-								hover:before:opacity-100 focus-visible:before:opacity-100
-								focus-visible:outline-none'
+							className='relative rounded-md before:pointer-events-none before:absolute before:inset-y-0 before:right-1 before:left-1 before:rounded-md before:bg-(--surface-subtle) before:opacity-0 before:transition-opacity before:duration-200 hover:before:opacity-100 focus-visible:outline-none focus-visible:before:opacity-100'
 						>
 							<Link
 								to='/learn'
 								onClick={closeMobileMenu}
-								className='relative z-10 block w-full px-3 py-2 text-sm
-									text-(--color-foreground-muted) no-underline
-									hover:no-underline'
+								className='relative z-10 block w-full px-3 py-2 text-sm text-(--color-foreground-muted) no-underline hover:no-underline'
 							>
 								All Learning Paths
 							</Link>
@@ -227,19 +187,12 @@ function Layout({ children }: { children: React.ReactNode }) {
 						{/* About */}
 						<li
 							role='menuitem'
-							className='relative rounded-md before:pointer-events-none
-								before:absolute before:inset-y-0 before:left-1 before:right-1
-								before:rounded-md before:bg-(--surface-subtle) before:opacity-0
-								before:transition-opacity before:duration-200
-								hover:before:opacity-100 focus-visible:before:opacity-100
-								focus-visible:outline-none'
+							className='relative rounded-md before:pointer-events-none before:absolute before:inset-y-0 before:right-1 before:left-1 before:rounded-md before:bg-(--surface-subtle) before:opacity-0 before:transition-opacity before:duration-200 hover:before:opacity-100 focus-visible:outline-none focus-visible:before:opacity-100'
 						>
 							<Link
 								to='/about'
 								onClick={closeMobileMenu}
-								className='relative z-10 block w-full px-3 py-2 text-sm
-									text-(--color-foreground-muted) no-underline
-									hover:no-underline'
+								className='relative z-10 block w-full px-3 py-2 text-sm text-(--color-foreground-muted) no-underline hover:no-underline'
 							>
 								About
 							</Link>

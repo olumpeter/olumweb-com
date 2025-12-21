@@ -22,7 +22,7 @@
 	.prose h2,
 	.prose h3,
 	.prose h4 {
-		color: var(--color-foreground);
+		color: var(--color-foreground) !important;
 		font-weight: 600;
 		line-height: 1.25;
 		scroll-margin-top: 6rem;
@@ -50,7 +50,16 @@
 	   Paragraphs
 	------------------------------------------------- */
 	.prose p {
+		color: var(--color-text-soft);
 		margin: 0.75rem 0;
+	}
+
+	/* -------------------------------------------------
+	   Strong / emphasis
+	------------------------------------------------- */
+	.prose strong {
+		color: var(--color-foreground) !important;
+		font-weight: 600;
 	}
 
 	/* -------------------------------------------------
@@ -63,6 +72,7 @@
 	}
 
 	.prose li {
+		color: var(--color-text-soft);
 		margin: 0.25rem 0;
 	}
 
@@ -74,7 +84,8 @@
 	   Inline code
 	------------------------------------------------- */
 	.prose code:not(pre code) {
-		background: var(--color-muted);
+		background: var(--surface-subtle) !important;
+		color: var(--color-foreground) !important;
 		border: 1px solid var(--color-outline);
 		border-radius: 0.25rem;
 		padding: 0.15em 0.35em;
@@ -86,9 +97,9 @@
 	   Code blocks
 	------------------------------------------------- */
 	.prose pre {
-		background: #0d1117;
-		color: #e6edf3;
-		border-radius: 0.5rem;
+		background: var(--surface-code);
+		color: var(--color-code-text);
+		border: 1px solid var(--color-outline);
 		padding: 1rem;
 		overflow-x: auto;
 		font-size: 0.9rem;
@@ -150,6 +161,7 @@
 		border-left: 3px solid var(--color-outline-strong);
 		padding-left: 1rem;
 		margin: 1.25rem 0;
+		color: var(--color-text-soft);
 		color: var(--color-text-soft);
 	}
 

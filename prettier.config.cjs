@@ -1,12 +1,5 @@
-// prettier.config.js
-// ✅ Works with Prettier v3 CLI, VS Code, and Tailwind CSS v4
-// ✅ Fully ESM-safe
-
-import * as classnames from 'prettier-plugin-classnames'
-import * as tailwind from 'prettier-plugin-tailwindcss'
-
 /** @type {import('prettier').Config} */
-export default {
+module.exports = {
 	arrowParens: 'avoid',
 	bracketSameLine: false,
 	bracketSpacing: true,
@@ -26,7 +19,7 @@ export default {
 
 	tailwindStylesheet: './app/styles/app.css',
 
-	plugins: [tailwind, classnames],
+	plugins: ['prettier-plugin-tailwindcss'],
 
 	overrides: [
 		{

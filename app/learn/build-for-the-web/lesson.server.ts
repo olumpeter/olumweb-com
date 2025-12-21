@@ -1,6 +1,12 @@
-import type { LessonSlug, LessonFrontmatter } from '~/utils/lessons'
+import type {
+	LessonSlug,
+	LessonFrontmatter,
+} from '~/learn/build-for-the-web/lessonRegistry'
 
-import { lessonRegistry, lessonThumbnails } from '~/utils/lessons'
+import {
+	lessonRegistry,
+	lessonThumbnails,
+} from '~/learn/build-for-the-web/lessonRegistry'
 
 export type LessonSummary = {
 	slug: LessonSlug
@@ -15,12 +21,16 @@ export type LessonSummary = {
  */
 export async function getPublishedLessons(): Promise<LessonSummary[]> {
 	return Object.keys(lessonRegistry)
-		.map((slug, index) => ({
-			slug: slug as LessonSlug,
-			title: 'Hello World App',
-			lessonNumber: index + 1,
-			thumbnail: lessonThumbnails[slug as LessonSlug],
-		}))
+		.map(slug => {
+			const lesson = lessonRegistry[slug as LessonSlug]
+
+			return {
+				slug: slug as LessonSlug,
+				title: lesson.frontmatter.title,
+				lessonNumber: lesson.frontmatter.lessonNumber,
+				thumbnail: lessonThumbnails[slug as LessonSlug],
+			}
+		})
 		.sort((a, b) => a.lessonNumber - b.lessonNumber)
 }
 
@@ -38,11 +48,7 @@ export async function loadLessonMetadata(lessonSlug: LessonSlug): Promise<{
 	}
 
 	return {
-		lessonFrontmatter: {
-			title: 'Hello World App',
-			lessonNumber: 1,
-			published: true,
-		},
+		lessonFrontmatter: entry.frontmatter,
 		lessonThumbnail: entry.thumbnail,
 	}
 }

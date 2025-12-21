@@ -1,0 +1,424 @@
+---
+title: 'Hello World App'
+slug: 'hello-world-app'
+series: 'build-for-the-web'
+lessonNumber: 1
+path: '/learn/build-for-the-web/hello-world-app'
+published: true
+readingTime: '12 min'
+---
+
+import helloWorldAppFinalResultUrl from '../images/001-hello-world-app/hello-world-app-final-result.jpg?url'
+
+## Introduction 🧭
+
+- In this lesson, you'll build your **first working web app**.
+- Not a demo.
+- Not a screenshot.
+- A real app that runs in the browser.
+- This lesson exists for one reason only:
+  > To prove that your code can appear on the screen.
+- We will **not** focus on:
+  - Layout
+  - Styling systems
+  - Components
+  - Logic
+
+- We are laying the **foundation** everything else will stand on.
+
+<hr className='my-8' />
+
+## What You'll Build 🎯
+
+- By the end of this lesson, you'll have:
+  - A running React Router v7 app.
+  - A home page route.
+  - A visible UI element.
+  - Tailwind CSS confirmed to be working.
+
+<img
+	src={helloWorldAppFinalResultUrl}
+	alt='Screenshot of Hello World App showing a red heading'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- Below is the **complete result** for this lesson.
+- Don't worry about understanding it yet.
+- We will **earn it step by step**.
+
+```tsx
+export default function Home() {
+	return (
+		<h1 className='m-4 text-4xl font-bold text-red-600'>
+			Hello, World!
+		</h1>
+	)
+}
+```
+
+- This lesson is not about beauty.
+- It's about **confirmation**.
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+- Before writing any code, understand this idea:
+  > A web app is just **a function that returns UI**.
+- At the beginning:
+  - There is no layout.
+  - No styling decisions.
+  - No interaction.
+  - No state.
+- Just:
+  - A file.
+  - A function.
+  - Something rendered on the page.
+- Everything you build later depends on this working first.
+
+<hr className='my-8' />
+
+## Create the Project 🏗️
+
+- 👉 Create a new project for this lesson:
+
+```bash
+npx create-react-router@latest 001-hello-world-app
+```
+
+- Move into the project folder and start the server:
+
+```bash
+cd 001-hello-world-app
+npm run dev
+```
+
+- Open [http://localhost:5173 ↗](http://localhost:5173) in your browser.
+- 👀 You should see the default React Router welcome screen.
+- That screen means:
+  - The project works
+  - The server runs
+  - The browser is connected
+
+<hr className='my-8' />
+
+- ⚠️ **Important note before continuing**
+  - This next section looks long — but it's **setup you won't touch again**.
+  - Read it once, copy carefully, then forget about it.
+
+## Code Formatting (Prettier) ✨
+
+- This project uses **Prettier** to keep code formatting consistent.
+
+- You don't need to think about spacing, quotes, or semicolons — Prettier
+  handles that automatically when you save a file.
+
+### Step 1: Create the Prettier config file
+
+- 📄 In the project root, create a file named **`prettier.config.cjs`**.
+
+  > 💡 Why `.cjs`?  
+  > Tooling configuration files are kept in CommonJS format for maximum.
+  > compatibility with editors and plugins.
+
+### Step 2: Add the Prettier configuration
+
+Paste the following code into `prettier.config.cjs`:
+
+```js
+/** @type {import('prettier').Config} */
+module.exports = {
+	arrowParens: 'avoid',
+	bracketSameLine: false,
+	bracketSpacing: true,
+	embeddedLanguageFormatting: 'auto',
+	endOfLine: 'lf',
+	htmlWhitespaceSensitivity: 'css',
+	jsxSingleQuote: true,
+	printWidth: 80,
+	proseWrap: 'always',
+	quoteProps: 'as-needed',
+	semi: false,
+	singleQuote: true,
+	singleAttributePerLine: false,
+	tabWidth: 2,
+	trailingComma: 'all',
+	useTabs: true,
+
+	plugins: ['prettier-plugin-tailwindcss'],
+
+	overrides: [
+		{
+			files: ['**/*.{js,jsx,ts,tsx}'],
+			options: { singleAttributePerLine: true },
+		},
+		{
+			files: ['**/*.json'],
+			options: { useTabs: false },
+		},
+		{
+			files: ['**/*.mdx'],
+			options: { proseWrap: 'preserve' },
+		},
+	],
+}
+```
+
+- **What this configuration does:**
+  - Formats code automatically on save.
+  - Uses **single quotes**.
+  - Omits **semicolons**.
+  - Keeps JSX readable and consistent.
+  - Preserves formatting in MDX files.
+  - Works smoothly with Tailwind CSS.
+  - You don't need to change this file during the lesson.
+
+- You won't need to modify this file during the lesson.
+- Just write code and save — Prettier does the rest.
+
+<hr className='my-8' />
+
+## Linting (ESLint) 🧹
+
+- This project uses the **same ESLint configuration I use in production**.
+- That means the tooling you see here is not "tutorial-only" or simplified.
+- It's the real setup used in a professional codebase.
+- You may notice warnings in your editor as you write code.
+- That's expected.
+- For now, keep this mental model:
+  - ESLint does **not** stop your app from running.
+  - Warnings are safe to ignore at this stage.
+  - Each rule will make sense as your understanding grows.
+- Think of ESLint as a **background guardrail**, not something you need to
+  actively manage yet.
+
+### Step 1: Create the ESLint config file
+
+- 📄 In the project root, create a file named `eslint.config.js`.
+
+### Step 2: Add the production ESLint configuration
+
+- Paste the following code into `eslint.config.js`:
+
+```js
+import tseslint from '@typescript-eslint/eslint-plugin'
+import eslintPluginImport from 'eslint-plugin-import'
+import eslintPluginUnusedImports from 'eslint-plugin-unused-imports'
+import parser from '@typescript-eslint/parser'
+
+export default [
+	{
+		ignores: [
+			'**/node_modules/**',
+			'**/dist/**',
+			'**/build/**',
+			'.react-router/types/**',
+			'prisma/generated/**',
+			'**/*.test.{ts,tsx,js,jsx}',
+			'**/tests/**',
+			'*.cjs',
+			'eslint.config.js',
+		],
+	},
+	{
+		files: ['**/*.{js,jsx,ts,tsx}'],
+		plugins: {
+			'@typescript-eslint': tseslint,
+			import: eslintPluginImport,
+			'unused-imports': eslintPluginUnusedImports,
+		},
+		languageOptions: {
+			parser,
+			ecmaVersion: 'latest',
+			sourceType: 'module',
+			parserOptions: {
+				project: ['./tsconfig.json'],
+			},
+		},
+		rules: {
+			'no-unused-vars': 'off',
+			'@typescript-eslint/no-unused-vars': [
+				'warn',
+				{ varsIgnorePattern: '^_', argsIgnorePattern: '^_' },
+			],
+			'unused-imports/no-unused-imports': 'warn',
+			'@typescript-eslint/no-floating-promises': 'warn',
+			'import/order': [
+				'warn',
+				{
+					groups: [
+						'builtin',
+						'external',
+						'internal',
+						'parent',
+						'sibling',
+						'index',
+						'object',
+						'type',
+					],
+					'newlines-between': 'always',
+					alphabetize: { order: 'asc', caseInsensitive: true },
+				},
+			],
+		},
+	},
+]
+```
+
+- **What to expect from this setup:**
+  - ESLint highlights unused imports.
+  - It warns when async work is not awaited.
+  - It keeps imports structured and predictable.
+
+- You are **not expected to fix every warning immediately**.
+- We'll return to these rules later, when they naturally connect to what
+  you're building.
+- For now, focus on structure and understanding, not tooling perfection.
+
+<hr className='my-8' />
+
+## Clean Up the Starter Code 🧹
+
+- 💡 **Mental model**: Each file in `app/routes` represents a page.
+- 🗑️ Delete the `app/routes/welcome` folder and its contents.
+- ✏️ Open `app/routes/home.tsx`.
+- This file represents the **home page** of your app.
+
+<hr className='my-8' />
+
+## Step 1: Make something appear 🧪
+
+- The objective of this step is simple:
+
+  > Make sure your code shows up in the browser.
+
+- ⚠️ **Note**
+  - This is the **only time** we'll use **red text** in this lesson.
+  - It exists for one reason:
+    > To clearly confirm that Tailwind CSS is working
+- ✏️ Replace the contents of home.tsx with:
+
+```tsx
+export default function Home() {
+	return (
+		<h1 className='m-4 text-4xl font-bold text-red-600'>
+			Hello, World!
+		</h1>
+	)
+}
+```
+
+### What this file represents
+
+- `home.tsx` is a **route file**.
+- In React Router Framework Mode:
+  - A file named home.tsx.
+  - Automatically becomes the home page.
+- You didn't configure routing.
+- You didn’t wire anything manually.
+- The framework handled it.
+
+### Line-by-line explanation 🧠
+
+#### 1️⃣ `export default`
+
+```ts
+export default function Home() {
+```
+
+- React Router expects **one default export** per route file.
+- That export is what gets rendered on the page.
+
+#### 2️⃣ `function Home()`
+
+- This is a React **component**.
+- A component is just a function.
+- Its only job:
+  > Return UI.
+
+#### 3️⃣ `return (...)`
+
+- Whatever is returned here:
+  - Becomes visible in the browser
+- No return → no UI
+
+#### 4️⃣ JSX
+
+```tsx
+<h1 className='text-4xl font-bold text-red-600 m-4'>
+```
+
+- This looks like HTML.
+- It's actually JSX.
+- JSX lets you write UI inside JavaScript.
+
+- Important detail:
+  - We use `className`, not `class`.
+
+#### 5️⃣ Tailwind classes
+
+- `text-4xl` → large text.
+- `font-bold` → strong emphasis.
+- `text-red-600` → visible confirmation.
+- `m-4` → spacing around the element.
+
+These styles apply **only** to this element.
+
+### What you should see 👀
+
+- A large red heading that says:
+  > Hello, World!
+
+<img
+	src={helloWorldAppFinalResultUrl}
+	alt='Hello World app showing red heading confirming the app renders'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- If you see this:
+  - The app runs.
+  - The route works.
+  - Tailwind is active.
+- That's a win.
+
+### Why we stop here
+
+- We do **not** add:
+  - Layout
+  - Components
+  - Styling systems
+  - Interaction
+- This lesson exists to establish confidence, not complexity.
+
+<hr className='my-8' />
+
+## Wrap Up 🏁
+
+- You've built your **first working web app**.
+- Not by memorizing syntax.
+- But by understanding a simple idea:
+  > A function returns UI → the browser shows it.
+
+### What you can now do
+
+- You can:
+  - Run a real project
+  - Edit a route file
+  - See your code in the browser
+  - Confirm your environment works
+
+### What you intentionally did not do
+
+- You did not:
+  - Design UI
+  - Add layout
+  - Add styling systems
+  - Add interaction
+- That comes next — **when it's earned**.
+
+### What's next → 🚀
+
+- In the next lesson, you'll stop verifying.
+- And start **designing structure**.
+- One box at a time.
+- If you can make _Hello, World!_ appear, you can build anything from here.
