@@ -2,8 +2,9 @@ import { z } from 'zod'
 
 import type { ComponentType } from 'react'
 
-import helloWorldAppThumbnail from '~/learn/build-for-the-web/images/001-hello-world-app/hello-world-app-final-result.jpg?url'
-import profileCardAppThubnail from '~/learn/build-for-the-web/images/002-profile-card-app/profile-app-card-final-result.jpg?url'
+import helloWorldAppThumbnail from '~/learn/build-for-the-web/images/001-hello-world-app/thumbnail/hello-world-app-thumbnail.png?url'
+import profileCardAppThubnail from '~/learn/build-for-the-web/images/002-profile-card-app/thumbnail/profile-card-app-thumbnail.png?url'
+import addingBehaviorToAstaticProfileCardAppThumbnail from '~/learn/build-for-the-web/images/003-adding-behavior-to-a-static-profile-card-app/thumbnail/adding-behavior-to-a-static-profile-card-app.png?url'
 
 /**
  * Client-side lesson registry
@@ -30,6 +31,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Profile Card App',
 			lessonNumber: 2,
+			published: true,
+		},
+	},
+	'adding-behavior-to-a-static-profile-card-app': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/003-adding-behavior-to-a-static-profile-card-app.mdx'),
+		thumbnail: addingBehaviorToAstaticProfileCardAppThumbnail,
+		frontmatter: {
+			title: 'Adding Behavior to a Static Profile Card App',
+			lessonNumber: 3,
 			published: true,
 		},
 	},

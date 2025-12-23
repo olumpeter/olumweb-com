@@ -37,7 +37,7 @@ export default function BuildForTheWebIndex() {
 								className='group block overflow-hidden rounded-xl border border-(--border-subtle) bg-(--surface-subtle) no-underline transition hover:-translate-y-0.5 hover:border-(--border-strong) hover:shadow-sm focus-visible:ring-2 focus-visible:ring-(--border-strong) focus-visible:outline-none'
 							>
 								{/* THUMBNAIL */}
-								<div className='relative aspect-3/3 overflow-hidden rounded-lg bg-(--surface-subtle-hover) p-3'>
+								<div className='relative aspect-video overflow-hidden rounded-lg bg-(--surface-subtle-hover) p-3'>
 									<img
 										src={lesson.thumbnail}
 										alt={`Preview of ${lesson.frontmatter.title} lesson`}

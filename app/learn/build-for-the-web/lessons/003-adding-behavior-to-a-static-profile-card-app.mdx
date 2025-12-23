@@ -1,0 +1,396 @@
+---
+title: 'Adding Behavior to a Static Profile Card App'
+slug: 'adding-behavior-to-a-static-profile-card-app'
+series: 'build-for-the-web'
+lessonNumber: 3
+path: '/learn/build-for-the-web/adding-behavior-to-a-static-profile-card-app'
+published: true
+readingTime: '12 min'
+---
+
+import profileCardBeforeInteraction from '../images/003-adding-behavior-to-a-static-profile-card-app/screenshots/profile-card-before-interaction.jpg?url'
+import profileCardAfterClickingFollowButtonOnceUrl from '../images/003-adding-behavior-to-a-static-profile-card-app/screenshots/profile-card-after-clicking-follow-button-once.jpg?url'
+
+## Introduction 🧭
+
+- In Lesson 2, you built a **complete Profile Card UI**.
+- It had:
+  - Structure
+  - Layout
+  - Styling
+  - Visual feedback
+- But it was still **static**.
+- In this lesson, that changes.
+
+### The Constraint 🧩
+
+> - **We will not change how the Profile Card looks.**
+> - **We will only change how it behaves.**
+
+- No new layout.
+- No new Tailwind concepts.
+- No new files.
+- One new idea only: **state**.
+
+<hr className='my-8' />
+
+## What You'll Add 🎯
+
+- By the end of this lesson, your Profile Card will:
+  - Respond to user clicks
+  - Change text from **Follow → Following**
+  - Re-render automatically when data changes
+- Visually, it will look the same.
+- Behaviorally, it will feel different.
+
+### Before Clicking the Follow Button Once
+
+<img
+	src={profileCardBeforeInteraction}
+	alt='Profile Card before interaction, showing the initial Follow button state.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- Below is the **complete code before state is introduced**.
+
+```tsx
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>
+					Modern Fullstack Web Developer
+				</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>
+					Simplifying the web
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						className='flex-1 cursor-pointer rounded-lg border px-4 py-2 text-sm transition hover:bg-slate-100'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						Follow
+					</button>
+				</div>
+			</div>
+		</div>
+	)
+}
+```
+
+### After Clicking the Follow Button Once
+
+<img
+	src={profileCardAfterClickingFollowButtonOnceUrl}
+	alt='Profile Card after clicking the Follow button once, showing the updated interactive state.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- Below is the **same code**, with one addition: state.
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						className='flex-1 cursor-pointer rounded-lg border px-4 py-2 text-sm transition hover:bg-slate-100'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+			</div>
+		</div>
+	)
+}
+```
+
+<hr className='my-8' />
+
+## The Promise (Read This Carefully) 🤝
+
+- This lesson intentionally does **not** introduce:
+  - Forms
+  - APIs
+  - Async logic
+  - Routing
+  - Modals
+  - Animations
+- Those are important — but not yet.
+- Right now, we are learning **how UI changes**.
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+- Before touching code, understand this idea:
+  > **UI = a function of state**
+  >
+  > - Same state → same UI
+  > - Different state → different UI
+- This means:
+  - You don't manually update the screen.
+  - You don't change text directly.
+  - You change **state**.
+  - React re-runs your component.
+  - The UI updates automatically.
+- In Lesson 2, your UI had **no state**.
+- It always rendered the same output.
+- In this lesson, the UI responds to **what's happening**.
+
+<hr className='my-8' />
+
+## Starting Point 🏁
+
+- Open the project from **Lesson 2**.
+- You should already have a fully styled Profile Card.
+- The **Follow** button:
+  - Looks clickable
+  - Has hover feedback
+  - But does nothing when clicked
+- That's the gap we're closing.
+
+<hr className='my-8' />
+
+## Step 1: Identify What Should Change 🧩
+
+- Ask one simple question:
+  > What is the _smallest_ piece of information that affects this UI?
+- Answer:
+  - Whether the user is following or not.
+- Nothing else needs to change.
+- We'll represent this with a boolean:
+- `false` → not following.
+- `true` → following.
+
+<hr className='my-8' />
+
+## Step 2: Introduce State ⚙️
+
+- At the top of your `home.tsx` file, import `useState`:
+
+```ts
+import { useState } from 'react'
+```
+
+- This line gives us access to React's state feature.
+- We'll focus on _what it does_, not how imports work yet.
+- Then, **inside** the `Home` component, add:
+
+```ts
+const [isFollowing, setIsFollowing] = useState(false)
+```
+
+- _What this line means_
+  - `isFollowing`
+    → the current state value.
+  - `setIsFollowing`
+    → a function that updates the state.
+  - `false`
+    → the starting value
+- That's all state is.
+- A value — and a way to update it.
+
+<hr className='my-8' />
+
+## Step 3: Connect User Action to State 🖱️
+
+- Now we connect a **click** to a **state change**.
+- Update the **Follow** button:
+
+```tsx
+<button
+	type='button'
+	onClick={() => setIsFollowing(!isFollowing)}
+	className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+>
+	Follow
+</button>
+```
+
+- **What’s happening here**
+  - The button listens for a click using `onClick`.
+  - When clicked, we update state.
+  - Instead of setting a fixed value, we **flip** the current state.
+- This line is the key:
+
+```ts
+setIsFollowing(!isFollowing)
+```
+
+- It means:
+  - If `isFollowing` is `false`, it becomes `true`.
+  - If `isFollowing` is `true`, it becomes `false`.
+
+- The button now represents a **real interaction**, not a one-time action.
+
+<hr className='my-8' />
+
+#### Step 4: Make the UI Respond to State 🔁
+
+- Now that the state can change in both directions, the UI should reflect it.
+- Replace the button text with a conditional expression:
+
+```tsx
+{isFollowing ? 'Following' : 'Follow'}
+```
+
+- Your button now becomes:
+
+```tsx
+<button
+	type='button'
+	onClick={() => setIsFollowing(!isFollowing)}
+	className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+>
+	{isFollowing ? 'Following' : 'Follow'}
+</button>
+```
+
+- **What you should observe 👀**
+  - First click → Follow → Following
+  - Second click → Following → Follow
+  - Every click updates the UI.
+  - You didn't manually change the text.
+  - You changed **state** — and React re-rendered the UI.
+
+<hr className='my-8' />
+
+## Key Idea Reinforced 🧠
+
+> **UI is a function of current state**.
+
+- Events update state.
+- State changes trigger re-renders.
+- The UI always reflects the latest state.
+- This is the foundation of real interactivity.
+
+## Wrap Up 🏁
+
+- You didn't redesign the Profile Card.
+- You didn't add new layout.
+- You didn't add new styling.
+- You changed **how it behaves**.
+- In this lesson, you crossed an important boundary:
+  > Your UI is no longer static.
+- It responds.
+
+<hr className='my-8' />
+
+### What you can now do confidently
+
+- By the end of this lesson, you can:
+  - Add **state** to a component.
+  - Connect user actions to state changes.
+  - Let the UI update automatically when state changes.
+  - Build **real interactivity** without touching the DOM.
+- You've learned that:
+  > UI is not updated manually — it is **re-rendered**.
+- This is how modern React apps work.
+
+<hr className='my-8' />
+
+### What you intentionally did not learn yet
+
+- And that's a good thing.
+- You did not add:
+  - Forms
+  - APIs
+  - Async logic
+  - Business rules
+  - Navigation
+- Those concepts build **on top of state**.
+- Without state, they don't make sense.
+- Your foundation is now correct.
+
+<hr className='my-8' />
+
+### Carry this forward
+
+- As you continue, keep this rule close:
+  > - **Structure first.**
+  > - **Style second.**
+  > - **Behavior after clarity.**
+- You didn't replace your UI.
+- You **evolved it**.
+- That's how real software grows.
+
+<hr className='my-8' />
+
+### What's next → 🚀
+
+- In the next lesson, you’ll:
+  - Control how the Message button behaves
+  - Add a second piece of state
+  - See how one component handles multiple interactions
+
+- Same card.
+- Same UI.
+- More behavior.
