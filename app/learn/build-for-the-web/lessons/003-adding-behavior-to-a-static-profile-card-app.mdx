@@ -34,7 +34,7 @@ import profileCardAfterClickingFollowButtonOnceUrl from '../images/003-adding-be
 
 <hr className='my-8' />
 
-## What You'll Add 🎯
+## What You'll Build 🎯
 
 - By the end of this lesson, your Profile Card will:
   - Respond to user clicks
@@ -43,7 +43,7 @@ import profileCardAfterClickingFollowButtonOnceUrl from '../images/003-adding-be
 - Visually, it will look the same.
 - Behaviorally, it will feel different.
 
-### Before Clicking the Follow Button Once
+### Before Clicking the Follow Button Once 👀
 
 <img
 	src={profileCardBeforeInteraction}
@@ -107,7 +107,7 @@ export default function Home() {
 }
 ```
 
-### After Clicking the Follow Button Once
+### After Clicking the Follow Button Once 👀
 
 <img
 	src={profileCardAfterClickingFollowButtonOnceUrl}
@@ -207,7 +207,7 @@ export default function Home() {
 
 <hr className='my-8' />
 
-## Starting Point 🏁
+## Step 1: Starting Point 🏁
 
 - Open the project from **Lesson 2**.
 - You should already have a fully styled Profile Card.
@@ -216,10 +216,61 @@ export default function Home() {
   - Has hover feedback
   - But does nothing when clicked
 - That's the gap we're closing.
+- If you're not sure your code matches Lesson 3 exactly, here is the full version we are starting from:
+
+```tsx
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						className='flex-1 cursor-pointer rounded-lg border px-4 py-2 text-sm transition hover:bg-slate-100'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						Follow
+					</button>
+				</div>
+			</div>
+		</div>
+	)
+}
+```
 
 <hr className='my-8' />
 
-## Step 1: Identify What Should Change 🧩
+## Step 2: Identify What Should Change 🧩
 
 - Ask one simple question:
   > What is the _smallest_ piece of information that affects this UI?
@@ -232,7 +283,7 @@ export default function Home() {
 
 <hr className='my-8' />
 
-## Step 2: Introduce State ⚙️
+## Step 3: Introduce State ⚙️
 
 - At the top of your `home.tsx` file, import `useState`:
 
@@ -260,7 +311,7 @@ const [isFollowing, setIsFollowing] = useState(false)
 
 <hr className='my-8' />
 
-## Step 3: Connect User Action to State 🖱️
+## Step 4: Connect User Action to State 🖱️
 
 - Now we connect a **click** to a **state change**.
 - Update the **Follow** button:
@@ -293,7 +344,7 @@ setIsFollowing(!isFollowing)
 
 <hr className='my-8' />
 
-#### Step 4: Make the UI Respond to State 🔁
+## Step 5: Make the UI Respond to State 🔁
 
 - Now that the state can change in both directions, the UI should reflect it.
 - Replace the button text with a conditional expression:
@@ -332,6 +383,8 @@ setIsFollowing(!isFollowing)
 - The UI always reflects the latest state.
 - This is the foundation of real interactivity.
 
+<hr className='my-8' />
+
 ## Wrap Up 🏁
 
 - You didn't redesign the Profile Card.
@@ -344,7 +397,7 @@ setIsFollowing(!isFollowing)
 
 <hr className='my-8' />
 
-### What you can now do confidently
+## What you can now do confidently 🛠️
 
 - By the end of this lesson, you can:
   - Add **state** to a component.
@@ -357,7 +410,7 @@ setIsFollowing(!isFollowing)
 
 <hr className='my-8' />
 
-### What you intentionally did not learn yet
+## What you intentionally did not learn yet 🎯
 
 - And that's a good thing.
 - You did not add:
@@ -372,7 +425,7 @@ setIsFollowing(!isFollowing)
 
 <hr className='my-8' />
 
-### Carry this forward
+## Carry this forward 🧭
 
 - As you continue, keep this rule close:
   > - **Structure first.**
@@ -384,13 +437,12 @@ setIsFollowing(!isFollowing)
 
 <hr className='my-8' />
 
-### What's next → 🚀
+## What's next → 🚀
 
 - In the next lesson, you’ll:
   - Control how the Message button behaves
   - Add a second piece of state
   - See how one component handles multiple interactions
-
 - Same card.
 - Same UI.
 - More behavior.

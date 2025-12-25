@@ -1,0 +1,665 @@
+---
+title: 'Adding a Second Behavior to the Profile Card App'
+slug: 'adding-a-second-behavior-to-the-profile-card-app'
+series: 'build-for-the-web'
+lessonNumber: 4
+path: '/learn/build-for-the-web/adding-a-second-behavior-to-the-profile-card-app'
+published: true
+readingTime: '18 min'
+---
+
+import profileCardAppStartingPointForLesson4 from '../images/004-adding-a-second-behavior-to-the-profile-card-app/screenshots/profile-card-app-starting-point-for-lesson-4.jpg?url'
+import profileCardAfterMessageButtonIsClickedOnce from '../images/004-adding-a-second-behavior-to-the-profile-card-app/screenshots/profile-card-after-message-button-is-clicked-once.jpg?url'
+import profileCardAfterOneMessageIsSent from '../images/004-adding-a-second-behavior-to-the-profile-card-app/screenshots/profile-card-after-one-message-is-sent.jpg?url'
+import profileCardAfterCancelButtonIsClickedOnceBeforeSendingTheFirstMessage from '../images/004-adding-a-second-behavior-to-the-profile-card-app/screenshots/profile-card-after-cancel-button-is-clicked-once-before-sending-the-first-message.jpg?url'
+
+## Introduction 🧭
+
+- In Lesson 3, you introduced **state**.
+- You made the Profile Card respond to user interaction.
+- The Follow button now:
+  - Changes state.
+  - Triggers a re-render.
+  - Updates the UI automatically.
+- That was your first real dynamic behavior.
+- In this lesson, we will **add one more** — and see how multiple pieces of state work together.
+
+### The Constraint 🧩
+
+> - We will not change the layout.
+> - We will not change the styling.
+> - We will not introduce forms, APIs, or async logic.
+> - We will not add new files.
+
+- We will:
+  - Stay inside the same component.
+  - Add one new piece of state.
+  - Control one more behavior.
+
+<hr className='my-8' />
+
+## What You'll Build 🎯
+
+- By the end of this lesson, your Profile Card will:
+  - Open a message composer when Message is clicked
+  - Disable the Message button while composing
+  - Allow the user to send or cancel a message
+  - Show how many messages have been sent
+- Visually, it will look the same.
+- Behaviorally, it will feel more interactive.
+
+### 1️⃣ Before Clicking the Message Button
+
+<img
+	src={profileCardAppStartingPointForLesson4}
+	alt='Profile Card before clicking the Message button, showing the static initial state.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> This is the starting point.
+
+- Below is the complete code at the start of this lesson:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						className='flex-1 cursor-pointer rounded-lg border px-4 py-2 text-sm transition hover:bg-slate-100'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+			</div>
+		</div>
+	)
+}
+```
+
+### 2️⃣ After Clicking the Message Button Once
+
+<img
+	src={profileCardAfterMessageButtonIsClickedOnce}
+	alt='Profile Card after clicking the Message button once, showing the message composer open.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> The message composer appears and the Message button becomes disabled.
+
+- Below is the same component with the composer added:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<div className='mt-4 space-y-2'>
+						<textarea
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+						<div className='flex gap-2'>
+							<button
+								type='button'
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white'
+							>
+								Send
+							</button>
+							<button
+								type='button'
+								onClick={() => setIsComposing(false)}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm'
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+### 3️⃣ After Clicking Cancel (Before Sending the First Message)
+
+<img
+	src={profileCardAfterCancelButtonIsClickedOnceBeforeSendingTheFirstMessage}
+	alt='Profile Card after clicking Cancel before sending, showing the composer closed and no message sent.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> The composer closes without sending anything.
+
+- This uses the same code as above — only the state changed back to `false`.
+- No new code needed — and this itself teaches that state drives UI.
+
+### 4️⃣ After Sending One Message
+
+<img
+	src={profileCardAfterOneMessageIsSent}
+	alt='Profile Card after sending one message, showing the message count incremented.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> The composer closes and the message count increases by one.
+
+- Below is the final version with message tracking added:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<div className='mt-4 space-y-2'>
+						<textarea
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+						<div className='flex gap-2'>
+							<button
+								type='button'
+								onClick={() => {
+									setMessagesSentCount(messagesSentCount + 1)
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white'
+							>
+								Send
+							</button>
+							<button
+								type='button'
+								onClick={() => setIsComposing(false)}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm'
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+- A component can have **multiple pieces of state**.
+- Each piece of state represents a small fact the component cares about.
+- The UI is always a function of **all current state**.
+
+> UI = f(state<sub>1</sub>, state<sub>2</sub>, state<sub>3</sub>, ...)
+
+<hr className='my-8' />
+
+## Step 1: Starting Point 🏁
+
+- Start from the end of Lesson 3.
+- You should already have `isFollowing` working.
+- If you're not sure your code matches Lesson 3 exactly, here is the full version we are starting from:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						className='flex-1 cursor-pointer rounded-lg border px-4 py-2 text-sm transition hover:bg-slate-100'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+			</div>
+		</div>
+	)
+}
+```
+
+- This is our baseline.
+- We will not change its layout or styling — only its behavior.
+
+<img
+	src={profileCardAppStartingPointForLesson4}
+	alt='Profile Card starting point UI with Follow button interactive and Message button static.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> If your screen looks like this, you're ready to continue.
+
+<hr className='my-8' />
+
+## Step 2: Decide What Should Change 🧩
+
+- Ask one question:
+
+> What is the smallest piece of information that controls whether the user is composing a message?
+
+Answer:
+
+> Whether the message composer is open or not.
+
+- We'll represent this with:
+
+```ts
+const [isComposing, setIsComposing] = useState(false)
+```
+
+<hr className='my-8' />
+
+## Step 3: Introduce Composing State ⚙️
+
+- Now that we know _what_ should change, we introduce state to represent it.
+- Add this inside your `Home` component:
+
+```ts
+const [isComposing, setIsComposing] = useState(false)
+```
+
+- You now have:
+
+```ts
+const [isFollowing, setIsFollowing] = useState(false)
+const [isComposing, setIsComposing] = useState(false)
+```
+
+- Each piece of state controls one concern:
+  - `isFollowing` → relationship state
+  - `isComposing` → UI state
+
+<hr className='my-8' />
+
+## Step 4: Connect the Message Button to State 🖱️
+
+- Now we connect the **Message** button to this new piece of state.
+
+```tsx
+<button
+	type='button'
+	onClick={() => setIsComposing(true)}
+	disabled={isComposing}
+	className='flex-1 cursor-pointer rounded-lg border px-4 py-2 text-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50'
+>
+	Message
+</button>
+```
+
+- Clicking Message now opens the composer.
+- While composing, the button is disabled.
+- This prevents the user from opening multiple composers and keeps the UI in
+  a valid state.
+
+<hr className='my-8' />
+
+## Step 5: Render the Composer Conditionally ✍️
+
+- Now we describe when the composer should exist.
+- Add this **below the actions section**:
+
+```tsx
+{/*
+	Render the composer only when the user is composing a message.
+	We are not showing or hiding it — we are describing when it should exist.
+*/}
+{isComposing && (
+	<div className='mt-4 space-y-2'>
+		<textarea
+			className='w-full rounded-lg border p-2 text-sm'
+			placeholder='Type your message...'
+		/>
+
+		<div className='flex gap-2'>
+			<button
+				type='button'
+				className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700'
+			>
+				Send
+			</button>
+
+			<button
+				type='button'
+				onClick={() => setIsComposing(false)}
+				className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+			>
+				Cancel
+			</button>
+		</div>
+	</div>
+)}
+```
+
+- Cancel closes the composer.
+- Send doesn't do anything yet — we'll handle that next.
+
+### After Clicking the Message Button Once 👀
+
+<img
+	src={profileCardAfterMessageButtonIsClickedOnce}
+	alt='Profile Card after clicking the Message button once, showing the composer open and Message button disabled.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> You should now see the message composer, and the Message button should be disabled.
+
+### After Clicking Cancel 👀
+
+<img
+	src={profileCardAfterCancelButtonIsClickedOnceBeforeSendingTheFirstMessage}
+	alt='Profile Card after clicking the Cancel button once before sending, showing the composer closed and no message sent.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> Clicking Cancel closes the composer without sending a message.
+
+<hr className='my-8' />
+
+## Step 6: Track Messages Sent 📊
+
+- Now that the user can click Send, we want to show that something meaningful happened.
+- Add this state:
+
+```ts
+const [messagesSentCount, setMessagesSentCount] = useState(0)
+```
+
+- Update the **Send** button:
+
+```tsx
+<button
+	type='button'
+	onClick={() => {
+		setMessagesSentCount(messagesSentCount + 1)
+		setIsComposing(false)
+	}}
+	className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700'
+>
+	Send
+</button>
+```
+
+## Step 7: Show Feedback to the User 👀
+
+- Display the count under the bio:
+
+```tsx
+<p className='mt-2 text-xs text-slate-400'>
+	Messages sent: {messagesSentCount}
+</p>
+```
+
+- Now the UI visibly reflects what happened.
+
+### After One Message is Sent 👀
+
+<img
+	src={profileCardAfterOneMessageIsSent}
+	alt='Profile Card after one message is sent, showing the message count incremented from 0 to 1 and the composer closed.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> The composer should close and the message count should increase by one.
+
+<hr className='my-8' />
+
+## Key Idea Reinforced 🧠
+
+- You did not manually update the UI.
+- You changed state.
+- The UI followed.
+- Each interaction becomes:
+  > Event → State change → Re-render → New UI
+
+<hr className='my-8' />
+
+## Wrap Up 🏁
+
+- You added a second and third piece of state.
+- You coordinated multiple behaviors.
+- You kept logic explicit and readable.
+- You made the UI feel more real without adding complexity.
+
+## What you can now do confidently 🛠️
+
+- Model multiple independent facts with state.
+- Derive UI from combined state.
+- Prevent invalid UI transitions.
+- Add feedback without adding backend logic.
+
+<hr className='my-8' />
+
+## What you intentionally did not learn yet 🎯
+
+- And that's a good thing.
+- You did not add:
+  - Controlled inputs
+  - Validation
+  - Submission logic
+  - Side effects
+  - Data persistence
+- Those concepts build **on top of state coordination**.
+- Without first understanding how multiple pieces of state interact, those topics become confusing and fragile.
+- Right now, your mental model is clean:
+
+  > The UI is derived from state — not pushed into being.
+
+- We are deliberately building a **stable foundation** before adding complexity.
+- This keeps your code:
+  - Predictable
+  - Understandable
+  - Easy to change later
+
+<hr className='my-8' />
+
+## Carry this forward 🧭
+
+- As you continue, keep this rule close:
+
+  > - **Structure first.**
+  > - **Style second.**
+  > - **Single behavior next.**
+  > - **Multiple behaviors only after clarity.**
+
+- You didn't add features randomly.
+- You added one new responsibility, understood it, and only then added another.
+- That discipline is what keeps real software:
+  - Maintainable
+  - Scalable
+  - Debuggable
+
+- If you can grow a component this way,
+  you can grow **any system** this way.
+
+<hr className='my-8' />
+
+### What's next → 🚀
+
+- In the next lesson, you'll:
+  - Control the message input value
+  - Validate user input
+  - Prepare data for submission
+- Still no servers.
+- Still no APIs.
+- Just one more layer of responsibility.
