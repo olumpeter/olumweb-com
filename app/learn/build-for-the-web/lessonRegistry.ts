@@ -6,6 +6,7 @@ import helloWorldAppThumbnail from '~/learn/build-for-the-web/images/001-hello-w
 import profileCardAppThubnail from '~/learn/build-for-the-web/images/002-profile-card-app/thumbnail/profile-card-app-thumbnail.png?url'
 import addingBehaviorToAstaticProfileCardAppThumbnail from '~/learn/build-for-the-web/images/003-adding-behavior-to-a-static-profile-card-app/thumbnail/adding-behavior-to-a-static-profile-card-app.png?url'
 import addingASecondBehaviorToTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/004-adding-a-second-behavior-to-the-profile-card-app/thumbnail/adding-a-second-behavior-to-the-profile-card-app.png?url'
+import controllingUserInputInTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/005-controlling-user-input-in-the-profile-card-app/thumbnail/controlling-user-input-in-the-profile-card-app.png?url'
 
 /**
  * Client-side lesson registry
@@ -52,6 +53,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Adding a Second Behavior to the Profile Card App',
 			lessonNumber: 4,
+			published: true,
+		},
+	},
+	'controlling-user-input-in-the-profile-card-app': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/005-controlling-user-input-in-the-profile-card-app.mdx'),
+		thumbnail: controllingUserInputInTheProfileCardAppThumbnail,
+		frontmatter: {
+			title: 'Controlling User Input in the Profile Card App',
+			lessonNumber: 5,
 			published: true,
 		},
 	},

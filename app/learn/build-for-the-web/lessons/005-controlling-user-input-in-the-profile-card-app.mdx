@@ -1,0 +1,571 @@
+---
+title: 'Controlling User Input in the Profile Card App'
+slug: 'controlling-user-input-in-the-profile-card-app'
+series: 'build-for-the-web'
+lessonNumber: 5
+path: '/learn/build-for-the-web/controlling-user-input-in-the-profile-card-app'
+published: true
+readingTime: '16 min'
+---
+
+import profileCardAppStartingPointForLesson5 from '../images/005-controlling-user-input-in-the-profile-card-app/screenshots/profile-card-starting-point-for-lesson-5.jpg?url'
+import profileCardBeforeTypingAnythingInTheUnenforcedControlledTextarea from '../images/005-controlling-user-input-in-the-profile-card-app/screenshots/profile-card-before-typing-anything-in-the-unenforced-controlled-textarea.jpg?url'
+import profileCardAfterTypingSomethingInTheUnenforcedControlledTextarea from '../images/005-controlling-user-input-in-the-profile-card-app/screenshots/profile-card-after-typing-something-in-the-unenforced-controlled-textarea.jpg?url'
+import profileCardBeforeTypingAnythingInTheEnforcedControlledTextarea from '../images/005-controlling-user-input-in-the-profile-card-app/screenshots/profile-card-before-typing-anything-in-the-enforced-controlled-textarea.jpg?url'
+import profileCardAfterTypingSomethingInTheEnforcedControlledTextarea from '../images/005-controlling-user-input-in-the-profile-card-app/screenshots/profile-card-after-typing-something-in-the-enforced-controlled-textarea.jpg?url'
+
+## Introduction 🧭
+
+- In Lesson 4, you coordinated multiple behaviors using state.
+- The Profile Card could:
+  - Open and close a composer.
+  - Track messages sent.
+  - Prevent the invalid transition of opening multiple composers at the
+    same time (by disabling the Message button while composing).
+- But the message itself was still… empty.
+- The UI reacted to clicks.
+- Now it will react to **data**.
+- In this lesson, we will cross an important boundary:
+  > The user will type something — and the component will own it.
+- That is what makes an app an app.
+
+### The Constraint 🧩
+
+> - We will not change the layout.
+> - We will not change the styling.
+> - We will not introduce forms or submit handlers.
+> - We will not introduce APIs or async logic.
+> - We will not add new files.
+
+- We will:
+  - Stay inside the same component.
+  - Add one new piece of state.
+  - Let the UI become data-driven.
+
+<hr className='my-8' />
+
+## What You'll Build 🎯
+
+- By the end of this lesson:
+  - The textarea will be controlled by state.
+  - Typing will update state on every keystroke.
+  - The UI will show the number of characters typed into the textarea.
+  - The Send button will be disabled when input is empty.
+  - The input will clear when a message is sent or canceled.
+
+### 1️⃣ Profile Card Before Typing Anything in the Enforced Controlled Textarea
+
+> This is what we are building in this lesson.
+
+<img
+	src={profileCardBeforeTypingAnythingInTheEnforcedControlledTextarea}
+	alt='Profile Card before typing in the enforced controlled textarea, Send button disabled'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 2️⃣ Profile Card After Typing Something in the Enforced Controlled Textarea
+
+<img
+	src={profileCardAfterTypingSomethingInTheEnforcedControlledTextarea}
+	alt='Profile Card after typing in the enforced controlled textarea, Send button enabled'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 3️⃣ Complete Code for this Lesson 5:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<div className='mt-4 space-y-2'>
+						<textarea
+							value={messageText}
+							onChange={event => setMessageText(event.target.value)}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						<div className='flex gap-2'>
+							<button
+								type='button'
+								disabled={messageText.trim() === ''}
+								onClick={() => {
+									setMessagesSentCount(messagesSentCount + 1)
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+							>
+								Send
+							</button>
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+- Before building this step-by-step, understand this idea:
+  > The input is not the source of truth.  
+  > State is the source of truth.  
+  > The input is just a reflection of state.
+- That's what "controlled input" means.
+- The flow becomes:
+  > User types → event fires → state updates → UI re-renders
+- Not:
+  > User types → browser changes DOM → React somehow notices
+- We do not "read" from the input.
+- We **write to it** from state.
+
+<hr className='my-8' />
+
+## Step 1: Starting Point 🏁
+
+- Start from the end of Lesson 4.
+- You should already have:
+  - The Follow button working.
+  - The Message button opening and closing the composer.
+  - The messages sent counter updating.
+- If your app behaves like that, you are in the correct place.
+- If you're not sure your code matches Lesson 4 exactly, here is the full
+  version we are starting from:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<div className='mt-4 space-y-2'>
+						<textarea
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+						<div className='flex gap-2'>
+							<button
+								type='button'
+								onClick={() => {
+									setMessagesSentCount(messagesSentCount + 1)
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white'
+							>
+								Send
+							</button>
+							<button
+								type='button'
+								onClick={() => setIsComposing(false)}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm'
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+- This is how it looks when you click the Message button once:
+
+<img
+	src={profileCardAppStartingPointForLesson5}
+	alt='Profile Card starting point with Follow button and closed message composer'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+<hr className='my-8' />
+
+## Step 2: Decide What Should Change 🧩
+
+- Ask one question:
+  > What is the smallest piece of information that represents the message being typed?
+- Answer:
+  > The current message text.
+- So we model it as state:
+
+```ts
+const [messageText, setMessageText] = useState('')
+```
+
+- An empty string means: no message yet.
+
+<hr className='my-8' />
+
+## Step 3: Introduce Message State ⚙️
+
+- Add the new state inside your `Home` component:
+
+```ts
+const [messageText, setMessageText] = useState('')
+```
+
+- Now your state looks like this:
+
+```ts
+const [isFollowing, setIsFollowing] = useState(false)
+const [isComposing, setIsComposing] = useState(false)
+const [messagesSentCount, setMessagesSentCount] = useState(0)
+const [messageText, setMessageText] = useState('')
+```
+
+- Each piece of state represents one fact:
+  - Relationship
+  - UI mode
+  - History
+  - Input
+
+<hr className='my-8' />
+
+## Step 4: Bind the Textarea to State ✍️
+
+- Replace the textarea with:
+
+```tsx
+<textarea
+	value={messageText}
+	onChange={event => setMessageText(event.target.value)}
+	className='w-full rounded-lg border p-2 text-sm'
+	placeholder='Type your message...'
+/>
+```
+
+- Now:
+  - The textarea displays `messageText`.
+  - Typing updates state.
+  - The component owns the value.
+
+## Step 5: Make State Visible 👀
+
+- Right now, `messageText` is updating — but the user cannot see that state yet.
+- So let's surface it.
+- Add this **below the textarea**:
+
+```tsx
+<p className='text-xs text-slate-400'>
+  Characters: {messageText.length}
+</p>
+```
+
+- Now the UI exposes internal state.
+  - Every keystroke changes `messageText`.
+  - The component re-renders.
+  - The character count updates automatically.
+- You didn't add logic.
+- You didn't add effects.
+- You just described the UI directly from state.
+
+### After Adding the Character Counter 👀
+
+<img
+	src={profileCardBeforeTypingAnythingInTheUnenforcedControlledTextarea}
+	alt='Profile Card before typing in the unenforced controlled textarea, character count at zero'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> The character count starts at 0 — because messageText is an empty string.
+
+- Now type something.
+
+### After Typing 👀
+
+<img
+	src={profileCardAfterTypingSomethingInTheUnenforcedControlledTextarea}
+	alt='Profile Card after typing in the unenforced controlled textarea, character count increased'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> The count updates automatically — because state changed.
+
+- Nothing is listening.
+- Nothing is syncing.
+- Nothing is manually updated.
+- State changed → UI re-rendered → new output.
+- That's the whole model.
+
+<hr className='my-8' />
+
+### Step 6: Enforce Rules Through State 🚫
+
+> "Enforced" means the UI itself now prevents invalid actions
+> — not just shows data.
+
+- Now that state is visible, we can use it to prevent invalid actions.
+- Update the Send button:
+
+```tsx
+<button
+	type='button'
+	disabled={messageText.trim() === ''}
+	onClick={() => {
+		setMessagesSentCount(messagesSentCount + 1)
+		setMessageText('')
+		setIsComposing(false)
+	}}
+	className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+>
+	Send
+</button>
+```
+
+- Now:
+  - If `messageText` is empty → Send is disabled.
+  - If it has content → Send becomes enabled.
+- You didn't check validity.
+- You didn't block submission.
+- You **described the button as a function of state**.
+- That is declarative control.
+
+### After Enforcing Constraints 👀
+
+<img
+	src={profileCardBeforeTypingAnythingInTheEnforcedControlledTextarea}
+	alt='Profile Card with enforced constraints, character count at zero and Send button disabled'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> The UI now expresses the system’s rules.
+
+- The interface is no longer passive.
+- It actively guides the user.
+
+<hr className='my-8' />
+
+## Step 7: Reset State Explicitly 🧹
+
+- Finally, ensure Cancel resets both the UI and the data:
+
+```tsx
+<button
+	type='button'
+	onClick={() => {
+		setMessageText('')
+		setIsComposing(false)
+	}}
+	className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+>
+	Cancel
+</button>
+```
+
+- Now:
+  - Cancel clears the input.
+  - Cancel closes the composer.
+  - Cancel returns the system to a known, valid state.
+- No leftovers.
+- No ghosts.
+- No stale data.
+- Just state → UI → state.
+
+### Why This Order Matters
+
+1. Bind input to state (control)
+1. Expose state visually (character counter)
+1. Enforce rules using state (disable Send)
+1. Reset state intentionally (Cancel clears)
+
+- This mirrors how real systems are built:
+  > Control → Visibility → Constraints → Recovery
+- That sequence gives learners a mental model, not just a feature.
+
+<hr className='my-8' />
+
+## Key Idea Reinforced 🧠
+
+- You did not read from the DOM.
+- You did not query the textarea.
+- You did not extract values on submit.
+- You bound the input to state.
+- You let state drive the UI.
+- That is what makes it predictable.
+
+<hr className='my-8' />
+
+## Wrap Up 🏁
+
+- You crossed a major boundary:
+  - The UI now represents data.
+  - User input is no longer accidental.
+  - Every keystroke is intentional.
+- Your component is now:
+  - Interactive
+  - Data-driven
+  - Predictable
+  - Ready for real workflows
+
+<hr className='my-8' />
+
+## What you can now do confidently 🛠️
+
+- Build controlled inputs
+- Synchronize user input with state
+- Prevent invalid input before submission
+- Reset and coordinate multiple pieces of state
+
+<hr className='my-8' />
+
+## What you intentionally did not learn yet 🎯
+
+- You did not add:
+  - Validation rules
+  - Error messages
+  - APIs
+  - Persistence
+  - Side effects
+  - Those belong after control is mastered.
+
+<hr className='my-8' />
+
+## Carry this forward 🧭
+
+> - Structure first
+> - Style second
+> - Behavior next
+> - Data last
+
+- This order keeps systems understandable.
+- If you can control one input this way, you can control any system this way.
+
+<hr className='my-8' />
+
+## What's next → 🚀
+
+- You'll validate input.
+- Handle error states.
+- Prepare data for real submission.
+- Still no servers.
+- Still no APIs.
+- Just one more layer of responsibility.
