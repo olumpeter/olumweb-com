@@ -7,6 +7,7 @@ import profileCardAppThubnail from '~/learn/build-for-the-web/images/002-profile
 import addingBehaviorToAstaticProfileCardAppThumbnail from '~/learn/build-for-the-web/images/003-adding-behavior-to-a-static-profile-card-app/thumbnail/adding-behavior-to-a-static-profile-card-app.png?url'
 import addingASecondBehaviorToTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/004-adding-a-second-behavior-to-the-profile-card-app/thumbnail/adding-a-second-behavior-to-the-profile-card-app.png?url'
 import controllingUserInputInTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/005-controlling-user-input-in-the-profile-card-app/thumbnail/controlling-user-input-in-the-profile-card-app.png?url'
+import validatingUserInputInTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/006-validating-user-input-in-the-profile-card-app/thumbnail/validating-user-input-in-the-profile-card-app.png?url'
 
 /**
  * Client-side lesson registry
@@ -63,6 +64,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Controlling User Input in the Profile Card App',
 			lessonNumber: 5,
+			published: true,
+		},
+	},
+	'validating-user-input-in-the-profile-card-app': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/006-validating-user-input-in-the-profile-card-app.mdx'),
+		thumbnail: validatingUserInputInTheProfileCardAppThumbnail,
+		frontmatter: {
+			title: 'Validating User Input in the Profile Card App',
+			lessonNumber: 6,
 			published: true,
 		},
 	},

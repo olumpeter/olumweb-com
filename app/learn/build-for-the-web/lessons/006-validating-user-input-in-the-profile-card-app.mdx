@@ -1,0 +1,939 @@
+---
+title: 'Validating User Input in the Profile Card App'
+slug: 'validating-user-input-in-the-profile-card-app'
+series: 'build-for-the-web'
+lessonNumber: 6
+path: '/learn/build-for-the-web/validating-user-input-in-the-profile-card-app'
+published: true
+readingTime: '20 min'
+---
+
+import profileCardStartingPointForLesson6 from '../images/006-validating-user-input-in-the-profile-card-app/screenshots/profile-card-starting-point-for-lesson-6.jpg?url'
+import profileCardMessageTooShort from '../images/006-validating-user-input-in-the-profile-card-app/screenshots/profile-card-message-too-short.jpg?url'
+import profileCardMessageTooLong from '../images/006-validating-user-input-in-the-profile-card-app/screenshots/profile-card-message-too-long.jpg?url'
+import profileCardMessageTooShortSendDisabled from '../images/006-validating-user-input-in-the-profile-card-app/screenshots/profile-card-message-too-short-send-disabled.jpg?url'
+import profileCardMessageTooLongSendDisabled from '../images/006-validating-user-input-in-the-profile-card-app/screenshots/profile-card-message-too-long-send-disabled.jpg?url'
+import profileCardMessageValid from '../images/006-validating-user-input-in-the-profile-card-app/screenshots/profile-card-message-valid.jpg?url'
+import profileCardAfterSendingValidMessage from '../images/006-validating-user-input-in-the-profile-card-app/screenshots/profile-card-after-sending-valid-message.jpg?url'
+
+## Introduction 🧭
+
+- In Lesson 5, you made the message input **controlled**.
+- The component now owns the message text.
+- Every keystroke updates state.
+- The UI reflects that state.
+- But the system still accepts **anything**.
+- An empty message is blocked.
+- But a 1-character message is accepted.
+- A 5,000-character message is accepted.
+- The UI does not express any rules.
+- In this lesson, we will add **constraints**.
+- We will teach the component:
+  - What is allowed.
+  - What is not allowed.
+  - How to express those rules through the UI.
+
+<hr className='my-8' />
+
+## The Constraint 🧩
+
+> - We will not change the layout.
+> - We will not change the styling.
+> - We will not introduce forms, APIs, or async logic.
+> - We will not add new files.
+
+- We will:
+  - Stay inside the same component.
+  - Add **no new state**.
+  - Derive validation purely from existing state.
+
+<hr className='my-8' />
+
+## What You'll Build 🎯
+
+- By the end of this lesson:
+  - Messages shorter than 3 characters will be rejected.
+  - Messages longer than 200 characters will be rejected.
+  - The Send button will reflect validity.
+  - The UI will explain why a message is invalid.
+  - The system will derive validity from state — not store it.
+- No submission.
+- No servers.
+- Just rules.
+
+> This is what we are building in this lesson.
+
+### 1️⃣ Profile Card Showing an Invalid Message (Too Short)
+
+<img
+	src={profileCardMessageTooShortSendDisabled}
+	alt='Profile Card showing a too-short message with validation feedback and the Send button disabled'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 2️⃣ Profile Card Showing an Invalid Message (Too Long)
+
+<img
+	src={profileCardMessageTooLongSendDisabled}
+	alt='Profile Card showing a too-long message with validation feedback and the Send button disabled'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 3️⃣ Profile Card Showing a Valid Message
+
+<img
+	src={profileCardMessageValid}
+	alt='Profile Card showing a valid message with the Send button enabled'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 4️⃣ Complete Code for this Lesson 6
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+
+	const minLength = 3
+	const maxLength = 200
+
+	const isTooShort = messageText.length > 0 && messageText.length < minLength
+
+	const isTooLong = messageText.length > maxLength
+
+	const isValid = !isTooShort && !isTooLong && messageText.trim() !== ''
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<div className='mt-4 space-y-2'>
+						<textarea
+							value={messageText}
+							onChange={event => setMessageText(event.target.value)}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						{isTooShort && (
+							<p className='text-xs text-red-500'>
+								Message must be at least {minLength} characters.
+							</p>
+						)}
+
+						{isTooLong && (
+							<p className='text-xs text-red-500'>
+								Message must be at most {maxLength} characters.
+							</p>
+						)}
+
+						<div className='flex gap-2'>
+							<button
+								type='button'
+								disabled={!isValid}
+								onClick={() => {
+									setMessagesSentCount(c => c + 1)
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+							>
+								Send
+							</button>
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+> **Validity is not something you check.  
+> Validity is something you _derive_.**
+
+- Just like layout and behavior, validity is a function of state.
+
+> UI = f(state)
+
+- Now that includes:
+  - Behavior
+  - Data
+  - Rules
+
+<hr className='my-8' />
+
+## Step 1: Starting Point 🏁
+
+- Start from the end of Lesson 5.
+- You should have:
+  - `messageText` controlled by state.
+  - The Send button disabled when the message is empty.
+  - The message composer opening and closing correctly.
+- If that works, you are in the right place.
+
+<img
+	src={profileCardStartingPointForLesson6}
+	alt='Profile Card starting point at the beginning of Lesson 6.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> This is the starting point for this lesson.
+
+- Below is the complete code at the start of this lesson:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<div className='mt-4 space-y-2'>
+						<textarea
+							value={messageText}
+							onChange={event => setMessageText(event.target.value)}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						<div className='flex gap-2'>
+							<button
+								type='button'
+								disabled={messageText.trim() === ''}
+								onClick={() => {
+									setMessagesSentCount(c => c + 1)
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+							>
+								Send
+							</button>
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+<hr className='my-8' />
+
+## Step 2: Define the Rules 🧩
+
+- Before touching code, define the rules:
+  - A message must be at least 3 characters.
+  - A message must be at most 200 characters.
+- These are system rules — not UI preferences.
+
+<hr className='my-8' />
+
+## Step 3: Derive Validation from State ⚙️
+
+- Ask one question:
+
+> What is the smallest piece of information that determines whether a message is valid?
+
+- Answer:
+
+> The length of the message — whether it falls below or exceeds our limits.
+
+- We do not introduce new state.
+- We derive everything from `messageText`.
+- Add the following **below your state declarations** inside `Home`:
+
+```ts
+const minLength = 3
+const maxLength = 200
+
+const isTooShort =
+	messageText.length > 0 && messageText.length < minLength
+
+const isTooLong =
+	messageText.length > maxLength
+
+const isValid =
+	!isTooShort &&
+	!isTooLong &&
+	messageText.trim() !== ''
+```
+
+- `minLength` and `maxLength` express the rules.
+- `isTooShort` and `isTooLong` express violations.
+- `isValid` expresses whether the current message is acceptable.
+
+> - We did not "check" validity.
+> - We described it.
+
+- At the end of Step 3, your component looks like this:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+
+  const minLength = 3
+	const maxLength = 200
+
+	const isTooShort =
+		messageText.length > 0 && messageText.length < minLength
+
+	const isTooLong =
+		messageText.length > maxLength
+
+	const isValid =
+		!isTooShort &&
+		!isTooLong &&
+		messageText.trim() !== ''
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<div className='mt-4 space-y-2'>
+						<textarea
+							value={messageText}
+							onChange={event => setMessageText(event.target.value)}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						<div className='flex gap-2'>
+							<button
+								type='button'
+								disabled={messageText.trim() === ''}
+								onClick={() => {
+									setMessagesSentCount(c => c + 1)
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+							>
+								Send
+							</button>
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+- **What changed**:
+  - You made the rules explicit.
+  - You expressed violations.
+  - You derived validity.
+
+> - We did not "check" validity.
+> - We described it.
+
+<hr className='my-8' />
+
+## Step 4: Surface Validation Feedback 👀
+
+- At the end of Step 3:
+  - The system knows what is valid.
+  - The user does not.
+- There is no visual feedback yet.
+- To add validation messages,
+  add the following **below the character counter**:
+
+```tsx
+{isTooShort && (
+	<p className='text-xs text-red-500'>
+		Message must be at least {minLength} characters.
+	</p>
+)}
+
+{isTooLong && (
+	<p className='text-xs text-red-500'>
+		Message must be at most {maxLength} characters.
+	</p>
+)}
+```
+
+- At the end of Step 4, your component looks like this:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+
+	const minLength = 3
+	const maxLength = 200
+
+	const isTooShort = messageText.length > 0 && messageText.length < minLength
+
+	const isTooLong = messageText.length > maxLength
+
+	const isValid = !isTooShort && !isTooLong && messageText.trim() !== ''
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<div className='mt-4 space-y-2'>
+						<textarea
+							value={messageText}
+							onChange={event => setMessageText(event.target.value)}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						{isTooShort && (
+							<p className='text-xs text-red-500'>
+								Message must be at least {minLength} characters.
+							</p>
+						)}
+
+						{isTooLong && (
+							<p className='text-xs text-red-500'>
+								Message must be at most {maxLength} characters.
+							</p>
+						)}
+
+						<div className='flex gap-2'>
+							<button
+								type='button'
+								disabled={messageText.trim() === ''}
+								onClick={() => {
+									setMessagesSentCount(c => c + 1)
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+							>
+								Send
+							</button>
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+- The UI now explains the rules.
+
+<img
+	src={profileCardMessageTooShort}
+	alt='Profile Card showing validation feedback for a message that is too short.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+<img
+	src={profileCardMessageTooLong}
+	alt='Profile Card showing validation feedback for a message that is too long.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- The system expresses:
+  - What went wrong
+  - Why it went wrong
+  - How to fix it
+
+<hr className='my-8' />
+
+## Step 5: Enforce the Rules Declaratively 🚫
+
+- The UI explains what is invalid.
+- But the system still allows invalid messages to be sent.
+- To enforce validity on send,
+  Update the **Send** button to depend on `isValid`:
+
+```tsx
+<button
+	type='button'
+	disabled={!isValid}
+	onClick={() => {
+		setMessagesSentCount(c => c + 1)
+		setMessageText('')
+		setIsComposing(false)
+	}}
+	className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+>
+	Send
+</button>
+```
+
+- At the end of Step 5, your component looks like this:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+
+	const minLength = 3
+	const maxLength = 200
+
+	const isTooShort = messageText.length > 0 && messageText.length < minLength
+
+	const isTooLong = messageText.length > maxLength
+
+	const isValid = !isTooShort && !isTooLong && messageText.trim() !== ''
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<div className='mt-4 space-y-2'>
+						<textarea
+							value={messageText}
+							onChange={event => setMessageText(event.target.value)}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						{isTooShort && (
+							<p className='text-xs text-red-500'>
+								Message must be at least {minLength} characters.
+							</p>
+						)}
+
+						{isTooLong && (
+							<p className='text-xs text-red-500'>
+								Message must be at most {maxLength} characters.
+							</p>
+						)}
+
+						<div className='flex gap-2'>
+							<button
+								type='button'
+								disabled={!isValid}
+								onClick={() => {
+									setMessagesSentCount(c => c + 1)
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+							>
+								Send
+							</button>
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+- Invalid messages can no longer be sent because the send button is disabled
+  when the message is invalid.
+
+<img
+	src={profileCardMessageTooShortSendDisabled}
+	alt='Profile Card showing a too-short message with the Send button disabled.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+<img
+	src={profileCardMessageTooLongSendDisabled}
+	alt='Profile Card showing a too-long message with the Send button disabled.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+<hr className='my-8' />
+
+## Step 6: Confirm the Valid Path ✅
+
+Type a valid message such as:
+
+> Hi Peter! I'm John. I'm having a great desire to learn modern website
+> development using React, Typescript, React Router v7 Framework Mode,
+> and Tailwind CSS. How can you help me?
+
+You should see:
+
+- No error messages.
+- The Send button enabled.
+
+<img
+	src={profileCardMessageValid}
+	alt='Profile Card showing a valid message with the Send button enabled.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+<hr className='my-8' />
+
+## Step 7: After Sending 🎉
+
+- Click **Send**.
+- You should see:
+  - The composer close.
+  - The message count increment.
+
+<img
+	src={profileCardAfterSendingValidMessage}
+	alt='Profile Card after sending a valid message.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+<hr className='my-8' />
+
+## Wrap Up 🏁
+
+- You added:
+  - Rules
+  - Constraints
+  - Feedback
+  - Enforcement
+- You turned free input into governed input.
+
+<hr className='my-8' />
+
+## What You Learned 🧠
+
+- Validity is derived, not stored.
+- Rules live in code, not in comments.
+- The UI is the visible expression of system state and rules.
+
+<hr className='my-8' />
+
+## What's Next → 🚀
+
+- In the next lesson, we will introduce time:
+  - A sending state.
+  - A loading UI.
+  - A simulated delay.
+- That's where real systems begin.

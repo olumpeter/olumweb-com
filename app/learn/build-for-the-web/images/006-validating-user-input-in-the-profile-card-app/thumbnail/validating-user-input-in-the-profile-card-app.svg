@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1920"
+   height="1080"
+   viewBox="0 0 507.99999 285.75"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   sodipodi:docname="validating-user-input-in-the-profile-card-app.svg"
+   inkscape:export-filename="validating-user-input-in-the-profile-card-app.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="0.53645833"
+     inkscape:cx="900.34952"
+     inkscape:cy="539.65049"
+     inkscape:window-width="1920"
+     inkscape:window-height="1001"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer2"
+     showborder="false"
+     showguides="true"
+     showgrid="false" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Page"
+     inkscape:groupmode="layer"
+     id="layer1"
+     sodipodi:insensitive="true">
+    <rect
+       style="fill:#f8fafc;fill-opacity:1;stroke:none;stroke-width:16.4835"
+       id="rect1"
+       width="508"
+       height="285.75"
+       x="0"
+       y="0"
+       inkscape:label="Background" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Design">
+    <rect
+       style="fill:#f8fafc;fill-opacity:1;stroke:none;stroke-width:16.4835"
+       id="rect2"
+       width="508"
+       height="285.75"
+       x="0"
+       y="-1.110223e-16"
+       inkscape:label="Background"
+       sodipodi:insensitive="true" />
+    <rect
+       style="opacity:0.6;fill:#f8fafc;fill-opacity:1;stroke:#e5e7eb;stroke-width:0.264583;stroke-dasharray:none;stroke-opacity:1"
+       id="rect5"
+       width="338.40207"
+       height="26.19375"
+       x="84.798965"
+       y="23.94479"
+       rx="4.2333331"
+       ry="4.2333331" />
+    <text
+       xml:space="preserve"
+       style="font-size:6.87917px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="146.33517"
+       y="42.26511"
+       id="text63"><tspan
+         sodipodi:role="line"
+         id="tspan63"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:20.1083px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;fill:#0f172a;fill-opacity:1;stroke-width:0.264583"
+         x="146.33517"
+         y="42.26511">Validating User Input </tspan></text>
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#e5e7eb;stroke-width:0.264583;stroke-dasharray:none;stroke-opacity:1"
+       id="rect3"
+       width="137.58333"
+       height="190.5"
+       x="30.835514"
+       y="66.894608"
+       rx="6.3499999"
+       ry="6.3499999"
+       inkscape:label="Profile card" />
+    <rect
+       style="fill:#f1f5f9;fill-opacity:1;stroke:#cbd5e1;stroke-width:0.264583;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4"
+       width="116.15208"
+       height="57.943748"
+       x="39.578323"
+       y="84.792503"
+       rx="3.175"
+       ry="3.175"
+       inkscape:label="Fake textarea" />
+    <text
+       xml:space="preserve"
+       style="font-weight:bold;font-size:10.5833px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="44.645226"
+       y="95.007217"
+       id="text4"
+       inkscape:label="Message content text"><tspan
+         sodipodi:role="line"
+         id="tspan4"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="44.645226"
+         y="95.007217">Hi</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.40833px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;fill:#64748b;fill-opacity:1;stroke-width:0.264583"
+       x="40.966679"
+       y="150.80904"
+       id="text5"
+       inkscape:label="Character count text"><tspan
+         sodipodi:role="line"
+         id="tspan5"
+         style="fill:#64748b;fill-opacity:1;stroke-width:0.264583"
+         x="40.966679"
+         y="150.80904">Characters: 2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.82083px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="41.068481"
+       y="157.36703"
+       id="text6"
+       inkscape:label="Error message text"><tspan
+         sodipodi:role="line"
+         id="tspan6"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#dc2626;fill-opacity:1;stroke-width:0.264583"
+         x="41.068481"
+         y="157.36703">Message must be at least 3 </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#dc2626;fill-opacity:1;stroke-width:0.264583"
+         x="41.068481"
+         y="165.30453"
+         id="tspan7">characters.</tspan></text>
+    <rect
+       style="fill:#e5e7eb;fill-opacity:1;stroke:#cbd5e1;stroke-width:0.264584;stroke-dasharray:none;stroke-opacity:1"
+       id="rect7"
+       width="57.943748"
+       height="15.610415"
+       x="70.655304"
+       y="235.7861"
+       rx="3.175"
+       ry="3.175"
+       inkscape:label="Send button" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.87917px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#94a3b8;fill-opacity:1;stroke-width:0.264583"
+       x="91.676498"
+       y="246.17101"
+       id="text8"
+       inkscape:label="Send button text"><tspan
+         sodipodi:role="line"
+         id="tspan8"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.87917px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#94a3b8;fill-opacity:1;stroke-width:0.264583"
+         x="91.676498"
+         y="246.17101">Send</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;line-height:1.25;font-family:Inter;-inkscape-font-specification:'Inter, @opsz=32,wght=600';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'opsz' 32, 'wght' 600;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="74.79673"
+       y="80.09481"
+       id="text3"
+       inkscape:label="Type of card text"><tspan
+         sodipodi:role="line"
+         id="tspan3"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.5833px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#dc2626;fill-opacity:1;stroke-width:0.264583"
+         x="74.79673"
+         y="80.09481">Too short</tspan></text>
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#e5e7eb;stroke-width:0.264583;stroke-dasharray:none;stroke-opacity:1"
+       id="rect13"
+       width="137.58333"
+       height="190.5"
+       x="185.20833"
+       y="66.894608"
+       rx="6.3499999"
+       ry="6.3499999"
+       inkscape:label="Profile card" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;line-height:1.25;font-family:Inter;-inkscape-font-specification:'Inter, @opsz=32,wght=600';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'opsz' 32, 'wght' 600;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="229.16954"
+       y="80.09481"
+       id="text13"
+       inkscape:label="Type of card text"><tspan
+         sodipodi:role="line"
+         id="tspan13"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.5833px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#dc2626;fill-opacity:1;stroke-width:0.264583"
+         x="229.16954"
+         y="80.09481">Too long</tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.5833px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#dc2626;fill-opacity:1;stroke-width:0.264583"
+         x="229.16954"
+         y="93.490906"
+         id="tspan66" /></text>
+    <rect
+       style="fill:#f1f5f9;fill-opacity:1;stroke:#cbd5e1;stroke-width:0.264583;stroke-dasharray:none;stroke-opacity:1"
+       id="rect14"
+       width="116.15208"
+       height="122.06023"
+       x="193.95114"
+       y="84.792503"
+       rx="3.175"
+       ry="3.175"
+       inkscape:label="Fake textarea" />
+    <text
+       xml:space="preserve"
+       style="font-weight:bold;font-size:10.5833px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="199.01804"
+       y="95.007217"
+       id="text14"
+       inkscape:label="Message content text"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="199.01804"
+         y="95.007217"
+         id="tspan31">Lorem ipsum dolor sit amet, </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="199.01804"
+         y="108.23634"
+         id="tspan45">consectetuer adipiscing elit. </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="199.01804"
+         y="121.46547"
+         id="tspan46">Aenean commodo ligula eget </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="199.01804"
+         y="134.69458"
+         id="tspan47">dolor. Aenean massa. Cum </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="199.01804"
+         y="147.92371"
+         id="tspan48">sociis natoque penatibus et </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="199.01804"
+         y="161.15283"
+         id="tspan49">magnis dis parturient montes, </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="199.01804"
+         y="174.38196"
+         id="tspan50">nascetur ridiculus mus. Donec </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="199.01804"
+         y="187.61108"
+         id="tspan51">quam felis, ultricies nec, </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="199.01804"
+         y="200.84021"
+         id="tspan52">pellentesque eu, pre</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.40833px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;fill:#64748b;fill-opacity:1;stroke-width:0.264583"
+       x="193.85988"
+       y="214.20111"
+       id="text15"
+       inkscape:label="Character count text"><tspan
+         sodipodi:role="line"
+         id="tspan15"
+         style="fill:#64748b;fill-opacity:1;stroke-width:0.264583"
+         x="193.85988"
+         y="214.20111">Characters: 253</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.82083px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="193.96169"
+       y="220.75911"
+       id="text17"
+       inkscape:label="Error message text"><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#dc2626;fill-opacity:1;stroke-width:0.264583"
+         x="193.96169"
+         y="220.75911"
+         id="tspan17">Message must be at most 200 </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#dc2626;fill-opacity:1;stroke-width:0.264583"
+         x="193.96169"
+         y="228.69661"
+         id="tspan62">characters.</tspan></text>
+    <rect
+       style="fill:#e5e7eb;fill-opacity:1;stroke:#cbd5e1;stroke-width:0.264584;stroke-dasharray:none;stroke-opacity:1"
+       id="rect17"
+       width="57.943748"
+       height="15.610415"
+       x="225.02812"
+       y="235.7861"
+       rx="3.175"
+       ry="3.175"
+       inkscape:label="Send button" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.87917px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#94a3b8;fill-opacity:1;stroke-width:0.264583"
+       x="246.04932"
+       y="246.17101"
+       id="text18"
+       inkscape:label="Send button text"><tspan
+         sodipodi:role="line"
+         id="tspan18"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.87917px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#94a3b8;fill-opacity:1;stroke-width:0.264583"
+         x="246.04932"
+         y="246.17101">Send</tspan></text>
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#e5e7eb;stroke-width:0.264583;stroke-dasharray:none;stroke-opacity:1"
+       id="rect19"
+       width="137.58333"
+       height="190.5"
+       x="339.58115"
+       y="66.894608"
+       rx="6.3499999"
+       ry="6.3499999"
+       inkscape:label="Profile card" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;line-height:1.25;font-family:Inter;-inkscape-font-specification:'Inter, @opsz=32,wght=600';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;font-variation-settings:'opsz' 32, 'wght' 600;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="383.54236"
+       y="80.094818"
+       id="text19"
+       inkscape:label="Type of card text"><tspan
+         sodipodi:role="line"
+         id="tspan19"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.5833px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#16a34a;fill-opacity:1;stroke-width:0.264583"
+         x="383.54236"
+         y="80.094818">Valid </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.5833px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#16a34a;fill-opacity:1;stroke-width:0.264583"
+         x="383.54236"
+         y="93.490913"
+         id="tspan65" /></text>
+    <rect
+       style="fill:#f1f5f9;fill-opacity:1;stroke:#cbd5e1;stroke-width:0.264583;stroke-dasharray:none;stroke-opacity:1"
+       id="rect20"
+       width="116.15208"
+       height="57.943748"
+       x="348.32394"
+       y="84.792503"
+       rx="3.175"
+       ry="3.175"
+       inkscape:label="Fake textarea" />
+    <text
+       xml:space="preserve"
+       style="font-weight:bold;font-size:10.5833px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="353.39087"
+       y="95.007217"
+       id="text20"
+       inkscape:label="Message content text"><tspan
+         sodipodi:role="line"
+         id="tspan20"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="353.39087"
+         y="95.007217">Hello Peter! I'd love to learn </tspan><tspan
+         sodipodi:role="line"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.40833px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#475569;fill-opacity:1;stroke-width:0.264583"
+         x="353.39087"
+         y="108.23634"
+         id="tspan54">web development with you.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.40833px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;fill:#64748b;fill-opacity:1;stroke-width:0.264583"
+       x="349.71231"
+       y="150.80904"
+       id="text21"
+       inkscape:label="Character count text"><tspan
+         sodipodi:role="line"
+         id="tspan21"
+         style="fill:#64748b;fill-opacity:1;stroke-width:0.264583"
+         x="349.71231"
+         y="150.80904">Characters: 56</tspan></text>
+    <rect
+       style="fill:#22c55e;fill-opacity:1;stroke:#cbd5e1;stroke-width:0.264584;stroke-dasharray:none;stroke-opacity:1"
+       id="rect23"
+       width="57.943748"
+       height="15.610415"
+       x="379.40094"
+       y="235.7861"
+       rx="3.175"
+       ry="3.175"
+       inkscape:label="Send button" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.87917px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+       x="400.42212"
+       y="246.17101"
+       id="text24"
+       inkscape:label="Send button text"><tspan
+         sodipodi:role="line"
+         id="tspan24"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.87917px;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+         x="400.42212"
+         y="246.17101">Send</tspan></text>
+  </g>
+</svg>
