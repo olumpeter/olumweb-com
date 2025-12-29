@@ -56,7 +56,7 @@ import profileCardAfterSendingValidMessage from '../images/006-validating-user-i
   - Messages longer than 200 characters will be rejected.
   - The Send button will reflect validity.
   - The UI will explain why a message is invalid.
-  - The system will derive validity from state — not store it.
+  - The system will derive validity from state — not store it anywhere.
 - No submission.
 - No servers.
 - Just rules.
@@ -710,6 +710,8 @@ export default function Home() {
 
 ## Step 5: Enforce the Rules Declaratively 🚫
 
+### Step 5a: Disable Sending When Invalid
+
 - The UI explains what is invalid.
 - But the system still allows invalid messages to be sent.
 - To enforce validity on send,
@@ -729,6 +731,71 @@ export default function Home() {
 	Send
 </button>
 ```
+
+### Step 5b: Express Invalid State Through Color 🎨
+
+- So far, invalid state is expressed through:
+  - Text (validation messages)
+  - Behavior (Send button disabled)
+- We will now add:
+  - **Visual state** — the textbox itself will reflect validity.
+- This makes the system:
+  - More expressive
+  - More intuitive
+  - More humane
+
+> - We will not add state.
+> - We will not add effects.
+> - We will only **express existing state visually**.
+
+#### Rule
+
+- If the message is invalid → the textbox becomes lightly tinted red.
+- If the message is valid → the textbox remains normal.
+
+#### Implementation
+
+- Update the `<textarea />` to derive its appearance from validation state:
+
+```tsx
+<textarea
+	value={messageText}
+	onChange={event => setMessageText(event.target.value)}
+	className={`w-full rounded-lg border p-2 text-sm transition ${
+		(isTooShort || isTooLong) ? 'bg-red-50 border-red-300' : 'bg-white'
+	}`}
+	placeholder='Type your message...'
+/>
+```
+
+#### Tailwind class breakdown
+
+| Class            | Purpose                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| `w-full`         | Makes the textarea take the full available width              |
+| `rounded-lg`     | Applies softly rounded corners                                |
+| `border`         | Adds a visible border around the input                        |
+| `p-2`            | Adds inner padding for comfortable typing                     |
+| `text-sm`        | Sets the font size to small for visual balance                |
+| `transition`     | Animates background and border color changes smoothly         |
+| `bg-red-50`      | Applies a very light red background to indicate invalid input |
+| `border-red-300` | Changes the border color to red when invalid                  |
+| `bg-white`       | Keeps the normal background when the input is valid           |
+
+#### What changed
+
+- We did not:
+  - Add state
+  - Add logic
+  - Add conditionals outside render
+- We only:
+  - Made visual output a function of existing state.
+
+> - Invalid → red tint
+> - Valid → normal background
+
+- The UI now mirrors the system truth not only in behavior and text
+  — but in appearance.
 
 - At the end of Step 5, your component looks like this:
 
@@ -806,7 +873,11 @@ export default function Home() {
 						<textarea
 							value={messageText}
 							onChange={event => setMessageText(event.target.value)}
-							className='w-full rounded-lg border p-2 text-sm'
+							className={`w-full rounded-lg border p-2 text-sm transition ${
+								isTooShort || isTooLong
+									? 'border-red-300 bg-red-50'
+									: 'bg-white'
+							}`}
 							placeholder='Type your message...'
 						/>
 
@@ -879,9 +950,7 @@ export default function Home() {
 
 Type a valid message such as:
 
-> Hi Peter! I'm John. I'm having a great desire to learn modern website
-> development using React, Typescript, React Router v7 Framework Mode,
-> and Tailwind CSS. How can you help me?
+> Hello Peter! I'd love to learn web development with you.
 
 You should see:
 
