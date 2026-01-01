@@ -8,6 +8,7 @@ import addingBehaviorToAstaticProfileCardAppThumbnail from '~/learn/build-for-th
 import addingASecondBehaviorToTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/004-adding-a-second-behavior-to-the-profile-card-app/thumbnail/adding-a-second-behavior-to-the-profile-card-app.png?url'
 import controllingUserInputInTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/005-controlling-user-input-in-the-profile-card-app/thumbnail/controlling-user-input-in-the-profile-card-app.png?url'
 import validatingUserInputInTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/006-validating-user-input-in-the-profile-card-app/thumbnail/validating-user-input-in-the-profile-card-app.png?url'
+import submittingTheMessageWithFormAndNavigationThumbnail from '~/learn/build-for-the-web/images/007-submitting-the-message-with-form-and-navigation/thumbnail/submitting-the-message-with-form-and-navigation.png?url'
 
 /**
  * Client-side lesson registry
@@ -74,6 +75,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Validating User Input in the Profile Card App',
 			lessonNumber: 6,
+			published: true,
+		},
+	},
+	'submitting-the-message-with-form-and-navigation': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/007-submitting-the-message-with-form-and-navigation.mdx'),
+		thumbnail: submittingTheMessageWithFormAndNavigationThumbnail,
+		frontmatter: {
+			title: 'Submitting the Message with <Form> and Navigation',
+			lessonNumber: 7,
 			published: true,
 		},
 	},

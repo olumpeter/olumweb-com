@@ -1001,8 +1001,16 @@ You should see:
 
 ## What's Next → 🚀
 
-- In the next lesson, we will introduce time:
-  - A sending state.
-  - A loading UI.
-  - A simulated delay.
-- That's where real systems begin.
+- So far, everything in this app lives entirely in the browser.
+  - The rules are local.
+  - The state is local.
+  - The effects are local.
+  - Even "sending" is only simulated.
+- In the next lesson, we will cross a real boundary:
+  - We will submit data using a real `<Form>`.
+  - The browser will create an actual request.
+  - The router will intercept that navigation.
+  - The server will receive the message.
+  - The UI will react to a real response.
+- That is the moment this stops being just a component —
+  and becomes a web application.

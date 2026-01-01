@@ -1,0 +1,962 @@
+---
+title: 'Submitting the Message with <Form> and Navigation'
+slug: 'submitting-the-message-with-form-and-navigation'
+series: 'build-for-the-web'
+lessonNumber: 7
+path: '/learn/build-for-the-web/submitting-the-message-with-form-and-navigation'
+published: true
+readingTime: '20 min'
+---
+
+import profileCardStartingPointForLesson7 from '../images/007-submitting-the-message-with-form-and-navigation/screenshots/profile-card-starting-point-for-lesson-7.jpg?url'
+import profileCardWhileSubmitting from '../images/007-submitting-the-message-with-form-and-navigation/screenshots/profile-card-while-submitting.jpg?url'
+import profileCardAfterSending from '../images/007-submitting-the-message-with-form-and-navigation/screenshots/profile-card-after-sending.jpg?url'
+
+## Introduction 🧭
+
+- In Lesson 6, you added rules and validation.
+- The system now knows:
+  - What is allowed.
+  - What is not allowed.
+- The UI expresses those rules clearly.
+- But nothing leaves the browser yet.
+- The message is never sent anywhere.
+
+- In this lesson, we cross an important boundary:
+
+  > **We will send data from the browser to the server.**
+
+- This is the moment the app stops being just JavaScript and becomes a web application.
+
+<hr className='my-8' />
+
+## The Constraint 🧩
+
+> - We will not change layout or styling.
+> - We will not add a database.
+> - We will not add new files.
+> - We will not introduce new state for sending.
+
+- We will:
+  - Stay inside the same route file.
+  - Replace fake sending with real submission.
+  - Let navigation drive sending state.
+
+<hr className='my-8' />
+
+## What You'll Build 🎯
+
+- By the end of this lesson:
+  - The message will be submitted using `<Form>`.
+  - The server will receive the message via `action()`.
+  - The UI will reflect submission state.
+  - The UI will respond to server feedback.
+
+> This is what we are building in this lesson.
+
+### 1️⃣ Profile Card While Submitting
+
+<img
+	src={profileCardWhileSubmitting}
+	alt='Profile Card showing the message being submitted.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 2️⃣ Profile Card After Sending
+
+<img
+	src={profileCardAfterSending}
+	alt='Profile Card after sending the message.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 3️⃣ Complete Code for this Lesson 7
+
+```tsx
+import { useState, useEffect } from 'react'
+
+import { Form, useNavigation } from 'react-router'
+
+import type { Route } from './+types/home'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+	const message = formData.get('message')
+
+	console.log('Received message:', message)
+
+	return { ok: true }
+}
+
+export default function Home({ actionData }: Route.ComponentProps) {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+
+	const minLength = 3
+	const maxLength = 200
+
+	const isTooShort = messageText.length > 0 && messageText.length < minLength
+	const isTooLong = messageText.length > maxLength
+	const isValid = !isTooShort && !isTooLong && messageText.trim() !== ''
+
+	const navigation = useNavigation()
+	const isSubmitting = navigation.state === 'submitting'
+
+	useEffect(() => {
+		if (actionData?.ok) {
+			setMessagesSentCount(c => c + 1)
+			setMessageText('')
+			setIsComposing(false)
+		}
+	}, [actionData])
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<Form
+						method='post'
+						className='mt-4 space-y-2'
+					>
+						<textarea
+							name='message'
+							value={messageText}
+							onChange={event => setMessageText(event.target.value)}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						{isTooShort && (
+							<p className='text-xs text-red-500'>
+								Message must be at least {minLength} characters.
+							</p>
+						)}
+
+						{isTooLong && (
+							<p className='text-xs text-red-500'>
+								Message must be at most {maxLength} characters.
+							</p>
+						)}
+
+						<div className='mt-6 flex gap-3'>
+							<button
+								type='submit'
+								disabled={!isValid || isSubmitting}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+							>
+								{isSubmitting ? 'Sending…' : 'Send'}
+							</button>
+
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</Form>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+> - **Submission is not a function call**.
+> - **Submission is navigation**.
+
+- Clicking submit tells the browser to navigate.
+- The router performs that navigation.
+- The server receives data.
+- The UI observes that process.
+
+> UI = f(local state, navigation state, server state)
+
+<hr className='my-8' />
+
+## Step 1: Starting Point 🏁
+
+- Start from the end of Lesson 6.
+- You should have:
+  - A controlled textarea (`messageText`).
+  - Validation rules (`isTooShort`, `isTooLong`, `isValid`).
+  - The Send button disabled when the message is invalid.
+  - The composer opening and closing correctly.
+- If your app behaves like this, you are in the correct place.
+
+<img
+	src={profileCardStartingPointForLesson7}
+	alt='Profile Card starting point at the beginning of Lesson 7.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> This is the starting point for this lesson.
+
+- Below is the complete code at the start of this lesson:
+
+```tsx
+import { useState } from 'react'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export default function Home() {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+
+	const minLength = 3
+	const maxLength = 200
+
+	const isTooShort = messageText.length > 0 && messageText.length < minLength
+
+	const isTooLong = messageText.length > maxLength
+
+	const isValid = !isTooShort && !isTooLong && messageText.trim() !== ''
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<div className='mt-4 space-y-2'>
+						<textarea
+							value={messageText}
+							onChange={event => setMessageText(event.target.value)}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						{isTooShort && (
+							<p className='text-xs text-red-500'>
+								Message must be at least {minLength} characters.
+							</p>
+						)}
+
+						{isTooLong && (
+							<p className='text-xs text-red-500'>
+								Message must be at most {maxLength} characters.
+							</p>
+						)}
+
+						<div className='flex gap-2'>
+							<button
+								type='button'
+								disabled={!isValid}
+								onClick={() => {
+									setMessagesSentCount(c => c + 1)
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+							>
+								Send
+							</button>
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+### Technical Orientation
+
+- Before we change anything, let's locate exactly **where** sending currently
+  happens, **how** it happens, and **why** it is only a simulation.
+- This will make the next step feel precise instead of magical.
+
+#### Where "sending" currently lives
+
+- In the current code, sending happens entirely inside this button:
+
+```tsx
+<button
+  type='button'
+  disabled={!isValid}
+  onClick={() => {
+    setMessagesSentCount(c => c + 1)
+    setMessageText('')
+    setIsComposing(false)
+  }}
+>
+  Send
+</button>
+```
+
+- This is the only place where:
+  - The message is considered "sent",
+  - The counter is incremented,
+  - The composer is closed.
+- There is **no other sending logic anywhere else** in the component.
+
+#### How sending currently works
+
+- When the user clicks **Send**:
+  1. The browser does nothing special.
+  2. React runs the `onClick` function.
+  3. State is updated locally.
+  4. The UI re-renders.
+- That is all.
+- There is:
+  - No navigation,
+  - No HTTP request,
+  - No server involvement.
+- From the browser's point of view, nothing has been sent anywhere.
+
+#### Why this matters
+
+- In the next step, we will:
+  - Remove this `onClick`-based sending mechanism.
+  - Replace it with browser-native form submission.
+  - Let the router and server participate in the flow.
+- That means this exact line:
+
+```ts
+onClick={() => { ... }}
+```
+
+- We will stop being responsible for sending.
+- Instead, sending will become something the browser does, not something
+  we simulate.
+
+#### Boundary Marker
+
+- Everything above this point is local state and UI behavior.
+- Everything below the next step will involve:
+  - Navigation,
+  - Requests,
+  - Server code.
+- This is the boundary we are about to cross.
+
+<hr className='my-8' />
+
+## Step 2: Replace Fake Sending with Real Submission 🧩
+
+- In this step, we will change **how sending happens**.
+- We will not change:
+  - The UI structure,
+  - The styling,
+  - The validation rules,
+  - The behavior of the Cancel button,
+  - The way the message is cleared,
+  - The way the composer opens and closes.
+- We will only change **how the message leaves the browser**.
+
+### Step 2a: Replace the _composer_ wrapper
+
+> - ⚠️ We are **not** changing the Actions section
+>   (`<div className='mt-6 flex gap-3'>`).
+> - We are only changing the wrapper around the **composer UI** — the part
+>   that appears _after_ you click **Message**.
+
+> ℹ️ We intentionally do not specify an action attribute on `<Form>`.
+> By default, `<Form>` submits to the current route's action() function.
+> This keeps submission logic colocated with the UI and avoids hard-coding URLs.
+
+#### What we have
+
+- The composer UI (the part that opens when `isComposing` is true) is currently
+  wrapped in a `<div>`:
+
+```tsx
+{isComposing && (
+  <div className='mt-4 space-y-2'>
+    ...
+  </div>
+)}
+```
+
+- This `<div>` is **not a form**.
+
+- So:
+  - The browser does not treat this as a submittable unit,
+  - No submission semantics exist,
+  - No request will ever be made.
+
+#### What we need
+
+- Right now, the browser sees this UI as **just a `<div>` with inputs inside it**.
+- That means:
+  - The browser does **not** treat it as a form,
+  - Pressing Enter does nothing special,
+  - Clicking "Send" cannot trigger a browser submission,
+  - No HTTP request will ever be created from this section.
+- If we want the browser to _submit_ this data, we must give it the correct
+  semantic element.
+
+> **Only `<form>` elements can be submitted by the browser.**  
+> A `<div>` can never be submitted.
+
+- So what we need to do is:
+  - Replace the `<div>` that wraps the composer UI
+  - With a `<Form>` component (which renders a real `<form>` element)
+- This single change tells the browser:
+
+> "This section is a form. It can be submitted."
+
+- To do that, we:
+
+1. Import the `Form` component:
+
+```tsx
+import { Form } from 'react-router'
+```
+
+2. Replace the wrapper around the composer:
+
+- From:
+
+```tsx
+{isComposing && (
+  <div className='mt-4 space-y-2'>
+    ...
+  </div>
+)}
+```
+
+- To:
+
+```tsx
+{isComposing && (
+  <Form method='post' className='mt-4 space-y-2'>
+    ...
+  </Form>
+)}
+```
+
+- Now:
+  - The browser recognizes this section as a form,
+  - The inputs inside it become submittable,
+  - And a submit button inside it will create a real request.
+
+- We have not sent anything yet —
+  we have only made it _possible_ for the browser to send something.
+
+### Step 2b: Change the Send button into a submit button
+
+#### What we have:
+
+```tsx
+<button
+  type='button'
+  disabled={!isValid}
+  onClick={() => {
+    setMessagesSentCount(c => c + 1)
+    setMessageText('')
+    setIsComposing(false)
+  }}
+  className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50'
+>
+  Send
+</button>
+```
+
+- This button:
+  - Does not submit anything,
+  - Does not navigate,
+  - Only runs JavaScript,
+  - Simulates sending by mutating local state.
+
+#### What we need
+
+- We want the browser to submit the form instead of calling JavaScript directly.
+- So we replace the button with:
+
+```tsx
+<button
+  type='submit'
+  disabled={!isValid}
+  className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+>
+  Send
+</button>
+```
+
+#### What changed in the code
+
+- `type='button'` → `type='submit'`
+- The `onClick` handler is removed
+- The styling is preserved
+- The responsibility for sending moves from JavaScript to the browser
+
+#### Why this works
+
+- Inside a `<Form>`, a button with `type='submit'` tells the browser:
+  > Submit this form.
+- The browser serializes the form fields.
+- The browser performs a navigation with that data.
+- The router matches that navigation to this route and calls its `action()`.
+- No state is changed here.
+- No counters are incremented here.
+- No UI is reset here.
+- That will now happen only after the server responds.
+
+### Step 2c: Name the textarea
+
+- For a field to be included in a form submission, it must have a `name`.
+- Update the textarea from:
+
+```tsx
+<textarea
+  value={messageText}
+  onChange={event => setMessageText(event.target.value)}
+  className='w-full rounded-lg border p-2 text-sm'
+  placeholder='Type your message...'
+/>
+```
+
+- to:
+
+```tsx
+<textarea
+  name='message'
+  value={messageText}
+  onChange={event => setMessageText(event.target.value)}
+  className='w-full rounded-lg border p-2 text-sm'
+  placeholder='Type your message...'
+/>
+```
+
+#### Why this matters
+
+- The browser only serializes inputs with a name.
+- `formData.get('message')` only works if the field is named `"message"`.
+- This is how the UI and server agree on what data is being sent.
+
+#### What changed
+
+- At the end of Step 2:
+  - Clicking **Send** no longer mutates state.
+  - Clicking **Send** triggers a form submission.
+  - The browser performs a navigation.
+  - The router intercepts it.
+- We have not yet told the system where to send the data or what to do with it.
+- We have only changed who is responsible for sending:
+  > From JavaScript → to the browser.
+- That is the foundation for the next step.
+- At this point, the browser knows _how_ to send the data —  
+  but nothing on the server knows what to do with it yet.
+- That's what we add next.
+
+> Now the browser can send data — but nothing is listening yet.
+
+<hr className='my-6' />
+
+## Step 3: Add the Server Action ⚙️
+
+- In Step 2, we taught the browser how to submit the message.
+- In this step, we will teach the system what to do _when_ that submission happens.
+- Right now:
+  - The browser submits the form,
+  - The router intercepts the navigation,
+  - But no server logic exists yet,
+  - So nothing receives the message.
+- We will now add the server function that handles the submission.
+
+### Server Actions
+
+- Server actions:
+  - Only run on the server,
+  - Are never shipped to the browser,
+  - And are the bridge between the UI and backend logic.
+- In React Router Framework Mode, this is done by exporting an `action` function
+  from the same route file.
+
+### Step 3a: Import the route types
+
+- At the top of your file, add:
+
+```ts
+import type { Route } from './+types/home'
+```
+
+- This gives us access to the correct server-side types for this route.
+
+### Step 3b: Define the action function
+
+- Add this above your `Home` component:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData()
+  const message = formData.get('message')
+
+  console.log('Received message:', message)
+
+  return { ok: true }
+}
+```
+
+#### What this code does
+
+```ts
+export async function action(...)
+```
+
+- Registers a server-only function that runs when this route receives a form
+  submission.
+- This function never runs in the browser and is not included in the client bundle.
+
+```ts
+const formData = await request.formData()
+```
+
+- Reads the submitted data from the HTTP request.
+- This gives you access to the values the browser serialized from the `<Form>`.
+
+```ts
+const message = formData.get('message')
+```
+
+- Extracts the field named `message`.
+- This matches the `name="message"` attribute on the `<textarea />`.
+- If the field were not named, this value would be `null`.
+
+```ts
+console.log('Received message:', message)
+```
+
+- Logs the submitted message on the server.
+- This is only for visibility and debugging in this lesson.
+- In a real app, this is where you would save to a database, send an email, or
+  call an API.
+
+```ts
+return { ok: true }
+```
+
+- Returns structured data back to the UI.
+- This value becomes available to the route component as `actionData`.
+
+#### What changed
+
+- At the end of Step 3:
+  - The browser submits data,
+  - The router routes it to this action,
+  - The server receives the message,
+  - And returns a response.
+- We have now connected the client to the server.
+- We are not yet using the server's response in the UI — that is the next step.
+
+<hr className='my-6' />
+
+## Step 4: Observe Navigation State 🔄
+
+- In Step 3, we taught the server how to receive the message.
+- In this step, we will teach the UI how to observe what the system is doing
+  _while_ that message is being sent.
+- Right now:
+  - Clicking **Send** submits the form.
+  - A request is sent.
+  - But the UI gives no feedback while that is happening.
+- We will now connect the UI to the navigation state so it can reflect that work.
+
+### Step 4a: Import the navigation hook
+
+- At the top of the file, add:
+
+```ts
+import { useNavigation } from 'react-router'
+```
+
+### Step 4b: Read the navigation state
+
+- Inside the `Home` component, add:
+
+```ts
+const navigation = useNavigation()
+const isSubmitting = navigation.state === 'submitting'
+```
+
+- This gives us a boolean that tells us whether a form submission is currently
+  in progress.
+
+### Step 4c: Reflect that state in the UI
+
+- Update the Send button to:
+
+```tsx
+<button
+  type='submit'
+  disabled={!isValid || isSubmitting}
+  className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+>
+  {isSubmitting ? 'Sending…' : 'Send'}
+</button>
+```
+
+### What changed
+
+- At the end of Step 4:
+  - The UI knows when a submission is in progress.
+  - The Send button disables while submitting.
+  - The button label reflects the current system state.
+- The UI is no longer blind — it is now aware of what the system is doing.
+
+<img
+	src={profileCardAfterSending}
+	alt='Profile Card after sending a message and receiving server confirmation.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+## Step 5: React to Server Feedback 🎯
+
+- In Step 4, the UI learned how to observe the sending process.
+- In this step, the UI will learn how to react to the result of that process.
+- Right now:
+  - The server returns `{ ok: true }`,
+  - But the UI does nothing with that information.
+- We will now connect the server response to UI behavior.
+
+### Step 5a: Read the action data
+
+- The router passes the result of the `action()` into the component as `actionData`.
+- So we update the component signature:
+
+```ts
+export default function Home({ actionData }: Route.ComponentProps) {
+```
+
+- This makes `actionData` available inside the component.
+
+#### Where does `actionData` come from?
+
+In Framework Mode, the router passes the return value of `action()` into the route component as `actionData` via `Route.ComponentProps`.
+
+This means:
+
+- You do not need `useActionData()`
+- You receive the server response as a prop
+- This keeps server data explicit and typed.
+
+### Step 5b: Ensure `useEffect` is imported
+
+- We will use a React effect to react to the server response when it arrives.
+- Make sure your imports include `useEffect`:
+
+```ts
+import { useState, useEffect } from 'react'
+```
+
+### Step 5c: React to successful submission
+
+- Add this effect inside the component:
+
+```ts
+useEffect(() => {
+  if (actionData?.ok) {
+    setMessagesSentCount(c => c + 1)
+    setMessageText('')
+    setIsComposing(false)
+  }
+}, [actionData])
+```
+
+#### What this does
+
+- When the server responds,
+- And the response indicates success,
+- The UI updates:
+  - The message count increases,
+  - The input is cleared,
+  - The composer closes.
+- We are no longer assuming success.
+- We only update the UI after the server confirms success.
+
+#### What changed
+
+- At the end of Step 5:
+  - The UI reacts to server outcomes,
+  - Not to button clicks,
+  - Not to assumptions,
+- But to confirmed responses.
+- The system is now end-to-end:
+  > User → Browser → Router → Server → Router → UI
+
+#### Visual Result 👀
+
+- After the server responds with `{ ok: true }`, you should see:
+  - The composer close,
+  - The input cleared,
+  - The message counter increment.
+- This is the visible result of reacting to server feedback.
+
+<img
+	src={profileCardAfterSending}
+	alt='Profile Card after sending a message and receiving server confirmation.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+<hr className='my-8' />
+
+## The Real Shift in This Lesson 🌍
+
+- This lesson did not add new UI.
+- It did not add new state.
+- It did not add new rules.
+- It changed **what kind of system this is**.
+- Before this lesson:
+  - The app was closed.
+  - All behavior was internal.
+  - Nothing could affect it from the outside.
+- After this lesson:
+  - The browser participates.
+  - The router participates.
+  - The server participates.
+  - The system is now open.
+- Your component is no longer a toy model.
+- It is now part of a real web system.
+- That is the shift.
+
+<hr className='my-8' />
+
+## Mental Model Update 🧠
+
+- Before:
+  > UI = f(state)
+- Now:
+  > UI = f(state, navigation, server)
+- Your component is no longer self-contained.
+- It is now reactive to the world.
+
+<hr className='my-8' />
+
+## What You Actually Learned 🧭
+
+- Forms are not UI primitives — they are protocol primitives.
+- Submission is not a function call — it is navigation.
+- Servers do not push into your UI — your UI _reacts_ to them.
+- You do not control the flow — you participate in it.
+
+<hr className='my-8' />
+
+## What's Next → 🚀
+
+- In the next lesson, we will introduce failure:
+  - What happens when the server rejects a message?
+  - What happens when the network is slow?
+  - What happens when the system does not cooperate?
+- That is where real systems begin.
