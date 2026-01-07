@@ -9,6 +9,7 @@ import addingASecondBehaviorToTheProfileCardAppThumbnail from '~/learn/build-for
 import controllingUserInputInTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/005-controlling-user-input-in-the-profile-card-app/thumbnail/controlling-user-input-in-the-profile-card-app.png?url'
 import validatingUserInputInTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/006-validating-user-input-in-the-profile-card-app/thumbnail/validating-user-input-in-the-profile-card-app.png?url'
 import submittingTheMessageWithFormAndNavigationThumbnail from '~/learn/build-for-the-web/images/007-submitting-the-message-with-form-and-navigation/thumbnail/submitting-the-message-with-form-and-navigation.png?url'
+import movingValidationToTheServerAndHandlingRejections from '~/learn/build-for-the-web/images/008-moving-validation-to-the-server-and-handling-rejections/thumbnail/moving-validation-to-the-server-and-handling-rejections.png?url'
 
 /**
  * Client-side lesson registry
@@ -85,6 +86,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Submitting the Message with <Form> and Navigation',
 			lessonNumber: 7,
+			published: true,
+		},
+	},
+	'moving-validation-to-the-server-and-handling-rejections': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/008-moving-validation-to-the-server-and-handling-rejections.mdx'),
+		thumbnail: movingValidationToTheServerAndHandlingRejections,
+		frontmatter: {
+			title: 'Moving Validation to the Server and Handling Rejections',
+			lessonNumber: 8,
 			published: true,
 		},
 	},

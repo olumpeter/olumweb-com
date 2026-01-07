@@ -1,0 +1,938 @@
+---
+title: 'Moving Validation to the Server and Handling Rejections'
+slug: 'moving-validation-to-the-server-and-handling-rejections'
+series: 'build-for-the-web'
+lessonNumber: 8
+path: '/learn/build-for-the-web/moving-validation-to-the-server-and-handling-rejections'
+published: true
+readingTime: '25 min'
+---
+
+import profileCardStartingPointForLesson8 from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-starting-point-for-lesson-8.jpg?url'
+import profileCardServerErrorWhenUserSubmitsEmpty from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-server-error-when-user-submits-an-empty-message.jpg?url'
+import profileCardServerErrorWhenUserSubmitsTooShort from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-server-error-when-user-submits-too-short-message.jpg?url'
+import profileCardServerErrorWhenUserSubmitsTooLong from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-server-error-when-user-submits-too-long-message.jpg?url'
+import profileCardAfterSuccessfulSend from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-after-successful-send.jpg?url'
+import profileCardShowingTwoErrorsWhenMessageTooLongAfterSubmission from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-showing-two-errors-when-user-submits-too-long-message.jpg?url'
+import profileCardShowingTwoErrorsWhenMessageTooShortAfterSubmission from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-showing-two-errors-when-user-submits-too-short-message.jpg?url'
+
+## Introduction 🧭
+
+- In Lesson 6, you added client-side validation.
+- In Lesson 7, you connected the browser to the server.
+  - The browser now submits data.
+  - The server now receives it.
+  - The UI reacts to server confirmation.
+- But there is still a problem:
+  > **The client decides what is valid.**
+- That is not how real systems work.
+  > **A real system never trusts input that came from the outside.**
+- In real systems:
+  - Clients can be modified.
+  - Clients can be bypassed.
+  - Clients can lie.
+- The server is the only place where truth can be enforced.
+- So in this lesson, we move the rules:
+  - From being only _expressed_ on the client,
+  - To being _enforced_ on the server.
+- And we teach the UI how to react when the server says:
+  > "No."
+- This is the moment where the system becomes _authoritative_.
+
+<hr className='my-8' />
+
+## The Constraint 🧩
+
+> - We will not add new routes.
+> - We will not add a database.
+> - We will not add fake delays or random failures.
+> - We will not change layout or styling.
+> - We will not add new files.
+> - We will not add new UI components.
+
+- We will:
+  - Reuse the same validation rules from Lesson 6.
+  - Enforce them on the server.
+  - Reflect server rejections in the UI.
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+> **The client proposes.  
+> The server decides.**
+
+- The client can suggest that a message is valid.
+- The server determines whether it actually is.
+
+> UI = f(state, navigation, server truth)
+
+<hr className='my-8' />
+
+## What You'll Build 🎯
+
+- By the end of this lesson:
+  - The server will validate the message.
+  - The server will reject invalid input.
+  - The UI will display server errors inline.
+  - The message will remain so the user can fix it.
+  - Only confirmed success clears the form.
+
+### 1️⃣ Server Rejecting an Empty Message
+
+<img
+	src={profileCardServerErrorWhenUserSubmitsEmpty}
+	alt='Profile Card showing a server validation error when the user submits an empty message.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 2️⃣ Server Rejecting a Message That is Too Short
+
+<img
+	src={profileCardServerErrorWhenUserSubmitsTooShort}
+	alt='Profile Card showing a server validation error when the message is too short.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 3️⃣ Server Rejecting a Message That is Too Long
+
+<img
+	src={profileCardServerErrorWhenUserSubmitsTooLong}
+	alt='Profile Card showing a server validation error when the message is too long.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 4️⃣ Profile Card After Successful Send
+
+<img
+	src={profileCardAfterSuccessfulSend}
+	alt='Profile Card after the server accepts the message and the UI updates.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 5️⃣ Complete Code for Lesson 8
+
+```tsx
+import { useState, useEffect } from 'react'
+
+import { Form, useNavigation } from 'react-router'
+
+import type { Route } from './+types/home'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+	const message = formData.get('message')
+
+	if (typeof message !== 'string') {
+		return { ok: false, error: 'Message is required.' }
+	}
+
+	const trimmedMessage = message.trim()
+
+	if (trimmedMessage.length === 0) {
+		return { ok: false, error: 'Message cannot be empty.' }
+	}
+
+	const minLength = 3
+	const maxLength = 200
+
+	if (trimmedMessage.length < minLength) {
+		return {
+			ok: false,
+			error: `Message must be at least ${minLength} characters.`,
+		}
+	}
+
+	if (trimmedMessage.length > maxLength) {
+		return {
+			ok: false,
+			error: `Message must be at most ${maxLength} characters.`,
+		}
+	}
+
+	console.log('Accepted message:', trimmedMessage)
+
+	return { ok: true }
+}
+
+export default function Home({ actionData }: Route.ComponentProps) {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+	const [hasEditedSinceLastSubmit, setHasEditedSinceLastSubmit] =
+		useState(false)
+
+	const navigation = useNavigation()
+	const isSubmitting = navigation.state === 'submitting'
+
+	useEffect(() => {
+		if (actionData) {
+			setHasEditedSinceLastSubmit(false)
+		}
+
+		if (actionData?.ok) {
+			setMessagesSentCount(c => c + 1)
+			setMessageText('')
+			setIsComposing(false)
+		}
+	}, [actionData])
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<Form
+						method='post'
+						className='mt-4 space-y-2'
+					>
+						<textarea
+							name='message'
+							value={messageText}
+							onChange={event => {
+								setMessageText(event.target.value)
+								setHasEditedSinceLastSubmit(true)
+							}}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						{actionData?.error && !hasEditedSinceLastSubmit && (
+							<p className='text-xs text-red-500'>{actionData.error}</p>
+						)}
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						<div className='mt-6 flex gap-3'>
+							<button
+								type='submit'
+								disabled={isSubmitting}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+							>
+								{isSubmitting ? 'Sending…' : 'Send'}
+							</button>
+
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</Form>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+<hr className='my-8' />
+
+## Step 1: Starting Point 🏁
+
+- Start from the end of Lesson 7.
+- You should now have:
+  - A real `<Form>` submission instead of fake sending.
+  - A server `action()` that receives the message.
+  - The UI reacting only after the server confirms success.
+  - Client-side validation still running in the browser.
+  - The Send button disabled when the message is invalid.
+- The server does not yet validate anything.
+- It accepts every message.
+
+> This is the exact state of the system at the start of this lesson.
+
+<img
+	src={profileCardStartingPointForLesson8}
+	alt='Profile Card starting point at the beginning of Lesson 8.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- Below is the complete code at the start of this lesson:
+
+```tsx
+import { useState, useEffect } from 'react'
+
+import { Form, useNavigation } from 'react-router'
+
+import type { Route } from './+types/home'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+	const message = formData.get('message')
+
+	console.log('Received message:', message)
+
+	return { ok: true }
+}
+
+export default function Home({ actionData }: Route.ComponentProps) {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+
+	const minLength = 3
+	const maxLength = 200
+
+	const isTooShort = messageText.length > 0 && messageText.length < minLength
+	const isTooLong = messageText.length > maxLength
+	const isValid = !isTooShort && !isTooLong && messageText.trim() !== ''
+
+	const navigation = useNavigation()
+	const isSubmitting = navigation.state === 'submitting'
+
+	useEffect(() => {
+		if (actionData?.ok) {
+			setMessagesSentCount(c => c + 1)
+			setMessageText('')
+			setIsComposing(false)
+		}
+	}, [actionData])
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<Form
+						method='post'
+						className='mt-4 space-y-2'
+					>
+						<textarea
+							name='message'
+							value={messageText}
+							onChange={event => setMessageText(event.target.value)}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						{isTooShort && (
+							<p className='text-xs text-red-500'>
+								Message must be at least {minLength} characters.
+							</p>
+						)}
+
+						{isTooLong && (
+							<p className='text-xs text-red-500'>
+								Message must be at most {maxLength} characters.
+							</p>
+						)}
+
+						<div className='mt-6 flex gap-3'>
+							<button
+								type='submit'
+								disabled={!isValid || isSubmitting}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+							>
+								{isSubmitting ? 'Sending…' : 'Send'}
+							</button>
+
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</Form>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+### Technical Orientation
+
+- Before we change anything, let's locate exactly **where** validation currently
+  happens, **how** it happens, and **why** it is only advisory.
+
+#### Where validation currently lives
+
+- All validation rules currently live on the client:
+
+```ts
+const isTooShort = messageText.length > 0 && messageText.length < minLength
+const isTooLong = messageText.length > maxLength
+const isValid = !isTooShort && !isTooLong && messageText.trim() !== ''
+```
+
+- These rules:
+  - Only affect the UI,
+  - Only run in the browser,
+  - Can be bypassed or removed entirely.
+
+#### How validation currently works
+
+- When the user types:
+  1. The browser updates local state.
+  1. React recomputes the flags.
+  1. The UI shows warnings or disables the button.
+- But:
+  - The server does not know these rules exist.
+  - The server does not enforce them.
+  - The server will currently accept anything.
+
+#### Why this matters
+
+- The client cannot be trusted.
+- Anyone can send a request directly to your server.
+- Anyone can bypass your UI.
+- Anyone can send invalid data.
+
+> **If the server does not enforce the rules, there are no rules.**
+
+#### Boundary Marker
+
+- Everything above this point is suggestion.
+- Everything below the next step will be authority.
+
+<hr className='my-8' />
+
+## Step 2: Make the Server the Source of Truth 🧩
+
+- Right now, all of our validation logic lives in the browser.
+- That means:
+  - It can be bypassed,
+  - It can be modified,
+  - And it cannot be trusted.
+- So even though the UI _looks_ like it's enforcing rules, the system
+  actually isn't.
+- Let's fix that.
+- The goal of this step is simple:
+  > **Move validation to the server and make it authoritative.**
+- We're not removing client validation yet.
+- We're just making sure the server enforces the rules no matter what
+  the client does.
+
+### Step 2a: Identify the validation rules
+
+- These are the validation rules we already have on the client:
+
+```ts
+const minLength = 3
+const maxLength = 200
+
+const isTooShort = messageText.length > 0 && messageText.length < minLength
+const isTooLong = messageText.length > maxLength
+const isValid = !isTooShort && !isTooLong && messageText.trim() !== ''
+```
+
+- This means:
+  - The message is required,
+  - It must be at least 3 characters,
+  - It must be at most 200 characters.
+- These rules are fine.
+- They're just in the wrong place.
+
+### Step 2b: Enforce the rules on the server
+
+- Open the `action` function. Right now it looks like this:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData()
+  const message = formData.get('message')
+
+  console.log('Received message:', message)
+
+  return { ok: true }
+}
+```
+
+- This accepts **anything**.
+- Let's change that.
+- Replace it with this:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData()
+  const message = formData.get('message')
+
+  if (typeof message !== 'string') {
+    return { ok: false, error: 'Message is required.' }
+  }
+
+  const trimmedMessage = message.trim()
+
+  if (trimmedMessage.length === 0) {
+    return { ok: false, error: 'Message cannot be empty.' }
+  }
+
+  const minLength = 3
+  const maxLength = 200
+
+  if (trimmedMessage.length < minLength) {
+    return { ok: false, error: `Message must be at least ${minLength} characters.` }
+  }
+
+  if (trimmedMessage.length > maxLength) {
+    return { ok: false, error: `Message must be at most ${maxLength} characters.` }
+  }
+
+  console.log('Accepted message:', trimmedMessage)
+
+  return { ok: true }
+}
+```
+
+### What changed?
+
+- The server now:
+  - Normalizes input,
+  - Validates it,
+  - Rejects invalid data,
+  - And returns useful errors.
+- This is the critical shift:
+  > **Validation is now enforced at the system boundary.**
+- That means:
+  - No matter how the client behaves,
+  - No matter what JavaScript is disabled,
+  - No matter what requests are sent manually,
+- The system stays correct.
+- At this point:
+  - Invalid messages are rejected,
+  - But the UI doesn't show that yet.
+- We'll fix that next.
+
+<hr className='my-8' />
+
+## Step 3: Reflect Server Rejections in the UI 👀
+
+- Now the server can say "no", but the user can't see that yet.
+- So when a message is rejected:
+  - Nothing happens,
+  - The user gets no feedback,
+  - And the system feels broken.
+- The server is doing the right thing.
+- The UI just isn't reflecting it.
+- Let's fix that.
+
+### Step 3a: Notice where server data enters the UI
+
+- The server response arrives here:
+
+```ts
+export default function Home({ actionData }: Route.ComponentProps) {
+```
+
+- That means:
+  - On success → `{ ok: true }`
+  - On failure → `{ ok: false, error: '...' }`
+- The UI already has the information.
+- We just need to render it.
+
+### Step 3b: Render the server error below the textarea
+
+- Find the `<textarea>` and add this immediately below it:
+
+```tsx
+{actionData?.error && (
+  <p className='text-xs text-red-500'>{actionData.error}</p>
+)}
+```
+
+- That's it.
+- Now:
+  - When the server rejects the input, the user sees why.
+  - When the server accepts it, the error disappears.
+  - The UI reflects server truth.
+- This is the pattern:
+  > The server decides.
+  > The UI reflects.
+- At this point, the UI reflects server truth — but not yet its freshness.
+
+<hr className='my-8' />
+
+## Step 4: Remove the Client's Ability to Block Submission 🚫
+
+- Right now, the client is still preventing invalid messages from being sent.
+- That happens here:
+
+```tsx
+<button
+  type='submit'
+  disabled={!isValid || isSubmitting}
+  className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+>
+  {isSubmitting ? 'Sending…' : 'Send'}
+</button>
+```
+
+- As long as this exists:
+  - The browser blocks invalid messages,
+  - The server never sees them,
+  - The server cannot demonstrate rejection,
+  - The client is still acting as the gatekeeper.
+- That contradicts the goal of this lesson.
+  > The client may observe.
+  > The server must decide.
+
+### Step 4a: Remove client authority
+
+- Locate and delete this line:
+
+```ts
+const isValid = !isTooShort && !isTooLong && messageText.trim() !== ''
+```
+
+- This variable gives the client final authority over whether a message is
+  allowed to be sent.
+- We don't want that.
+
+### Step 4b: Allow all messages to reach the server
+
+- Replace the submit button with this:
+
+```tsx
+<button
+  type='submit'
+  disabled={isSubmitting}
+  className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+>
+  {isSubmitting ? 'Sending…' : 'Send'}
+</button>
+```
+
+#### What changed?
+
+- We removed `!isValid` from the `disabled` condition.
+- The browser no longer blocks invalid input.
+- All messages now reach the server.
+- The server becomes the single source of truth.
+- Client-side validation still exists — but only as feedback.
+- It no longer enforces rules.
+- That is the shift.
+
+<hr className='my-8' />
+
+## Step 5: Remove Duplicate Validation Feedback 🧹
+
+- At this point, validation is technically correct — but the user experience
+  is not.
+- Because we kept client-side validation for feedback **and** added server-side
+  validation for authority, the UI can now show _two errors at the same time_.
+- That looks like this:
+
+### Duplicate error when the message is too short
+
+<img
+	src={profileCardShowingTwoErrorsWhenMessageTooShortAfterSubmission}
+	alt='Profile card showing both a client-side and server-side error when the message is too short.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### Duplicate error when the message is too long
+
+<img
+	src={profileCardShowingTwoErrorsWhenMessageTooLongAfterSubmission}
+	alt='Profile card showing both a client-side and server-side error when the message is too long after submission.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- This is confusing for users:
+  - They see two messages saying essentially the same thing.
+  - They don't know which one matters.
+  - The system feels noisy and inconsistent.
+- So in this step, we will:
+  - Remove client-side validation feedback,
+  - Keep only server-side validation,
+  - And make the UI reflect a single authoritative source of truth.
+
+> The server decides.  
+> The UI reflects.  
+> The client does not judge.
+
+### Step 5a: Delete client validation state
+
+- Remove these lines entirely from the UI component:
+
+```ts
+const minLength = 3
+const maxLength = 200
+
+const isTooShort = messageText.length > 0 && messageText.length < minLength
+const isTooLong = messageText.length > maxLength
+const isValid = !isTooShort && !isTooLong && messageText.trim() !== ''
+```
+
+- These are no longer needed.
+
+### Step 5b: Delete client validation UI
+
+- Remove these blocks from the JSX:
+
+```tsx
+{isTooShort && (
+  <p className='text-xs text-red-500'>
+    Message must be at least {minLength} characters.
+  </p>
+)}
+
+{isTooLong && (
+  <p className='text-xs text-red-500'>
+    Message must be at most {maxLength} characters.
+  </p>
+)}
+```
+
+- These are client-side validation messages and are no longer part of the system.
+- The server is now the only place where validation exists.
+- The UI no longer tries to judge validity.
+- It only reflects the server's response.
+
+#### What the UI looks like now
+
+- No warnings while typing.
+- No client-side errors.
+- Only server errors after submission.
+- Only one source of truth.
+- This may feel slightly stricter — but it is honest.
+
+<hr className='my-8' />
+
+## Step 6: Clear Stale Server Errors When the User Edits 🧹
+
+- Now that we only show server-side errors, there is one more subtle problem.
+- The server error refers to **the last submitted value**.
+- But the user can change the input after that.
+- When they do, the old server error becomes stale.
+- We must not show truths that no longer apply.
+
+### Step 6a: Track whether the user has edited since the last submission
+
+- Add this piece of state to the component:
+
+```ts
+const [hasEditedSinceLastSubmit, setHasEditedSinceLastSubmit] = useState(false)
+```
+
+- This flag means:
+  - `false` → the input still matches what the server validated
+  - `true` → the input has changed since then
+
+### Step 6b: Mark edits
+
+- Update the textarea `onChange` handler:
+
+```tsx
+<textarea
+  name='message'
+  value={messageText}
+  onChange={event => {
+    setMessageText(event.target.value)
+    setHasEditedSinceLastSubmit(true)
+  }}
+  className='w-full rounded-lg border p-2 text-sm'
+  placeholder='Type your message...'
+/>
+```
+
+### Step 6c: Reset the flag after each server response
+
+- Update the effect:
+
+```tsx
+useEffect(() => {
+  if (actionData) {
+    setHasEditedSinceLastSubmit(false)
+  }
+
+  if (actionData?.ok) {
+    setMessagesSentCount(c => c + 1)
+    setMessageText('')
+    setIsComposing(false)
+  }
+}, [actionData])
+```
+
+### Step 6d: Hide stale errors
+
+- Update the error rendering to this:
+
+```tsx
+{actionData?.error && !hasEditedSinceLastSubmit && (
+  <p className='text-xs text-red-500'>{actionData.error}</p>
+)}
+```
+
+- Now:
+  - Errors appear after submission.
+  - As soon as the user types again, the error disappears.
+  - The UI never shows server truth that no longer applies.
+
+<hr className='my-8' />
+
+## The Real Shift in This Lesson 🌍
+
+- This lesson did not add new UI.
+- It did not add new layout.
+- It did not add new data sources.
+- It did not add new business logic.
+- It changed **where authority lives**.
+- Before:
+  - The browser decided what was valid.
+  - The browser blocked invalid input.
+  - The server accepted everything.
+- After:
+  - The browser always submits.
+  - The server decides what is valid.
+  - The server can reject input.
+  - The UI reflects the server's decision.
+- The system moved from:
+  > **Client-authoritative → Server-authoritative**
+- That is the difference between:
+  - A demo system
+  - And a real system
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+> - **Validation is not a UI concern.**
+> - **Validation is a system boundary.**
+
+- The client proposes.
+- The server decides.
+- The UI reflects.
+
+> UI = f(local state, navigation state, server truth)
+
+- The UI does not define reality.
+- The UI mirrors reality.
+
+<hr className='my-8' />
+
+## What You Actually Learned 🧭
+
+- Validation belongs on the server.
+- The client cannot be trusted.
+- Server responses are snapshots in time.
+- UI must not display stale truth.
+- Rejection is not failure — it is enforcement.
+- A correct system is not always a permissive one.
+
+<hr className='my-8' />
+
+## What's Next → 🚀
+
+- In the next lesson, we introduce failures that are **not the user's fault**:
+  - Network errors
+  - Server errors
+  - Unexpected conditions
+- You will learn how to distinguish between:
+  - **User errors** (invalid input)
+  - **System errors** (infrastructure failure)
+- And how the UI should represent both honestly, clearly, and safely.
+- That is where systems become resilient.

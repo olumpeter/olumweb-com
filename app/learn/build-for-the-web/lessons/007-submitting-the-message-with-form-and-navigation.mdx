@@ -8,9 +8,10 @@ published: true
 readingTime: '20 min'
 ---
 
-import profileCardStartingPointForLesson7 from '../images/007-submitting-the-message-with-form-and-navigation/screenshots/profile-card-starting-point-for-lesson-7.jpg?url'
-import profileCardWhileSubmitting from '../images/007-submitting-the-message-with-form-and-navigation/screenshots/profile-card-while-submitting.jpg?url'
-import profileCardAfterSending from '../images/007-submitting-the-message-with-form-and-navigation/screenshots/profile-card-after-sending.jpg?url'
+import profileCardServerRejectionInvisible from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-server-rejection-invisible.jpg?url'
+import profileCardErrorWithMessageStillPresent from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-error-with-message-still-present.jpg?url'
+import profileCardSendEnabledDespiteInvalidInput from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-send-enabled-despite-invalid.jpg?url'
+import profileCardErrorClearedAfterTyping from '../images/008-moving-validation-to-the-server-and-handling-rejections/screenshots/profile-card-error-cleared-after-typing.jpg?url'
 
 ## Introduction 🧭
 
@@ -21,12 +22,10 @@ import profileCardAfterSending from '../images/007-submitting-the-message-with-f
 - The UI expresses those rules clearly.
 - But nothing leaves the browser yet.
 - The message is never sent anywhere.
-
 - In this lesson, we cross an important boundary:
-
   > **We will send data from the browser to the server.**
-
-- This is the moment the app stops being just JavaScript and becomes a web application.
+- This is the moment the app stops being just JavaScript and becomes a web
+  application.
 
 <hr className='my-8' />
 
@@ -955,8 +954,8 @@ useEffect(() => {
 
 ## What's Next → 🚀
 
-- In the next lesson, we will introduce failure:
-  - What happens when the server rejects a message?
-  - What happens when the network is slow?
-  - What happens when the system does not cooperate?
-- That is where real systems begin.
+- In the next lesson, we will introduce **rejection**:
+  - What happens when the server says "no"?
+  - What happens when submitted data is not accepted?
+  - How does the UI react when the system rejects input?
+- This is where the system becomes authoritative instead of permissive.
