@@ -28,7 +28,7 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      inkscape:zoom="0.46979167"
-     inkscape:cx="917.42793"
+     inkscape:cx="915.29933"
      inkscape:cy="718.40354"
      inkscape:window-width="1920"
      inkscape:window-height="1001"
@@ -38,11 +38,7 @@
      inkscape:current-layer="layer1"
      showgrid="false"
      showborder="false"
-     showguides="true"><sodipodi:guide
-       position="116.01774,-1.4783815"
-       orientation="0,-1"
-       id="guide4"
-       inkscape:locked="false" /></sodipodi:namedview><defs
+     showguides="true" /><defs
      id="defs1"><marker
        style="overflow:visible"
        id="marker11"
@@ -166,6 +162,12 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"><rect
+       style="font-variation-settings:'opsz' 32, 'wght' 700;fill:#f5f7fa;stroke-width:0.79375"
+       id="rect3"
+       width="508"
+       height="285.75"
+       x="0"
+       y="0" /><rect
        style="fill:none;stroke:#cbd5e1;stroke-width:0.52916669;stroke-dasharray:none;stroke-opacity:1"
        id="rect1"
        width="486.3042"
@@ -220,7 +222,7 @@
        stroke-miterlimit="10"
        pointer-events="all"
        id="path16"
-       style="stroke-width:0.79375003;stroke:#475569;stroke-opacity:1;stroke-dasharray:none;fill:#ffffff" /><switch
+       style="stroke-width:0.79375003;stroke:#475569;stroke-opacity:1;stroke-dasharray:none;fill:none" /><switch
        id="switch64"
        transform="matrix(0.26458334,0,0,0.26458334,215.5342,115.09373)"><g
          requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"

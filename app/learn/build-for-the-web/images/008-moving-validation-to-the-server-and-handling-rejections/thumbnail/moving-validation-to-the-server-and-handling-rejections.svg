@@ -28,7 +28,7 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      inkscape:zoom="0.46979167"
-     inkscape:cx="1110.0665"
+     inkscape:cx="1109.0022"
      inkscape:cy="760.9756"
      inkscape:window-width="1920"
      inkscape:window-height="1001"
@@ -283,7 +283,14 @@
          id="stop1085-4" /></linearGradient></defs><g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1"><image
+     id="layer1"><rect
+       style="font-variation-settings:'opsz' 32, 'wght' 700;fill:#f5f7fa;stroke:none;stroke-width:0.79375;fill-opacity:1"
+       id="rect3"
+       width="508"
+       height="285.75"
+       x="0"
+       y="0"
+       inkscape:label="background" /><image
        width="300.39304"
        height="274.92847"
        preserveAspectRatio="none"
