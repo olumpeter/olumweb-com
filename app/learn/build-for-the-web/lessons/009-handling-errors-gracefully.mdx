@@ -1,0 +1,573 @@
+---
+title: 'Handling Errors Gracefully'
+slug: 'handling-errors-gracefully'
+series: 'build-for-the-web'
+lessonNumber: 9
+path: '/learn/build-for-the-web/handling-errors-gracefully'
+published: true
+readingTime: '22 min'
+---
+
+import profileCardStartingPointForLesson9 from '../images/009-handling-errors-gracefully/screenshots/profile-card-starting-point-for-lesson-9.jpg?url'
+import profileCardRenderCrash from '../images/009-handling-errors-gracefully/screenshots/profile-card-render-crash.jpg?url'
+import profileCardActionCrash from '../images/009-handling-errors-gracefully/screenshots/profile-card-action-crash.jpg?url'
+import profileCardRenderCrashContained from '../images/009-handling-errors-gracefully/screenshots/profile-card-render-crash-contained.jpg?url'
+import profileCardActionCrashContained from '../images/009-handling-errors-gracefully/screenshots/profile-card-action-crash-contained.jpg?url'
+
+## Introduction 🧭
+
+- In Lesson 8, you made the system **correct**:
+  - The server became authoritative.
+  - Invalid input was rejected.
+  - The UI reflected server truth.
+- But correctness is not enough.
+- Systems must also be **resilient**.
+
+> A correct system that crashes is not useful.  
+> A resilient system continues to serve even when things go wrong.
+
+- In this lesson we deal with a different class of problems:
+  - Runtime crashes
+  - Bugs
+  - Broken assumptions
+  - Unexpected failures
+- These are not caused by the user.
+- These are **system failures**.
+- And they must be handled differently from user mistakes.
+- By the end of this lesson, you will be able to:
+  - Prevent crashes from destroying the entire experience by containing them.
+  - Contain failures to the smallest responsible surface.
+  - Show honest, calm feedback when something breaks.
+  - Keep the rest of the system usable.
+- This is where systems become **professional**.
+
+<hr className='my-8' />
+
+## The Constraint 🧩
+
+> - We will not add new routes.
+> - We will not add a database.
+> - We will not introduce random or automatic failures.
+> - We will not add fake delays or randomness.
+> - We will not change layout or styling.
+> - We will not add new UI components.
+
+- We will:
+  - Add an Error Boundary.
+  - Scope failures properly.
+  - Distinguish between user errors and system errors
+  - Make failure visible but not destructive
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+> **Not all errors are the same.**
+
+- There are two fundamentally different kinds of errors:
+  - Validation errors (user mistakes)
+  - System errors (application failures)
+
+### Validation errors (user mistakes)
+
+- Caused by invalid input
+- Expected
+- Recoverable by the user
+- Part of normal system operation
+- So we handle them with:
+  > Inline feedback and correction.
+
+### System errors (application failures)
+
+- Caused by bugs or broken assumptions.
+- Unexpected.
+- Not recoverable by the user.
+- Indicate a problem in the system.
+- So we handle them by:
+  > Containing the failure and replacing the broken UI.
+
+### The rule
+
+> **Users fix validation errors.  
+> Developers fix system errors.**
+
+<hr className='my-8' />
+
+## What You'll Build 🎯
+
+- By the end of this lesson:
+  - Runtime errors will no longer crash the entire app.
+  - Failures will be contained to their responsible route.
+  - Users will see calm fallback UI instead of a blank screen.
+  - The rest of the app will continue working.
+
+### 1️⃣ Render-time error — contained safely
+
+<img
+	src={profileCardRenderCrashContained}
+	alt='A render-time error being caught and contained by the Error Boundary.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### 2️⃣ Server/action error — contained safely
+
+<img
+	src={profileCardActionCrashContained}
+	alt='A server-side error being caught and contained by the Error Boundary.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+> These failures still happen — but they no longer destroy the experience.  
+> They are visible, honest, and contained.
+
+<hr className='my-8' />
+
+<hr className='my-8' />
+
+## Step 1: Starting Point 🏁
+
+- Start from the end of Lesson 8.
+- You should have:
+  - Server-authoritative validation.
+  - Inline feedback for invalid input.
+  - No crashes during normal use.
+
+> This is the exact state of the system at the start of this lesson.
+
+<img
+	src={profileCardStartingPointForLesson9}
+	alt='Profile Card at the start of Lesson 9, after successful server-validated submission.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- Below is the complete code at the start of this lesson:
+
+```tsx
+import { useState, useEffect } from 'react'
+
+import { Form, useNavigation } from 'react-router'
+
+import type { Route } from './+types/home'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+	const message = formData.get('message')
+
+	if (typeof message !== 'string') {
+		return { ok: false, error: 'Message is required.' }
+	}
+
+	const trimmedMessage = message.trim()
+
+	if (trimmedMessage.length === 0) {
+		return { ok: false, error: 'Message cannot be empty.' }
+	}
+
+	const minLength = 3
+	const maxLength = 200
+
+	if (trimmedMessage.length < minLength) {
+		return {
+			ok: false,
+			error: `Message must be at least ${minLength} characters.`,
+		}
+	}
+
+	if (trimmedMessage.length > maxLength) {
+		return {
+			ok: false,
+			error: `Message must be at most ${maxLength} characters.`,
+		}
+	}
+
+	console.log('Accepted message:', trimmedMessage)
+
+	return { ok: true }
+}
+
+export default function Home({ actionData }: Route.ComponentProps) {
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+	const [hasEditedSinceLastSubmit, setHasEditedSinceLastSubmit] =
+		useState(false)
+
+	const navigation = useNavigation()
+	const isSubmitting = navigation.state === 'submitting'
+
+	useEffect(() => {
+		if (actionData) {
+			setHasEditedSinceLastSubmit(false)
+		}
+
+		if (actionData?.ok) {
+			setMessagesSentCount(c => c + 1)
+			setMessageText('')
+			setIsComposing(false)
+		}
+	}, [actionData])
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<Form
+						method='post'
+						className='mt-4 space-y-2'
+					>
+						<textarea
+							name='message'
+							value={messageText}
+							onChange={event => {
+								setMessageText(event.target.value)
+								setHasEditedSinceLastSubmit(true)
+							}}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						{actionData?.error && !hasEditedSinceLastSubmit && (
+							<p className='text-xs text-red-500'>{actionData.error}</p>
+						)}
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						<div className='mt-6 flex gap-3'>
+							<button
+								type='submit'
+								disabled={isSubmitting}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+							>
+								{isSubmitting ? 'Sending…' : 'Send'}
+							</button>
+
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</Form>
+				)}
+			</div>
+		</div>
+	)
+}
+```
+
+<hr className='my-8' />
+
+## Step 2: Reveal Failure with Controlled Hooks 🧪
+
+- Before we add a solution, we must see the problem.
+- To understand error boundaries, you need to see them catch **real failures**.
+- We will add **commented-out failure hooks** that you can manually enable.
+
+### Step 2a: Simulate a render-time failure
+
+- Open `app/routes/home.tsx`
+- At the very top of the `Home` component body, add:
+
+```tsx
+export default function Home({ actionData }: Route.ComponentProps) {
+  // 👇 Uncomment to simulate a render-time crash
+  // throw new Error('Simulated render failure')
+
+  const [isFollowing, setIsFollowing] = useState(false)
+  // ...
+```
+
+- Do not uncomment it yet.
+
+### Step 2b: Simulate a server/action failure
+
+- Inside the `action` function, you may also add:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+  // 👇 Uncomment to simulate a server-side failure
+  // throw new Error('Simulated server failure')
+
+  const formData = await request.formData()
+  // ...
+```
+
+- Again — leave it commented for now.
+
+### Step 2c: Observe the failure
+
+- Temporarily uncomment **one** of the hooks and reload.
+- You will see:
+  - The app crashes
+  - The UI disappears
+  - Navigation state is lost
+
+#### Render-time crash
+
+- This happens when the component throws during rendering:
+
+<img
+	src={profileCardRenderCrash}
+	alt='The app crashing due to a render-time error with no Error Boundary.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+#### Server/action crash
+
+- This happens when the server throws during form submission:
+
+<img
+	src={profileCardActionCrash}
+	alt='The app crashing due to a server-side error with no Error Boundary.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- This is the failure mode we are fixing.
+- Re-comment the line before continuing.
+
+<hr className='my-8' />
+
+## Step 3: Introduce an Error Boundary 🧱
+
+- In React Router, **each route can define how it fails**.
+- If a route throws during rendering, loading, or actions,
+  React Router will look for an `ErrorBoundary` exported by that route.
+  > - A route is responsible for its own failure.
+- This keeps errors:
+  - Close to where they happen
+  - Easy to reason about
+  - Easy to contain
+- So instead of creating a global error handler,
+  we teach this route how to fail safely.
+
+### Step 3a: Add the Error Boundary to the route
+
+- Open your route file (`app/routes/home.tsx`).
+- Update your imports at the top:
+
+```ts
+import { Form, useNavigation, isRouteErrorResponse } from 'react-router'
+```
+
+- Then add this at the bottom of the file:
+
+```tsx
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+	console.error(error)
+
+	let errorMessage = 'Oh no, something went wrong. Sorry about that.'
+
+	if (isRouteErrorResponse(error)) {
+		errorMessage = error.statusText || errorMessage
+	} else if (error instanceof Error) {
+		errorMessage = error.message
+	}
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			<div className='w-full max-w-md rounded-xl border bg-white p-6 text-center'>
+				<h1 className='text-lg font-semibold text-slate-900'>
+					Something went wrong
+				</h1>
+				<p className='mt-2 text-sm text-slate-600'>{errorMessage}</p>
+			</div>
+		</div>
+	)
+}
+```
+
+- That's it.
+- You have now:
+  - Taught the route how to fail.
+  - Contained runtime errors so they no longer crash the whole app.
+  - Scoped failure to the smallest responsible boundary.
+- You can now uncomment the failure hook again and observe that the
+  crash is contained instead of destructive.
+
+<hr className='my-8' />
+
+## Step 4: Understand What the Error Boundary Actually Does 🧠
+
+- An Error Boundary does **not** prevent errors.
+- It does **not** fix bugs.
+- It does **not** make broken code correct.
+- What it does is this:
+
+> **Contain failure.  
+> Do not spread it.**
+
+- You already saw what _uncontained_ failure looks like in Step 2:
+  - The blank screen in the **render-time crash** screenshot
+  - The destroyed navigation state in the **server/action crash** screenshot
+- Those failures spread upward and took down the entire UI.
+- Now let's understand what changed.
+- That means:
+  - If something breaks **inside this route**,
+  - Only this route is replaced with fallback UI,
+  - The rest of the application stays alive.
+
+### Without an Error Boundary
+
+- (What you saw in Step 2)
+- A thrown error during rendering:
+  - Crashes the entire React tree.
+  - Leaves the user with a blank screen.
+  - Destroys navigation state.
+- The failure is **global** and **destructive**.
+
+### With an Error Boundary
+
+- (What you saw after adding the boundary)
+- A thrown error:
+  - Is caught at the route boundary.
+  - Replaces only this route's UI.
+  - Leaves the rest of the app intact.
+
+#### Render-time crash (contained)
+
+<img
+	src={profileCardRenderCrashContained}
+	alt='A render-time error being caught and contained by the Error Boundary.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+#### Server/action crash (contained)
+
+<img
+	src={profileCardActionCrashContained}
+	alt='A server-side error being caught and contained by the Error Boundary.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- The failure is now:
+  - Local
+  - Contained
+  - Predictable
+  - Non-destructive
+- So the Error Boundary acts like a **circuit breaker**:
+  - It isolates failure
+  - It prevents cascade
+  - It keeps the system usable
+- That is the entire job of an Error Boundary.
+
+<hr className='my-8' />
+
+## Step 5: What Counts as a "System Error"? ⚠️
+
+- A system error is anything the user cannot recover from by changing input.
+- Examples:
+  - A component tries to read `user.name` but `user` is `null`.
+  - A loader throws because a required environment variable is missing.
+  - A bug causes an exception during rendering.
+- These are not part of normal flow.
+- They are not expected.
+- They indicate a broken assumption.
+- That is what Error Boundaries exist for.
+
+<hr className='my-8' />
+
+## Step 6: Why This Matters in Real Systems 🌍
+
+- In real production systems:
+  - You cannot predict every bug.
+  - You cannot prevent every failure.
+  - You cannot test every possible state.
+- But you **can** decide how your system behaves when something breaks.
+- An uncontained failure:
+  - Destroys user trust
+  - Creates confusion
+  - Makes the system feel fragile
+- A contained failure:
+  - Preserves trust
+  - Preserves orientation
+  - Makes the system feel stable and professional
+- Users do not judge your system by whether it _ever_ fails.
+- They judge it by **how it fails**.
+- Error boundaries are how you make failure:
+  - Visible but not catastrophic
+  - Honest but not alarming
+  - Contained but not hidden
+- That is what resilience looks like.
+
+<hr className='my-8' />
+
+## Wrap Up 🏁
+
+- You learned that:
+  - Correct systems can still fail.
+  - Resilient systems contain failure.
+  - Error Boundaries do not prevent errors — they isolate them.
+  - Validation errors belong to users.
+  - System failures belong to developers
+- You did not add features in this lesson.
+- You added **stability**.
+- You did not add complexity.
+- You added **robustness**.
+- You did not add polish.
+- You added **professionalism**.
+- This is how systems grow up.
+
+<hr className='my-8' />
+
+## What's Next → 🚀
+
+- In the next lesson, we will stop reacting to failure, and start **designing
+  for change**.
+- Because the only thing more certain than failure is that systems evolve.
+- And systems that evolve safely are the ones that last.
