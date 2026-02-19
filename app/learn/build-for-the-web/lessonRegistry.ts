@@ -10,7 +10,8 @@ import controllingUserInputInTheProfileCardAppThumbnail from '~/learn/build-for-
 import validatingUserInputInTheProfileCardAppThumbnail from '~/learn/build-for-the-web/images/006-validating-user-input-in-the-profile-card-app/thumbnail/validating-user-input-in-the-profile-card-app.png?url'
 import submittingTheMessageWithFormAndNavigationThumbnail from '~/learn/build-for-the-web/images/007-submitting-the-message-with-form-and-navigation/thumbnail/submitting-the-message-with-form-and-navigation.png?url'
 import movingValidationToTheServerAndHandlingRejections from '~/learn/build-for-the-web/images/008-moving-validation-to-the-server-and-handling-rejections/thumbnail/moving-validation-to-the-server-and-handling-rejections.png?url'
-import handlingErrorsGracefully from '~/learn/build-for-the-web/images/009-handling-errors-gracefully/thumbnail/009-handling-errors-gracefully.png'
+import handlingErrorsGracefully from '~/learn/build-for-the-web/images/009-handling-errors-gracefully/thumbnail/009-handling-errors-gracefully.png?url'
+import persistingDataAndBuildingCrud from '~/learn/build-for-the-web/images/010-persisting-data-and-building-crud/thumbnail/010-persisting-data-and-building-crud.png?url'
 
 /**
  * Client-side lesson registry
@@ -107,6 +108,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Handling Errors Gracefully',
 			lessonNumber: 9,
+			published: true,
+		},
+	},
+	'persisting-data-and-building-crud': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/010-persisting-data-and-building-crud.mdx'),
+		thumbnail: persistingDataAndBuildingCrud,
+		frontmatter: {
+			title: 'Persisting Data and Building CRUD',
+			lessonNumber: 10,
 			published: true,
 		},
 	},

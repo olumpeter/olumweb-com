@@ -1,0 +1,1774 @@
+---
+title: 'Persisting Data and Building CRUD'
+slug: 'persisting-data-and-building-crud'
+series: 'build-for-the-web'
+lessonNumber: 10
+path: '/learn/build-for-the-web/persisting-data-and-building-crud'
+published: true
+readingTime: '28 min'
+---
+
+import profileCardStartingPointForLesson10 from '../images/010-persisting-data-and-building-crud/screenshots/profile-card-starting-point-for-lesson-10.jpg?url'
+
+## Introduction 🧭
+
+- In Lesson 8, you made the system **correct**.
+- In Lesson 9, you made the system **resilient**.
+- But the system still has one fundamental limitation:
+  > **Nothing survives a page reload.**
+- All data currently lives in memory.
+- When the process restarts:
+  - All messages are gone.
+  - All counts reset.
+  - The system forgets everything.
+- That means:
+  - The system is interactive…
+  - But not persistent.
+  - And therefore not yet real.
+- In this lesson, we cross that line.
+- By the end of this lesson, you will:
+  - Persist profile card messages across reloads.
+  - Support **C**reate, **R**ead, **U**pdate, and **D**elete (CRUD) operations.
+  - Turn the Profile Card into a real data-backed system.
+- This is the moment where your app stops being a demo and starts being software.
+
+<hr className='my-8' />
+
+## The Constraint 🧩
+
+> - We will not add new routes.
+> - We will not introduce authentication.
+> - We will not add complex relationships.
+> - We will not change layout or styling.
+> - We will not introduce premature abstractions.
+
+- We will:
+  - Introduce a minimal persistent store.
+  - Model data explicitly.
+  - Add CRUD operations.
+  - Keep everything simple and visible.
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+> **State disappears when the process stops.  
+> Persistence survives restarts.**
+
+- In-memory state dies with the process.
+- Persistent state lives outside the process.
+- A real system must remember beyond a single run.
+- And:
+  > **CRUD is not a feature. CRUD is the minimal interface to persistent state.**
+- Everything that persists must be:
+  - **C**reated
+  - **R**ead
+  - **U**pdated
+  - **D**eleted
+
+<hr className='my-8' />
+
+## What You'll Build 🎯
+
+- A persisted message store.
+- Messages survive reloads.
+- Messages can be edited.
+- Messages can be deleted.
+- The UI reflects persistent truth.
+
+### 1️⃣ Persisted messages
+
+### 2️⃣ Updated message
+
+### 3️⃣ Deleted message
+
+<hr className='my-8' />
+
+## Step 1: Starting Point 🏁
+
+- Start from the end of Lesson 9.
+- You should have:
+  - Server-authoritative validation.
+  - Error boundaries.
+  - A stable UI.
+- But:
+  - All data is ephemeral.
+  - Refresh wipes everything.
+  - Nothing is remembered.
+
+> This is the exact state of the system at the start of this lesson.
+
+<img
+	src={profileCardStartingPointForLesson10}
+	alt='Profile Card at the start of Lesson 10, before any data is persisted.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+- Below is the complete code at the start of this lesson:
+
+```tsx
+import { useState, useEffect } from 'react'
+
+import { Form, useNavigation, isRouteErrorResponse } from 'react-router'
+
+import type { Route } from './+types/home'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export async function action({ request }: Route.ActionArgs) {
+	// 👇 Uncomment to simulate a server-side failure
+	// throw new Error('Simulated server failure')
+	const formData = await request.formData()
+	const message = formData.get('message')
+
+	if (typeof message !== 'string') {
+		return { ok: false, error: 'Message is required.' }
+	}
+
+	const trimmedMessage = message.trim()
+
+	if (trimmedMessage.length === 0) {
+		return { ok: false, error: 'Message cannot be empty.' }
+	}
+
+	const minLength = 3
+	const maxLength = 200
+
+	if (trimmedMessage.length < minLength) {
+		return {
+			ok: false,
+			error: `Message must be at least ${minLength} characters.`,
+		}
+	}
+
+	if (trimmedMessage.length > maxLength) {
+		return {
+			ok: false,
+			error: `Message must be at most ${maxLength} characters.`,
+		}
+	}
+
+	console.log('Accepted message:', trimmedMessage)
+
+	return { ok: true }
+}
+
+export default function Home({ actionData }: Route.ComponentProps) {
+	// 👇 Uncomment to simulate a render-time crash
+	// throw new Error('Simulated render failure')
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+	const [hasEditedSinceLastSubmit, setHasEditedSinceLastSubmit] =
+		useState(false)
+
+	const navigation = useNavigation()
+	const isSubmitting = navigation.state === 'submitting'
+
+	useEffect(() => {
+		if (actionData) {
+			setHasEditedSinceLastSubmit(false)
+		}
+
+		if (actionData?.ok) {
+			setMessagesSentCount(c => c + 1)
+			setMessageText('')
+			setIsComposing(false)
+		}
+	}, [actionData])
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Sent messages count */}
+				<p className='mt-2 text-xs text-slate-400'>
+					Messages sent: {messagesSentCount}
+				</p>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<button
+						type='button'
+						onClick={() => setIsFollowing(!isFollowing)}
+						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						{isFollowing ? 'Following' : 'Follow'}
+					</button>
+				</div>
+
+				{isComposing && (
+					<Form
+						method='post'
+						className='mt-4 space-y-2'
+					>
+						<textarea
+							name='message'
+							value={messageText}
+							onChange={event => {
+								setMessageText(event.target.value)
+								setHasEditedSinceLastSubmit(true)
+							}}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						{actionData?.error && !hasEditedSinceLastSubmit && (
+							<p className='text-xs text-red-500'>{actionData.error}</p>
+						)}
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						<div className='mt-6 flex gap-3'>
+							<button
+								type='submit'
+								disabled={isSubmitting}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+							>
+								{isSubmitting ? 'Sending…' : 'Send'}
+							</button>
+
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</Form>
+				)}
+			</div>
+		</div>
+	)
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+	console.error(error)
+
+	let errorMessage = 'Oh no, something went wrong. Sorry about that.'
+
+	if (isRouteErrorResponse(error)) {
+		errorMessage = error.statusText || errorMessage
+	} else if (error instanceof Error) {
+		errorMessage = error.message
+	}
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			<div className='w-full max-w-md rounded-xl border bg-white p-6 text-center'>
+				<h1 className='text-lg font-semibold text-slate-900'>
+					Something went wrong
+				</h1>
+				<p className='mt-2 text-sm text-slate-600'>{errorMessage}</p>
+			</div>
+		</div>
+	)
+}
+```
+
+## Step 2: Introduce a Minimal Data Model 🧩
+
+- Right now, our system handles _things_ — but it does not _know_ what those
+  things are.
+- Messages exist only as:
+  - A string in a form.
+  - A string in an HTTP request.
+  - A string passed through functions.
+- Follow state exists only as:
+  - A boolean in React state.
+  - A UI toggle.
+- There is no _entity_.
+- There is no identity.
+- There is nothing to persist.
+- Before a system can persist something, it must define what exists.
+
+> **Persistence requires a model.**
+
+- So the first step is to define what exists — inside this route.
+
+<hr className='my-8' />
+
+### Step 2a: Decide what exists in this system
+
+- Right now, the system has two real concepts:
+  - A **Message**.
+  - A **Profile**.
+- A Message is something the user creates.
+- A Profile is something the user can interact with and change (follow/unfollow).
+- These are not UI concepts.
+- They are system concepts.
+- So we model both.
+
+<hr className='my-8' />
+
+### Step 2b: Add the models to the route
+
+- Open `app/routes/home.tsx`.
+- Right now, your file starts like this:
+
+```tsx
+import { useState, useEffect } from 'react'
+
+import { Form, useNavigation, isRouteErrorResponse } from 'react-router'
+
+import type { Route } from './+types/home'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export async function action({ request }: Route.ActionArgs) {
+  // ...
+}
+```
+
+- Add the model definitions **after the imports** and **before**
+  `export async function action`.
+
+```ts
+import { useState, useEffect } from 'react'
+
+import { Form, useNavigation, isRouteErrorResponse } from 'react-router'
+
+import type { Route } from './+types/home'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+// 👇 Add these types here
+export type Message = {
+	id: string
+	text: string
+	createdAt: number
+}
+
+export type Profile = {
+	id: string
+	isFollowing: boolean
+}
+
+export async function action({ request }: Route.ActionArgs) {
+	// ...
+}
+```
+
+#### Why add this code in `home.tsx`?
+
+- Because right now:
+  - This route is the entire system.
+  - Messages only exist in this route.
+  - Follow state only exists in this route.
+  - There is no persistence layer yet.
+  - There is no shared domain yet.
+- So this is the only honest place where these concepts currently exist.
+- We are not designing architecture yet.
+- We are defining reality.
+- Later — when the system grows — these will move into shared models.
+- But first, the system must know what it is made of.
+- This makes Message and Profile real system concepts instead of implicit
+  UI state flowing through functions.
+
+<hr className='my-8' />
+
+## Step 3: Introduce a Minimal Persistent Store 💾
+
+- We have now defined what exists.
+- But nothing is remembered yet.
+- The system still forgets everything when the process restarts.
+- Right now:
+  - Messages live only in memory.
+  - Profile follow state lives only in memory.
+  - A reload destroys all truth.
+- So the next step is to give the system **somewhere to remember**.
+
+> **Persistence means storing truth outside the running process.**
+
+- We will start with the smallest possible persistent store:
+  a JSON file on disk.
+- Not because it is scalable.
+- Not because it is fast.
+- But because it is:
+  - Real
+  - Visible
+  - Honest
+  - And teaches the right boundary.
+
+<hr className='my-8' />
+
+### Step 3a: Create a JSON store for the system
+
+- We need a place on disk where the system can store truth.
+- We will use a simple JSON file:
+  - It lives outside the process.
+  - It survives reloads.
+  - It is easy to inspect.
+  - It makes persistence visible.
+- Create a new file at:
+
+```bash
+app/data/store.json
+```
+
+- Add this content:
+
+```json
+{
+	"messages": [],
+	"profile": {
+		"id": "profile-1",
+		"isFollowing": false
+	}
+}
+```
+
+- This file is now the **source of truth** for:
+  - All messages.
+  - The follow state.
+- Nothing reads it yet.
+- Nothing writes to it yet.
+- But it exists.
+
+> This is the moment your system becomes capable of memory.
+
+<hr className='my-8' />
+
+### Step 3b: Add helpers to read and write the store
+
+- We now need a small layer that:
+  - Reads from the JSON file.
+  - Writes to the JSON file.
+- This is not a database.
+- This is not an ORM.
+- This is simply file I/O.
+- Create a new file at:
+
+```bash
+app/data/store.server.ts
+```
+
+- Add this content:
+
+```ts
+import fs from 'fs/promises'
+import path from 'path'
+
+const STORE_PATH = path.join(process.cwd(), 'app/data/store.json')
+
+export type Store = {
+  messages: {
+    id: string
+    text: string
+    createdAt: number
+  }[]
+  profile: {
+    id: string
+    isFollowing: boolean
+  }
+}
+
+export async function readStore(): Promise<Store> {
+  const raw = await fs.readFile(STORE_PATH, 'utf-8')
+  return JSON.parse(raw)
+}
+
+export async function writeStore(store: Store) {
+  await fs.writeFile(STORE_PATH, JSON.stringify(store, null, 2))
+}
+```
+
+#### Why a separate file?
+
+- Because persistence is infrastructure, not UI.
+- We are drawing a boundary:
+  - UI → Action → Store
+- This keeps responsibilities clean:
+  - UI renders.
+  - Actions decide.
+  - Store remembers.
+
+<hr className='my-8' />
+
+## Step 4: Connect the store to the action 🔌
+
+- Right now, the action:
+  - Validates input.
+  - Logs the message.
+  - **Forgets it**.
+- Worse, it also **assumes why it was called**.
+  > - It implicitly assumes: _this must be a create._
+
+> - The action currently guesses:
+>   This must be a create.
+
+- That assumption will not survive CRUD.
+- Before we persist anything, the action must become
+  **explicit and honest about intent**.
+
+<hr className='my-8' />
+
+### Step 4a: Make intent explicit in the UI (`create`)
+
+- From this point on, the action will eventually support:
+  - Create
+  - Update
+  - Delete
+- An action must never guess _why_ it was submitted.
+
+> **Every mutation must declare intent**.
+
+- We start by making the UI explicit.
+
+#### Update the message form
+
+- Open `app/routes/home.tsx`.
+- Find the **message composer form** (rendered when `isComposing === true`)
+- It currently looks like this:
+
+```tsx
+<Form method="post" className="mt-4 space-y-2">
+	<textarea
+		name="message"
+		value={messageText}
+		onChange={event => {
+			setMessageText(event.target.value)
+			setHasEditedSinceLastSubmit(true)
+		}}
+		className="w-full rounded-lg border p-2 text-sm"
+		placeholder="Type your message..."
+	/>
+```
+
+- Add a **hidden intent field at the very top of the form**:
+
+```tsx
+<Form method="post" className="mt-4 space-y-2">
+	<input type="hidden" name="intent" value="create" />
+
+	<textarea
+		name="message"
+		value={messageText}
+		onChange={event => {
+			setMessageText(event.target.value)
+			setHasEditedSinceLastSubmit(true)
+		}}
+		className="w-full rounded-lg border p-2 text-sm"
+		placeholder="Type your message..."
+	/>
+
+```
+
+#### What this does
+
+- Every submission now explicitly declares:
+  > **I am creating a message.**
+- The server no longer infers intent from field names.
+- This is the first invariant required for real CRUD.
+
+<hr className='my-8' />
+
+### Step 4b: Branch on intent in the action (`create`)
+
+- Now the server must **respect what the UI declared**.
+- The action is no longer a single behavior.
+- It becomes a **dispatcher**.
+
+#### Extract intent at the top of the action
+
+- Open `app/routes/home.tsx`
+- Locate the `action` function
+- Start by reading `formData` and `intent`:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+	const intent = formData.get('intent')
+
+	if (intent === 'create') {
+		// create logic lives here
+	}
+
+	return { ok: false, error: 'Unsupported intent.' }
+}
+```
+
+#### Why this structure matters
+
+- The action **now routes behavior explicitly**.
+- Every mutation must pass through an intent gate.
+- Unsupported mutations fail fast and loudly — **by design**.
+- This is not optional scaffolding — it is the foundation of CRUD.
+
+<hr className='my-8' />
+
+### Step 4c: Implement the `create` branch
+
+- Now we move the existing validation and persistence
+  **inside the `create` branch**.
+
+#### Import the store helpers
+
+- Add these imports at the top of `app/routes/home.tsx`:
+
+```tsx
+import { readStore, writeStore } from '~/data/store.server'
+import { randomUUID } from 'crypto'
+```
+
+- **Move validation + persistence into** `intent === 'create'`
+- Replace the body of your `action` with this:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+	const intent = formData.get('intent')
+
+	if (intent === 'create') {
+		const message = formData.get('message')
+
+		if (typeof message !== 'string') {
+			return { ok: false, error: 'Message data type must be string.' }
+		}
+
+		const trimmedMessage = message.trim()
+
+		if (trimmedMessage.length === 0) {
+			return { ok: false, error: 'Message cannot be empty.' }
+		}
+
+		const minLength = 3
+		const maxLength = 200
+
+		if (trimmedMessage.length < minLength) {
+			return {
+				ok: false,
+				error: `Message must be at least ${minLength} characters.`,
+			}
+		}
+
+		if (trimmedMessage.length > maxLength) {
+			return {
+				ok: false,
+				error: `Message must be at most ${maxLength} characters.`,
+			}
+		}
+
+		const store = await readStore()
+
+		const newMessage = {
+			id: randomUUID(),
+			text: trimmedMessage,
+			createdAt: Date.now(),
+		}
+
+		store.messages.push(newMessage)
+
+		await writeStore(store)
+
+		return { ok: true }
+	}
+
+	return { ok: false, error: 'Unsupported intent.' }
+}
+```
+
+#### Why this is the correct shape
+
+- The action now has a **stable CRUD spine**:
+  1.  Read intent
+  2.  Route by intent
+  3.  Validate input
+  4.  Mutate persistent truth
+  5.  Respond
+
+- This scales cleanly to:
+  - `if (intent === 'update') { ... }`
+  - `if (intent === 'delete') { ... }`
+
+- Nothing is guessed.
+- Nothing is implicit.
+- Nothing is accidental.
+
+> - **CRUD does not start with storage.**
+> - **CRUD starts with intent.**
+
+- This completes the _Create_ side of CRUD.
+
+<hr className='my-8' />
+
+## Step 5: Read from the store 📖
+
+- We can now **create messages** and persist them.
+- But the UI still does not **read** from the store.
+- That means:
+  - The system remembers…
+  - But the user cannot see memory.
+- Persistence is only real when it is **observable**.
+- So the next step is to connect the store to the UI.
+
+<hr className='my-8' />
+
+### Step 5a: Add a loader
+
+- In React Router, **server data is read in the loader**.
+- The loader runs before the route renders and provides data to the UI.
+
+#### What to do
+
+1. Open app/routes/home.tsx
+2. Scroll to the top of the file
+3. **Place the following function above the `Home` component**
+   (and below any imports or type definitions):
+
+```ts
+export async function loader() {
+	const store = await readStore()
+	return store
+}
+```
+
+#### What this does
+
+- Reads the persistent store on every request
+- Exposes the system's **source of truth** to the UI
+- Returns:
+  - `messages`
+  - `profile`
+- The UI now has access to **persistent state**, not just local React state.
+
+<hr className='my-8' />
+
+### Step 5b: Read loader data in the component
+
+- Now we teach the UI to receive what the loader provides.
+
+#### Update the component signature
+
+- Change the `Home` component signature to include `loaderData`:
+
+```ts
+export default function Home({ actionData, loaderData }: Route.ComponentProps) {
+```
+
+#### Extract store data in the component
+
+- Open `app/routes/home.tsx`.
+- Locate the `Home` component:
+
+```ts
+export default function Home({ actionData, loaderData }: Route.ComponentProps) {
+```
+
+- **At the very top of the component function**, extract the data returned
+  by the loader:
+
+```ts
+const { messages, profile } = loaderData
+```
+
+- Your component should now begin like this:
+
+```tsx
+export default function Home({ actionData, loaderData }: Route.ComponentProps) {
+	const { messages, profile } = loaderData
+
+	// 👇 Uncomment to simulate a render-time crash
+	// throw new Error('Simulated render failure')
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messagesSentCount, setMessagesSentCount] = useState(0)
+	const [messageText, setMessageText] = useState('')
+	const [hasEditedSinceLastSubmit, setHasEditedSinceLastSubmit] =
+		useState(false)
+
+	const navigation = useNavigation()
+	const isSubmitting = navigation.state === 'submitting'
+
+	// ...
+```
+
+#### What this gives you
+
+- `messages`
+  → The persisted list of messages loaded from the store
+- `profile`
+  → The persisted follow state loaded from the store
+
+#### Why this matters
+
+- The UI is no longer rendering local guesses.
+- It is now rendering **server-loaded, persistent truth.**
+- From this point on:
+  - Reloads do not erase data.
+  - The UI reflects what the system actually remembers.
+
+> - This is the moment the UI becomes a window into real system state.
+
+<hr className='my-8' />
+
+### Step 5c: Render persisted messages
+
+- We now render what the system remembers.
+
+> Messages already have a conceptual home in the UI:
+> the "Messages sent" section.
+
+- We will **extend that section**, not create a new one.
+
+#### Update the messages section
+
+- Locate this code in `app/routes/home.tsx`:
+
+```tsx
+{/* Sent messages count */}
+<p className='mt-2 text-xs text-slate-400'>
+	Messages sent: {messagesSentCount}
+</p>
+```
+
+- Replace it with this **expanded version**:
+
+```tsx
+{/* Messages */}
+<div className='mt-4 text-left'>
+	<p className='text-xs text-slate-400'>
+		Messages sent: {messagesSentCount}
+	</p>
+
+	{messages.length > 0 && (
+		<section className='mt-3 rounded-xl bg-slate-50 p-4'>
+			<h3 className='mb-3 text-[11px] font-semibold tracking-wider text-slate-500 uppercase'>
+				Recent messages
+			</h3>
+
+			<ul className='space-y-3'>
+				{messages.slice(-3).map(message => (
+					<li
+						key={message.id}
+						className='rounded-r-md border-l-2 border-slate-300 bg-white px-3 py-2 text-sm leading-relaxed text-slate-700 transition hover:bg-slate-50'
+					>
+						{message.text}
+					</li>
+				))}
+			</ul>
+		</section>
+	)}
+</div>
+```
+
+#### Why this is the correct placement
+
+- "Messages sent" already introduces:
+  - Quantity
+  - Ownership
+- The list now naturally answers:
+  > Which messages are those?
+- No new section.
+- No duplicated concept.
+- One coherent block:
+  - Count (derived)
+  - Content (persisted)
+- This keeps the UI aligned with the lesson's mental model:
+
+> - A count is a projection.
+> - A list is the truth.
+> - They belong together.
+
+<hr className='my-8' />
+
+### Step 5d: Fix the messages count (derive, don't store)
+
+#### Remove local count state
+
+- Inside the `Home` component, **remove** this line:
+
+```tsx
+const [messagesSentCount, setMessagesSentCount] = useState(0)
+```
+
+- Also remove this line from the `useEffect`:
+
+```tsx
+setMessagesSentCount(c => c + 1)
+```
+
+- At this point, there should be **no local state** responsible for counting
+  messages.
+
+#### Derive the count from persisted data
+
+- Immediately after extracting loader data, derive the count:
+
+```ts
+const messagesSentCount = messages.length
+```
+
+- The top of the ... now becomes ...
+
+```tsx
+export default function Home({ actionData, loaderData }: Route.ComponentProps) {
+	const { messages, profile } = loaderData
+
+	const messagesSentCount = messages.length
+
+	// 👇 Uncomment to simulate a render-time crash
+	// throw new Error('Simulated render failure')
+	const [isFollowing, setIsFollowing] = useState(false)
+	const [isComposing, setIsComposing] = useState(false)
+	const [messageText, setMessageText] = useState('')
+	const [hasEditedSinceLastSubmit, setHasEditedSinceLastSubmit] =
+		useState(false)
+
+	const navigation = useNavigation()
+	const isSubmitting = navigation.state === 'submitting'
+
+	// ...
+```
+
+#### Why this is required
+
+- `messages` is the **source of truth**
+- The count is a **projection** of that truth
+- Storing the count separately allows it to drift out of sync
+
+> - Counts are not state.
+> - Counts are derived data.
+
+#### Result
+
+- The message count now:
+  - Matches the rendered messages
+  - Survives reloads
+  - Cannot become incorrect
+- The UI no longer mixes:
+  - Persistent truth
+  - With ephemeral guesses
+- At this point, the UI is fully driven by **real, persistent system state**.
+
+> This completes the **Read** side of CRUD.
+
+- At this point, we can **see persisted data**, but we cannot yet
+  **change or remove it.**
+
+<hr className='my-8' />
+
+## Step 6: Update messages ✏️
+
+- We can now **create** messages.
+- We can now **read** messages.
+- But once a message exists, it is frozen.
+- That is not a real system.
+
+> A real system must allow **existing truth to change**.
+
+- Update is not replacement.
+- Update is **refinement of persisted truth**.
+- And it must obey **the exact same rules** as creation.
+- This step adds the **Update** side of CRUD.
+
+<hr className='my-8' />
+
+### Step 6a: Extract and centralize message validation
+
+- Right now, message validation lives **inside the `create` branch**.
+- But the system now supports **multiple mutations**.
+- Validation is not UI logic.
+- Validation is not intent-specific logic.
+
+> - Validation defines what the system allows to exist.
+
+- That means:
+  - Create and Update **must share the same rules**.
+  - Those rules must live in **exactly one place**.
+- So before we add update, we finish the refactor.
+
+<hr className='my-8' />
+
+- But updates must obey **the exact same message rules**:
+  - A message must be a string.
+  - A message must not be empty.
+  - A message must respect length constraints.
+- Duplicating that logic would be a mistake.
+
+#### Define validation result types
+
+- Validation has two possible outcomes:
+  - Failure (with an error)
+  - Success (with a guaranteed valid message)
+- We model this explicitly using a **discriminated union**.
+- Add the following **above the** `action` **function**:
+
+```ts
+type ValidationError = {
+	ok: false
+	error: string
+}
+
+type ValidationSuccess = {
+	ok: true
+	value: string
+}
+
+type ValidationResult = ValidationError | ValidationSuccess
+```
+
+- **Why this matters**
+  - `ok` is the discriminator.
+  - TypeScript can now **narrow types correctly**.
+  - When `ok === true`, `value`:
+    - Exists
+    - Is a string
+    - Is guaranteed to be valid
+  - This removes string | undefined errors **by construction**.
+
+#### Add the message validation helper
+
+- Now we define validation once.
+- It:
+  - Accepts **unknown input**.
+  - Enforces **all message rules**.
+  - Returns a **typed result**.
+- Add this function **below the types** and **above the** `action` **function**:
+
+```ts
+function validateMessageText(text: unknown): ValidationResult {
+	if (typeof text !== 'string') {
+		return { ok: false, error: 'A message must be a string.' }
+	}
+
+	const trimmedText = text.trim()
+
+	if (trimmedText.length === 0) {
+		return { ok: false, error: 'A message must not be empty.' }
+	}
+
+	const minLength = 3
+	const maxLength = 200
+
+	if (trimmedText.length < minLength) {
+		return {
+			ok: false,
+			error: `A message must be at least ${minLength} characters.`,
+		}
+	}
+
+	if (trimmedText.length > maxLength) {
+		return {
+			ok: false,
+			error: `A message must be at most ${maxLength} characters.`,
+		}
+	}
+
+	return { ok: true, value: trimmedText }
+}
+```
+
+- **What this guarantees**
+  - The function always returns **one canonical result**.
+  - When `ok === true`, `value` is:
+    - Trimmed
+    - Valid
+    - Safe to persist
+  - This function now defines:
+    > - **What a valid message is — system-wide**
+
+<hr className='my-8' />
+
+## Step 6b: Rewire the create branch to use shared validation
+
+- We have extracted validation.
+- Now we must **actually use it**.
+- Until we do, the system is inconsistent.
+
+> **All mutation paths must obey the same rules**.
+
+- Update the `create` branch inside the `action` function to this:
+
+```ts
+if (intent === 'create') {
+	const messageText = formData.get('message')
+
+	const validatedMessageText = validateMessageText(messageText)
+
+	if (!validatedMessageText.ok) {
+		return validatedMessageText
+	}
+
+	const store = await readStore()
+
+	const newMessage = {
+		id: randomUUID(),
+		text: validatedMessageText.value,
+		createdAt: Date.now(),
+	}
+
+	store.messages.push(newMessage)
+	await writeStore(store)
+
+	return { ok: true }
+}
+```
+
+<hr className='my-8' />
+
+## Step 6c: Add the `update` intent branch
+
+- The action already routes on intent.
+- We now add a **sibling branch** to `create`.
+
+> **Add the following branch alongside the `create` branch inside
+> the `action` function.**
+
+```ts
+if (intent === 'update') {
+	const id = formData.get('id')
+	const messageText = formData.get('messageText')
+
+	if (typeof id !== 'string') {
+		return { ok: false, error: 'Invalid update payload.' }
+	}
+
+	const validatedMessageText = validateMessageText(messageText)
+
+	if (!validatedMessageText.ok) {
+		return validatedMessageText
+	}
+
+	const store = await readStore()
+	const message = store.messages.find(m => m.id === id)
+
+	if (!message) {
+		return { ok: false, error: 'Message not found.' }
+	}
+
+	message.text = validatedMessageText.value
+	await writeStore(store)
+
+	return { ok: true }
+}
+```
+
+#### Why this works cleanly
+
+- Create and Update share **exactly one validation path**.
+- No duplication
+- No divergence
+- No hidden rules
+
+> **The system now enforces one truth, consistently.**
+
+<hr className='my-8' />
+
+### Step 6d: Add editing state to the UI
+
+- The server can now update messages.
+- But the user has no way to trigger an update.
+- We add a **minimal, honest editing loop**.
+
+#### Add editing state
+
+- Up to this point, the **messages section already exists**.
+- It already has: - A container - A heading (Recent messages) - A list of messages rendered from persisted truth
+
+  > - We are not changing the section.
+  > - We are only changing how each message behaves.
+
+- The heading stays.
+- The layout stays.
+- The meaning stays.
+- Only the **per-message UI** gains an edit mode.
+
+#### What stays exactly the same
+
+- From Step 5, you already have this structure:
+
+```tsx
+<section className='mt-3 rounded-xl bg-slate-50 p-4'>
+	<h3 className='mb-3 text-[11px] font-semibold tracking-wider text-slate-500 uppercase'>
+		Recent messages
+	</h3>
+
+	<ul className='space-y-3'>
+		{/* messages render here */}
+	</ul>
+</section>
+```
+
+- **Do not remove this**.
+- **Do not rename it**.
+- **Do not move it**.
+
+- This section is the **Read surface** of your system.
+
+#### What we are adding in Step 6d
+
+- We now make **each list item editable**.
+- To do that, we introduce **draft state** in the component.
+- Add this inside the `Home` component:
+
+```ts
+const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+const [editText, setEditText] = useState('')
+```
+
+- `editingMessageId` → which message is being edited.
+- `editText` → temporary draft text.
+
+> - Draft state is **not persisted truth**.
+> - It exists only to support user interaction.
+
+#### Replace only the message list rendering
+
+- Inside the existing `<ul>` (and **nowhere else**), replace the
+  message rendering with this:
+
+```tsx
+<ul className='space-y-3'>
+	{messages.map(message => {
+		const isEditing = editingMessageId === message.id
+
+		return (
+			<li
+				key={message.id}
+				className='flex items-center gap-2 rounded border bg-white p-2 text-sm text-slate-700'
+			>
+				{isEditing ? (
+					<Form method='post' className='flex w-full items-center gap-2'>
+						<input type='hidden' name='intent' value='update' />
+						<input type='hidden' name='id' value={message.id} />
+
+						<textarea
+							name='messageText'
+							value={editText}
+							onChange={e => setEditText(e.target.value)}
+							className='flex-1 rounded border px-2 py-1 text-sm'
+						/>
+
+						<button
+							type='submit'
+							className='rounded-md bg-green-600 px-2 py-1 text-xs text-white transition hover:bg-green-700'
+						>
+							Save
+						</button>
+
+						<button
+							type='button'
+							className='rounded-md border px-2 py-1 text-xs transition hover:bg-slate-100 hover:border-slate-400'
+							onClick={() => setEditingMessageId(null)}
+						>
+							Cancel
+						</button>
+					</Form>
+				) : (
+					<>
+						<span className='flex-1'>{message.text}</span>
+
+						<button
+							type='button'
+							className='rounded-md border px-2 py-1 text-xs transition hover:border-slate-400 hover:bg-slate-100'
+							onClick={() => {
+								setEditingMessageId(message.id)
+								setEditText(message.text)
+							}}
+						>
+							Edit
+						</button>
+					</>
+				)}
+			</li>
+		)
+	})}
+</ul>
+```
+
+#### Why this matters
+
+- The **heading remains** because:
+  - It defines the meaning of the section.
+  - It anchors the mental model.
+- Update affects **behavior**, not **structure**.
+- Read stays Read.
+- Update layers on top.
+
+> - We did not replace the UI.
+> - We refined how truth can be edited.
+
+### Step 6d: Close edit mode after the server confirms the update
+
+- The server can now update messages.
+- The UI can now enter edit mode.
+- But there is one final detail we must get exactly right.
+
+> - Edit mode must close only when the update actually succeeds.
+
+- Not when the user clicks "Save".
+- Not when the form submits.
+- Only when the server confirms that truth has changed.
+
+#### Why this matters
+
+- Clicking **Save** only declares intent.
+- The server still might:
+  - Reject the update
+  - Fail validation
+  - Fail entirely
+- If we close edit mode before the server responds:
+  - The UI would lie
+  - Errors could disappear
+  - Truth and UI would drift out of sync
+
+> The UI must react to confirmed truth — not guess it.
+
+#### The rule we follow
+
+> - Local UI state may react to a successful mutation,
+> - but it must never assume success.
+
+- So edit mode closes **after**:
+
+1. The form submits
+2. The server validates
+3. The store is updated
+4. The action returns { `ok: true` }
+5. The loader re-runs
+
+- Only then does the UI respond.
+
+#### Add a reaction to successful updates
+
+- Inside the `Home` component, add this effect:
+
+```ts
+useEffect(() => {
+	if (actionData?.ok && editingMessageId !== null) {
+		setEditingMessageId(null)
+	}
+}, [actionData, editingMessageId])
+```
+
+#### What this effect does
+
+- It **listens for server confirmation**.
+- When:
+  - A mutation succeeds (`actionData.ok`).
+  - And a message was being edited.
+- It exits edit mode
+- No optimistic guesses.
+- No button-level hacks.
+- No duplicated logic.
+
+#### Why this is the correct shape
+
+- The **Save button stays dumb**.
+- The **server stays authoritative**.
+- The **UI reacts to truth**.
+
+- This mirrors how real systems work:
+  > - Actions mutate truth
+  > - Loaders expose truth
+  > - UI reacts to truth
+
+#### Resulting behavior
+
+- Click **Edit** → Draft state opens
+- Click **Save** → Server validates and updates
+- Server responds { `ok: true` } → Edit mode closes automatically
+- UI re-renders with updated text
+- If validation fails:
+  - Edit mode stays open
+  - Errors remain visible
+  - Nothing is hidden
+
+<hr className='my-8' />
+
+## Step 7: Delete messages 🗑️
+
+- At this point, the system can:
+  - Create messages
+  - Read persisted messages
+  - Update existing messages
+- But there is still a hard limitation:
+  > **Nothing can ever be removed.**
+- That means truth only ever grows.
+- A real system must allow truth to be removed, not just hidden
+  or reset in the UI.
+- Delete is not:
+  - Clearing local state
+  - Hiding UI elements
+  - Resetting counters
+- Delete is:
+  > **Removing persisted data so the system behaves as if it never existed.**
+- This step completes the final part of CRUD: **Delete**.
+
+<hr className='my-8' />
+
+### Step 7a: Add the delete intent to the action
+
+- Your action already supports multiple behaviors by routing on `intent`.
+- Right now, it handles:
+  - `create`
+  - `update`
+- We add one more explicit branch:
+  - `delete`
+- The action remains a dispatcher.
+- We extend it — we don't redesign it.
+- Add this branch **alongside the existing ones**:
+
+```ts
+if (intent === 'delete') {
+	const id = formData.get('id')
+
+	if (typeof id !== 'string') {
+		return { ok: false, error: 'Invalid delete payload.' }
+	}
+
+	const store = await readStore()
+	const initialLength = store.messages.length
+
+	store.messages = store.messages.filter(m => m.id !== id)
+
+	if (store.messages.length === initialLength) {
+		return { ok: false, error: 'Message not found.' }
+	}
+
+	await writeStore(store)
+
+	return { ok: true }
+}
+```
+
+#### Why this is the correct shape
+
+- Delete requires exactly one thing: **identity**
+- We:
+  - Validate the ID
+  - Remove the message from persistent storage
+  - Persist the updated truth
+- If nothing changed, we fail loudly
+  > - Delete does not mutate data.
+  > - Delete removes data.
+- This keeps deletion:
+  - Explicit
+  - Honest
+  - Server-authoritative
+
+- <hr className='my-8' />
+
+### Step 7b: Add delete controls to the UI
+
+- The server now understands how to delete a message.
+- The remaining question is simple:
+  > **How does the user tell the server which message to delete?**
+- Answer:
+
+  > - By submitting a form with:
+  >   - `intent=delete` and **the message** `id`
+
+- No abstractions. No tricks.
+
+#### Where this change lives
+
+- This code belongs **inside the message list**, specifically in
+  the **non-editing state**.
+
+You already have logic like this:
+
+```tsx
+{messages.map(message => {
+	const isEditing = editingMessageId === message.id
+
+	return (
+		<li key={message.id}>
+			{isEditing ? (
+				// edit UI
+			) : (
+				// non-editing UI
+			)}
+		</li>
+	)
+})}
+```
+
+- We only change the **non-editing branch**.
+
+#### Before (non-editing state)
+
+```tsx
+<>
+	<span className='flex-1'>{message.text}</span>
+
+	<button
+		type='button'
+		className='rounded-md border px-2 py-1 text-xs transition hover:bg-slate-100 hover:border-slate-400'
+		onClick={() => {
+			setEditingMessageId(message.id)
+			setEditText(message.text)
+		}}
+	>
+		Edit
+	</button>
+</>
+```
+
+#### After (non-editing state)
+
+```tsx
+<>
+	<span className='flex-1'>{message.text}</span>
+
+	<button
+		type='button'
+		className='rounded-md border px-2 py-1 text-xs transition hover:bg-slate-100 hover:border-slate-400'
+		onClick={() => {
+			setEditingMessageId(message.id)
+			setEditText(message.text)
+		}}
+	>
+		Edit
+	</button>
+
+	<Form method='post'>
+		<input type='hidden' name='intent' value='delete' />
+		<input type='hidden' name='id' value={message.id} />
+
+		<button
+			type='submit'
+			className='rounded-md border px-2 py-1 text-xs text-red-600 transition hover:bg-red-50'
+		>
+			Delete
+		</button>
+	</Form>
+</>
+```
+
+#### Why this is the _right_ shape
+
+- **Edit**
+  - Enters local draft state
+  - Does not mutate truth yet
+- **Delete**
+  - Skips local state entirely
+  - Submits an explicit server mutation
+  - Removes persisted truth
+  - Lets the loader re-render reality
+- No conditionals.
+- No UI cleanup logic.
+- No guessing.
+
+> - Intent goes to the server.
+> - Truth changes.
+> - UI follows.
+
+## Step 8: What you just built 🧠
+
+- You started this lesson with an interactive UI that forgot everything.
+- You are ending it with a real system.
+- You now have:
+- A persistent store that survives reloads.
+- Explicit data models.
+- A single server-authoritative source of truth.
+- A clear mutation contract (`intent`).
+- Full CRUD:
+  - **Create** introduces truth.
+  - **Read** exposes truth.
+  - **Update** refines truth.
+  - **Delete** removes truth.
+- Most importantly:
+  > - The UI no longer invents state.
+  > - It reflects persisted reality.
+- Why this matters:
+  - It reinforces _why_ CRUD exists.
+  - It makes the shift from UI thinking to system thinking visible.
+  - It locks in the purpose of the lesson.
+
+<hr className='my-8' />
+
+## Step 9: What we intentionally did **not** cover 🚫
+
+- This lesson was about **system correctness**, not production polish.
+- So we intentionally skipped:
+  - Authentication and users
+  - Authorization rules
+  - Confirmation dialogs
+  - Optimistic updates
+  - Undo / soft delete
+  - Databases and ORMs
+  - Performance or scaling concerns
+- These are real problems — just not _this_ problem.
+
+> You can only reason about complexity after you understand fundamentals.
+
+<hr className='my-8' />
+
+## Step 10: The real lesson 🎓
+
+- CRUD is not about databases.
+- CRUD is about **truth**.
+- This lesson taught you that:
+  - Truth lives on the server.
+  - Mutations must be explicit.
+  - State must be derived, not duplicated.
+  - UI is a projection of persisted reality.
+  - Systems get simpler when intent is clear.
+- Once you understand this:
+  - Frameworks matter less.
+  - Libraries become replaceable.
+  - Bugs become easier to reason about.
+- This is the difference between following tutorials
+  and **learning how systems actually work**.
+
+<hr className='my-8' />
+
+## Step 11: Pause and reflect 🧭
+
+- Before moving on, pause and notice something important.
+- We did **not**:
+  - Add new routes
+  - Add a database
+  - Add users
+  - Add authentication
+  - Add abstractions
+  - Add libraries
+- And yet, you built a system that:
+  - Persists truth
+  - Survives reloads
+  - Supports full CRUD
+  - Has clear authority
+  - Behaves predictably
+- That is not beginner work.
+- That is **systems thinking**.
+
+<hr className='my-8' />
+
+## What actually changed from Lesson 9 → Lesson 10
+
+- It might feel like a lot of code changed.
+- But conceptually, only one thing happened:
+
+> **Truth moved out of React state and into persistent storage.**
+
+- Everything else followed naturally.
+- Validation already existed.
+- Error handling already existed.
+- The UI already worked.
+- Intent became explicit.
+- State became honest.
+- This is why good architecture often feels _boring_ when it's correct.
+
+<hr className='my-8' />
+
+## The most important idea in this lesson ⭐
+
+- If you remember only one thing, remember this:
+
+> **CRUD is not about databases.  
+> CRUD is about truth.**
+
+- Create introduces truth.
+- Read exposes truth.
+- Update refines truth.
+- Delete removes truth.
+
+The database is just where truth lives.
+
+<hr className='my-8' />
+
+## Why this lesson matters long-term
+
+Everything you build later depends on this mental model:
+
+- Authentication  
+  → Just another constraint on mutation.
+- Authorization  
+  → Rules about _who_ can mutate truth.
+- Databases  
+  → Stronger persistence layers.
+- APIs  
+  → Different ways to express intent.
+
+If CRUD is solid, everything else stacks cleanly.
+
+<hr className='my-8' />
+
+## What comes next 🚀
+
+Right now, your system is:
+
+- Correct
+- Resilient
+- Persistent
+- Explicit
+
+But one question remains:
+
+> **If the architecture is right, how easy is it to swap storage?**
+
+That’s what the next lesson proves.
+
+In **Lesson 11**, you will:
+
+- Replace the JSON store with a real database.
+- Keep the UI unchanged.
+- Keep the action unchanged.
+- Keep the CRUD contract unchanged.
+
+You will see — clearly — that:
+
+> **Good systems don’t fight change.  
+> They absorb it.**
+
+<hr className='my-8' />
+
+## You're not building demos anymore 🧠
+
+This lesson marks a turning point.
+
+Before:
+
+- You were wiring UI together.
+
+Now:
+
+- You are designing systems.
+
+That difference compounds.
+
+Take a breath.  
+Read the code again.  
+Notice how calm it feels.
+
+Then move on.
+
+You’ve earned it.
