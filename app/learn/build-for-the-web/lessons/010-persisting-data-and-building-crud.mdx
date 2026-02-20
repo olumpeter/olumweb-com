@@ -9,6 +9,7 @@ readingTime: '28 min'
 ---
 
 import profileCardStartingPointForLesson10 from '../images/010-persisting-data-and-building-crud/screenshots/profile-card-starting-point-for-lesson-10.jpg?url'
+import profileCardFinalCrudResult from '../images/010-persisting-data-and-building-crud/screenshots/profile-card-final-state-for-lesson-10.jpg?url'
 
 ## Introduction 🧭
 
@@ -59,7 +60,8 @@ import profileCardStartingPointForLesson10 from '../images/010-persisting-data-a
 - Persistent state lives outside the process.
 - A real system must remember beyond a single run.
 - And:
-  > **CRUD is not a feature. CRUD is the minimal interface to persistent state.**
+  > **CRUD is not a feature. CRUD is the minimal interface required to
+  > reason about persistent state.**
 - Everything that persists must be:
   - **C**reated
   - **R**ead
@@ -70,17 +72,463 @@ import profileCardStartingPointForLesson10 from '../images/010-persisting-data-a
 
 ## What You'll Build 🎯
 
-- A persisted message store.
-- Messages survive reloads.
-- Messages can be edited.
-- Messages can be deleted.
-- The UI reflects persistent truth.
+- By the end of this lesson, you'll have a **Profile Card system** that:
+  - Persists messages and profile state across page reloads.
+  - Supports full **Create, Read, Update, Delete (CRUD)** operations for messages.
+  - Uses the server as the single source of truth.
+  - Reflects persisted data accurately in the UI.
 
-### 1️⃣ Persisted messages
+<img
+	src={profileCardFinalCrudResult}
+	alt='Final Profile Card UI with persisted messages and full CRUD support'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
 
-### 2️⃣ Updated message
+- Below is the **complete final code** for the Profile Card system you'll
+  build in this lesson.
+- Don't worry about understanding it yet — we'll build it **step by step**.
 
-### 3️⃣ Deleted message
+```tsx
+import { useState, useEffect } from 'react'
+
+import { Form, useNavigation, isRouteErrorResponse } from 'react-router'
+
+import type { Route } from './+types/home'
+
+import { readStore, writeStore } from '~/data/store.server'
+import { randomUUID } from 'crypto'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export type Message = {
+	id: string
+	text: string
+	createdAt: number
+}
+
+export type Profile = {
+	id: string
+	isFollowing: boolean
+}
+
+type ValidationError = {
+	ok: false
+	error: string
+}
+
+type ValidationSuccess = {
+	ok: true
+	value: string
+}
+
+type ValidationResult = ValidationError | ValidationSuccess
+
+function validateMessageText(text: unknown): ValidationResult {
+	if (typeof text !== 'string') {
+		return {
+			ok: false,
+			error: 'A message must be a string.',
+		}
+	}
+
+	const trimmedText = text.trim()
+
+	if (trimmedText.length === 0) {
+		return {
+			ok: false,
+			error: 'A message must not be empty.',
+		}
+	}
+
+	const minLength = 3
+	const maxLength = 200
+
+	if (trimmedText.length < minLength) {
+		return {
+			ok: false,
+			error: `A message must be at least ${minLength} characters.`,
+		}
+	}
+
+	if (trimmedText.length > maxLength) {
+		return {
+			ok: false,
+			error: `A message must be at most ${maxLength} characters.`,
+		}
+	}
+
+	return { ok: true, value: trimmedText }
+}
+
+export async function action({ request }: Route.ActionArgs) {
+	// 👇 Uncomment to simulate a server-side failure
+	// throw new Error('Simulated server failure')
+	const formData = await request.formData()
+	const intent = formData.get('intent')
+
+	if (intent === 'create') {
+		const messageText = formData.get('message')
+
+		const validatedMessageText = validateMessageText(messageText)
+
+		if (!validatedMessageText.ok) {
+			return validatedMessageText
+		}
+
+		const store = await readStore()
+
+		const newMessage = {
+			id: randomUUID(),
+			text: validatedMessageText.value,
+			createdAt: Date.now(),
+		}
+
+		store.messages.push(newMessage)
+		await writeStore(store)
+
+		return { ok: true }
+	}
+
+	if (intent === 'update') {
+		const id = formData.get('id')
+		const messageText = formData.get('messageText')
+
+		if (typeof id !== 'string') {
+			return { ok: false, error: 'Invalid update payload.' }
+		}
+
+		const validatedMessageText = validateMessageText(messageText)
+
+		if (!validatedMessageText.ok) {
+			return validatedMessageText
+		}
+
+		const store = await readStore()
+		const message = store.messages.find(m => m.id === id)
+
+		if (!message) {
+			return { ok: false, error: 'Message not found.' }
+		}
+
+		message.text = validatedMessageText.value
+		await writeStore(store)
+
+		return { ok: true }
+	}
+
+	if (intent === 'delete') {
+		const id = formData.get('id')
+
+		if (typeof id !== 'string') {
+			return { ok: false, error: 'Invalid delete payload.' }
+		}
+
+		const store = await readStore()
+		const initialLength = store.messages.length
+
+		store.messages = store.messages.filter(m => m.id !== id)
+
+		if (store.messages.length === initialLength) {
+			return { ok: false, error: 'Message not found.' }
+		}
+
+		await writeStore(store)
+
+		return { ok: true }
+	}
+
+	if (intent === 'toggle-follow') {
+		const store = await readStore()
+
+		store.profile.isFollowing = !store.profile.isFollowing
+
+		await writeStore(store)
+
+		return { ok: true }
+	}
+
+	return { ok: false, error: 'Unsupported intent' }
+}
+
+export async function loader() {
+	const store = await readStore()
+	return store
+}
+
+export default function Home({ actionData, loaderData }: Route.ComponentProps) {
+	const { messages, profile } = loaderData
+
+	const messagesSentCount = messages.length
+
+	// 👇 Uncomment to simulate a render-time crash
+	// throw new Error('Simulated render failure')
+	const [isComposing, setIsComposing] = useState(false)
+	const [messageText, setMessageText] = useState('')
+	const [hasEditedSinceLastSubmit, setHasEditedSinceLastSubmit] =
+		useState(false)
+	const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+	const [editText, setEditText] = useState('')
+
+	const navigation = useNavigation()
+	const isSubmitting = navigation.state === 'submitting'
+
+	useEffect(() => {
+		if (actionData) {
+			setHasEditedSinceLastSubmit(false)
+		}
+
+		if (actionData?.ok) {
+			setMessageText('')
+			setIsComposing(false)
+		}
+	}, [actionData])
+
+	useEffect(() => {
+		if (actionData?.ok && editingMessageId !== null) {
+			setEditingMessageId(null)
+		}
+	}, [actionData, editingMessageId])
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			{/* Card */}
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+				{/* Avatar */}
+				<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+					<img
+						src={cartoonAntelopeAvatar}
+						alt='Profile avatar'
+						className='h-20 w-20 rounded-full object-cover'
+					/>
+				</div>
+
+				{/* Name */}
+				<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+					Peter Olum
+				</h2>
+
+				{/* Role */}
+				<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+				{/* Bio */}
+				<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+				{/* Messages */}
+				<div className='mt-4 text-left'>
+					<p className='text-xs text-slate-400'>
+						Messages sent: {messagesSentCount}
+					</p>
+
+					{messages.length > 0 && (
+						<section className='mt-3 rounded-xl bg-slate-50 p-4'>
+							<h3 className='mb-3 text-[11px] font-semibold tracking-wider text-slate-500 uppercase'>
+								Recent messages
+							</h3>
+
+							<ul className='space-y-3'>
+								{messages.slice(-3).map(message => {
+									const isEditing = editingMessageId === message.id
+
+									return (
+										<li
+											key={message.id}
+											className='flex items-center gap-2 rounded border bg-white p-2 text-sm text-slate-700'
+										>
+											{isEditing ? (
+												<Form
+													method='post'
+													className='flex w-full items-center gap-2'
+												>
+													<input
+														type='hidden'
+														name='intent'
+														value='update'
+													/>
+													<input
+														type='hidden'
+														name='id'
+														value={message.id}
+													/>
+
+													<textarea
+														name='messageText'
+														value={editText}
+														onChange={e => setEditText(e.target.value)}
+														className='flex-1 rounded border px-2 py-1 text-sm'
+													/>
+
+													<button
+														type='submit'
+														className='rounded-md bg-green-600 px-2 py-1 text-xs text-white transition hover:bg-green-700'
+													>
+														Save
+													</button>
+
+													<button
+														type='button'
+														className='rounded-md border px-2 py-1 text-xs transition hover:border-slate-400 hover:bg-slate-100'
+														onClick={() => setEditingMessageId(null)}
+													>
+														Cancel
+													</button>
+												</Form>
+											) : (
+												<>
+													<span className='flex-1'>{message.text}</span>
+
+													<button
+														type='button'
+														className='rounded-md border px-2 py-1 text-xs transition hover:border-slate-400 hover:bg-slate-100'
+														onClick={() => {
+															setEditingMessageId(message.id)
+															setEditText(message.text)
+														}}
+													>
+														Edit
+													</button>
+
+													<Form method='post'>
+														<input
+															type='hidden'
+															name='intent'
+															value='delete'
+														/>
+														<input
+															type='hidden'
+															name='id'
+															value={message.id}
+														/>
+
+														<button
+															type='submit'
+															className='rounded-md border px-2 py-1 text-xs text-red-600 transition hover:bg-red-50'
+														>
+															Delete
+														</button>
+													</Form>
+												</>
+											)}
+										</li>
+									)
+								})}
+							</ul>
+						</section>
+					)}
+				</div>
+
+				{/* Actions */}
+				<div className='mt-6 flex gap-3'>
+					<button
+						type='button'
+						onClick={() => setIsComposing(true)}
+						disabled={isComposing}
+						className='flex-1 rounded-lg border px-4 py-2 text-sm'
+					>
+						Message
+					</button>
+
+					<Form
+						method='post'
+						className='flex-1'
+					>
+						<input
+							type='hidden'
+							name='intent'
+							value='toggle-follow'
+						/>
+
+						<button
+							type='submit'
+							className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+						>
+							{profile.isFollowing ? 'Following' : 'Follow'}
+						</button>
+					</Form>
+				</div>
+
+				{isComposing && (
+					<Form
+						method='post'
+						className='mt-4 space-y-2'
+					>
+						<input
+							type='hidden'
+							name='intent'
+							value='create'
+						/>
+
+						<textarea
+							name='message'
+							value={messageText}
+							onChange={event => {
+								setMessageText(event.target.value)
+								setHasEditedSinceLastSubmit(true)
+							}}
+							className='w-full rounded-lg border p-2 text-sm'
+							placeholder='Type your message...'
+						/>
+
+						{actionData?.error && !hasEditedSinceLastSubmit && (
+							<p className='text-xs text-red-500'>{actionData.error}</p>
+						)}
+
+						<p className='text-xs text-slate-400'>
+							Characters: {messageText.length}
+						</p>
+
+						<div className='mt-6 flex gap-3'>
+							<button
+								type='submit'
+								disabled={isSubmitting}
+								className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+							>
+								{isSubmitting ? 'Sending…' : 'Send'}
+							</button>
+
+							<button
+								type='button'
+								onClick={() => {
+									setMessageText('')
+									setIsComposing(false)
+								}}
+								className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+							>
+								Cancel
+							</button>
+						</div>
+					</Form>
+				)}
+			</div>
+		</div>
+	)
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+	console.error(error)
+
+	let errorMessage = 'Oh no, something went wrong. Sorry about that.'
+
+	if (isRouteErrorResponse(error)) {
+		errorMessage = error.statusText || errorMessage
+	} else if (error instanceof Error) {
+		errorMessage = error.message
+	}
+
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			<div className='w-full max-w-md rounded-xl border bg-white p-6 text-center'>
+				<h1 className='text-lg font-semibold text-slate-900'>
+					Something went wrong
+				</h1>
+				<p className='mt-2 text-sm text-slate-600'>{errorMessage}</p>
+			</div>
+		</div>
+	)
+}
+```
+
+- You are **not expected to write or understand this yet**.
+- The rest of the lesson is about **earning this code**, one decision at a time.
 
 <hr className='my-8' />
 
@@ -122,13 +570,13 @@ export async function action({ request }: Route.ActionArgs) {
 	const message = formData.get('message')
 
 	if (typeof message !== 'string') {
-		return { ok: false, error: 'Message is required.' }
+		return { ok: false, error: 'A message must be a string.' }
 	}
 
 	const trimmedMessage = message.trim()
 
 	if (trimmedMessage.length === 0) {
-		return { ok: false, error: 'Message cannot be empty.' }
+		return { ok: false, error: 'A message must not be empty.' }
 	}
 
 	const minLength = 3
@@ -137,14 +585,14 @@ export async function action({ request }: Route.ActionArgs) {
 	if (trimmedMessage.length < minLength) {
 		return {
 			ok: false,
-			error: `Message must be at least ${minLength} characters.`,
+			error: `A message must be at least ${minLength} characters.`,
 		}
 	}
 
 	if (trimmedMessage.length > maxLength) {
 		return {
 			ok: false,
-			error: `Message must be at most ${maxLength} characters.`,
+			error: `A message must be at most ${maxLength} characters.`,
 		}
 	}
 
@@ -659,13 +1107,13 @@ export async function action({ request }: Route.ActionArgs) {
 		const message = formData.get('message')
 
 		if (typeof message !== 'string') {
-			return { ok: false, error: 'Message data type must be string.' }
+			return { ok: false, error: 'A message must be a string.' }
 		}
 
 		const trimmedMessage = message.trim()
 
 		if (trimmedMessage.length === 0) {
-			return { ok: false, error: 'Message cannot be empty.' }
+			return { ok: false, error: 'A message must not be empty.' }
 		}
 
 		const minLength = 3
@@ -674,14 +1122,14 @@ export async function action({ request }: Route.ActionArgs) {
 		if (trimmedMessage.length < minLength) {
 			return {
 				ok: false,
-				error: `Message must be at least ${minLength} characters.`,
+				error: `A message must be at least ${minLength} characters.`,
 			}
 		}
 
 		if (trimmedMessage.length > maxLength) {
 			return {
 				ok: false,
-				error: `Message must be at most ${maxLength} characters.`,
+				error: `A message must be at most ${maxLength} characters.`,
 			}
 		}
 
@@ -835,6 +1283,9 @@ export default function Home({ actionData, loaderData }: Route.ComponentProps) {
   - The UI reflects what the system actually remembers.
 
 > - This is the moment the UI becomes a window into real system state.
+
+> - We are intentionally leaving follow state in React for now.
+> - We will fix this inconsistency later, once CRUD for messages is complete.
 
 <hr className='my-8' />
 
@@ -1008,6 +1459,9 @@ export default function Home({ actionData, loaderData }: Route.ComponentProps) {
 - Validation is not intent-specific logic.
 
 > - Validation defines what the system allows to exist.
+
+> You have already seen these validation rules earlier in the lesson.
+> We are not changing them — we are making them explicit and shared.
 
 - That means:
   - Create and Update **must share the same rules**.
@@ -1256,7 +1710,7 @@ const [editText, setEditText] = useState('')
 
 ```tsx
 <ul className='space-y-3'>
-	{messages.map(message => {
+	{messages.slice(-3).map(message => {
 		const isEditing = editingMessageId === message.id
 
 		return (
@@ -1325,7 +1779,7 @@ const [editText, setEditText] = useState('')
 > - We did not replace the UI.
 > - We refined how truth can be edited.
 
-### Step 6d: Close edit mode after the server confirms the update
+### Step 6e: Close edit mode after the server confirms the update
 
 - The server can now update messages.
 - The UI can now enter edit mode.
@@ -1484,7 +1938,7 @@ if (intent === 'delete') {
   - Honest
   - Server-authoritative
 
-- <hr className='my-8' />
+<hr className='my-8' />
 
 ### Step 7b: Add delete controls to the UI
 
@@ -1506,7 +1960,7 @@ if (intent === 'delete') {
 You already have logic like this:
 
 ```tsx
-{messages.map(message => {
+{messages.slice(-3).map(message => {
 	const isEditing = editingMessageId === message.id
 
 	return (
@@ -1591,15 +2045,136 @@ You already have logic like this:
 > - Truth changes.
 > - UI follows.
 
-## Step 8: What you just built 🧠
+<hr className='my-8' />
+
+## Step 8: Persist profile follow state ⭐
+
+- At this point, the system can:
+  - Create, read, update, and delete messages
+  - Persist message data across reloads
+  - Render server-authoritative truth in the UI
+
+- But one inconsistency remains:
+  - Messages are real
+  - Follow state is not
+
+> Follow state still resets on reload.  
+> That makes it **UI fiction**.
+
+### Step 8a: Remove local follow state
+
+- Open `app/routes/home.tsx`
+- Inside the `Home` component, locate this line:
+
+```tsx
+const [isFollowing, setIsFollowing] = useState(false)
+```
+
+- **Delete it completely.**
+
+#### Why this must go
+
+- The profile already exists in persistent storage
+- Keeping local follow state duplicates truth
+- Duplicated truth inevitably drifts
+
+> If the server owns truth, React must not invent it.
+
+### Step 8b: Add a follow mutation intent
+
+- Scroll to the `action` function.
+- You already route mutations using `intent`.
+- Add the following branch **alongside the others**:
+
+```tsx
+if (intent === 'toggle-follow') {
+	const store = await readStore()
+
+	store.profile.isFollowing = !store.profile.isFollowing
+
+	await writeStore(store)
+
+	return { ok: true }
+}
+```
+
+#### What this does
+
+- Moves follow state mutation to the server
+- Persists the change
+- Triggers a loader re-run automatically
+
+- No validation required.
+- No payload required.
+
+### Step 8c: Replace the Follow button with a mutation form
+
+- Scroll to the **Actions** section of the UI.
+- Remove this existing Follow button that toggles React state.
+
+```tsx
+<button
+	type='button'
+	onClick={() => setIsFollowing(!isFollowing)}
+	className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+>
+	{isFollowing ? 'Following' : 'Follow'}
+</button>
+```
+
+- Replace it with this form:
+
+```tsx
+<Form method='post' className='flex-1'>
+	<input type='hidden' name='intent' value='toggle-follow' />
+
+	<button
+		type='submit'
+		className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+	>
+		{profile.isFollowing ? 'Following' : 'Follow'}
+	</button>
+</Form>
+```
+
+#### What changed
+
+- The UI no longer mutates state
+- It declares intent
+- The server mutates truth
+- The UI reflects persisted reality
+
+### Step 8d: Verify the behavior
+
+- Click Follow
+- Reload the page
+- The state is preserved
+
+- Nothing else changed.
+- No new routes
+- No new abstractions
+- No new patterns
+- Just consistency.
+
+#### Result
+
+- Messages and profile now behave the same way.
+- All user-visible state is persisted.
+- The system has **one source of truth**.
+
+> This removes the last piece of fake state from the app.
+
+<hr className='my-8' />
+
+## What you just built 🧠
 
 - You started this lesson with an interactive UI that forgot everything.
 - You are ending it with a real system.
 - You now have:
-- A persistent store that survives reloads.
-- Explicit data models.
-- A single server-authoritative source of truth.
-- A clear mutation contract (`intent`).
+  - A persistent store that survives reloads.
+  - Explicit data models.
+  - A single server-authoritative source of truth for **all user-visible state**.
+  - A clear mutation contract (`intent`).
 - Full CRUD:
   - **Create** introduces truth.
   - **Read** exposes truth.
@@ -1607,6 +2182,7 @@ You already have logic like this:
   - **Delete** removes truth.
 - Most importantly:
   > - The UI no longer invents state.
+  > - Messages and profile data are both server-owned.
   > - It reflects persisted reality.
 - Why this matters:
   - It reinforces _why_ CRUD exists.
@@ -1615,7 +2191,7 @@ You already have logic like this:
 
 <hr className='my-8' />
 
-## Step 9: What we intentionally did **not** cover 🚫
+## What we intentionally did **not** cover 🚫
 
 - This lesson was about **system correctness**, not production polish.
 - So we intentionally skipped:
@@ -1632,7 +2208,7 @@ You already have logic like this:
 
 <hr className='my-8' />
 
-## Step 10: The real lesson 🎓
+## The real lesson 🎓
 
 - CRUD is not about databases.
 - CRUD is about **truth**.
@@ -1640,6 +2216,7 @@ You already have logic like this:
   - Truth lives on the server.
   - Mutations must be explicit.
   - State must be derived, not duplicated.
+  - Any state the user expects to persist must live on the server.
   - UI is a projection of persisted reality.
   - Systems get simpler when intent is clear.
 - Once you understand this:
@@ -1651,7 +2228,7 @@ You already have logic like this:
 
 <hr className='my-8' />
 
-## Step 11: Pause and reflect 🧭
+## Pause and reflect 🧭
 
 - Before moving on, pause and notice something important.
 - We did **not**:
@@ -1670,9 +2247,7 @@ You already have logic like this:
 - That is not beginner work.
 - That is **systems thinking**.
 
-<hr className='my-8' />
-
-## What actually changed from Lesson 9 → Lesson 10
+### What actually changed from Lesson 9 → Lesson 10
 
 - It might feel like a lot of code changed.
 - But conceptually, only one thing happened:
