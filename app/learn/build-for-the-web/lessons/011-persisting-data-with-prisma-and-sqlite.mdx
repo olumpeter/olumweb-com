@@ -1,0 +1,1365 @@
+---
+title: 'Persisting Data with Prisma and SQLite'
+slug: 'persisting-data-with-prisma-and-sqlite'
+series: 'build-for-the-web'
+lessonNumber: 11
+path: '/learn/build-for-the-web/persisting-data-with-prisma-and-sqlite'
+published: true
+readingTime: '26 min'
+---
+
+import profileCardStartingPointForLesson11 from '../images/011-persisting-data-with-prisma-and-sqlite/screenshots/profile-card-starting-point-for-lesson-11.jpg?url'
+
+## Introduction 🧭
+
+- In Lesson 10, something fundamental changed.
+- You didn't just add persistence.
+- You didn't just add CRUD.
+- You moved **truth out of React and onto the server**.
+- You defined:
+  - Explicit data models.
+  - A stable CRUD contract.
+  - A single source of truth.
+- And you proved that:
+  > - **The UI is a projection of persisted reality.**
+- But there is still a quiet limitation.
+- Our system remembers…
+- But it remembers using a JSON file.
+- That file is:
+  - Real
+  - Honest
+  - Educational
+- But it is not how real systems persist data long-term.
+- In this lesson, we take the next step.
+- We do **not** redesign the system.
+- We do **not** rewrite the UI.
+- We do **not** change our CRUD contract.
+- Instead:
+  > - **We replace the persistence layer with a real database.**
+- By the end of this lesson, you will:
+  - Replace the JSON store with **SQLite**.
+  - Introduce **Prisma** as the persistence tool.
+  - Keep the UI unchanged.
+  - Keep actions unchanged.
+  - Keep loaders unchanged.
+  - Keep intents unchanged.
+  - This lesson is not about learning Prisma syntax.
+  - It is about proving that:
+    > - Good systems absorb change without drama.
+
+<hr className='my-8' />
+
+## The Constraint 🧩
+
+> - **We will not change the UI.**
+> - **We will not change JSX.**
+> - **We will not change forms.**
+> - **We will not change intents.**
+> - **We will not add routes.**
+> - **We will not add abstractions "just in case".**
+
+- We will:
+  - Replace the storage mechanism.
+  - Introduce Prisma and SQLite.
+  - Preserve the existing CRUD boundary.
+  - Let the system prove itself.
+- If something breaks outside the persistence layer, we stop.
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+> **Persistence is a boundary — not a feature.**
+
+- CRUD defines **what** the system does.
+- Persistence defines **where truth lives**.
+- The UI does not care **how** data is stored.
+- Actions do not care **how** data is stored.
+- Loaders do not care **how** data is stored.
+- They care only about:
+  - Input
+  - Output
+  - Truth
+- If persistence leaks upward, the boundary is wrong.
+- If persistence can be swapped, the boundary is correct.
+- This lesson tests that boundary.
+
+<hr className='my-8' />
+
+## What You'll Build 🎯
+
+- By the end of this lesson, you will have:
+  - The **same Profile Card system**
+  - The **same UI**
+  - The **same CRUD behavior**
+  - The **same mental model**
+- But now:
+  - Messages live in a real database
+  - Profile state lives in a real database
+  - Prisma manages persistence
+  - SQLite stores truth
+- Nothing else changes.
+  > The calmness is the proof.
+
+<hr className='my-8' />
+
+## Step 1: Starting Point 🏁
+
+- Start from the end of **Lesson 10**.
+- At this point, your system:
+  - Is correct and resilient.
+  - Persists messages and profile state across reloads.
+  - Supports full **Create, Read, Update, Delete (CRUD)** operations.
+  - Uses the server as the single source of truth.
+- The UI:
+  - Reflects persisted data accurately.
+  - Does not invent or duplicate state.
+- Reloading the page:
+  - Does not erase messages.
+  - Does not reset follow state.
+  - Preserves consistency.
+- This is intentional and correct — but provisional.
+- In other words:
+  > **The system works and remembers.**
+- But one limitation remains.
+- Persistence is implemented using:
+  - A JSON file on disk.
+  - Manual file reads and writes.
+- This approach is:
+  - Honest.
+  - Simple.
+  - Easy to reason about.
+- But it is not how production systems typically persist data.
+- That means:
+  - The architecture is correct.
+  - The CRUD contract is correct.
+  - The mental model is correct.
+- …but the persistence layer is still **provisional**.
+
+> **This is the exact state of the system at the start of this lesson.**
+
+<img
+	src={profileCardStartingPointForLesson11}
+	alt='Profile Card at the start of Lesson 11, using a JSON-backed store.'
+	className='border-(rgba(0, 0, 0, 0.06)) mb-10 rounded-lg border'
+/>
+
+### Reference: Full system at the end of Lesson 10
+
+- This lesson is **self-contained**.
+- If you are starting here, the complete working implementation from the end of
+  Lesson 10 is provided below **for reference only**.
+- You are **not expected to reread or re-understand this code**.
+- Only the persistence layer will change in this lesson.
+
+<details>
+<summary>Full Profile Card implementation (end of Lesson 10)</summary>
+
+```tsx
+import { useState, useEffect } from 'react'
+
+import { Form, useNavigation, isRouteErrorResponse } from 'react-router'
+
+import type { Route } from './+types/home'
+
+import { readStore, writeStore } from '~/data/store.server'
+import { randomUUID } from 'crypto'
+
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+
+export type Message = {
+	id: string
+	text: string
+	createdAt: number
+}
+
+export type Profile = {
+	id: string
+	isFollowing: boolean
+}
+
+type ValidationError = {
+ok: false
+error: string
+}
+
+type ValidationSuccess = {
+ok: true
+value: string
+}
+
+type ValidationResult = ValidationError | ValidationSuccess
+
+function validateMessageText(text: unknown): ValidationResult {
+if (typeof text !== 'string') {
+return {
+ok: false,
+error: 'Message must be a string.',
+}
+}
+
+    const trimmedText = text.trim()
+
+    if (trimmedText.length === 0) {
+    	return {
+    		ok: false,
+    		error: 'A message must not be empty.',
+    	}
+    }
+
+    const minLength = 3
+    const maxLength = 200
+
+    if (trimmedText.length < minLength) {
+    	return {
+    		ok: false,
+    		error: `A message must be at least  ${minLength} characters.`,
+    	}
+    }
+
+    if (trimmedText.length > maxLength) {
+    	return {
+    		ok: false,
+    		error: `A message must be at most ${maxLength} characters.`,
+    	}
+    }
+
+    return { ok: true, value: trimmedText }
+
+}
+
+export async function action({ request }: Route.ActionArgs) {
+	// 👇 Uncomment to simulate a server-side failure
+	// throw new Error('Simulated server failure')
+	const formData = await request.formData()
+	const intent = formData.get('intent')
+
+    if (intent === 'create') {
+    	const messageText = formData.get('message')
+
+    	const validatedMessageText = validateMessageText(messageText)
+
+    	if (!validatedMessageText.ok) {
+    		return validatedMessageText
+    	}
+
+    	const store = await readStore()
+
+    	const newMessage = {
+    		id: randomUUID(),
+    		text: validatedMessageText.value,
+    		createdAt: Date.now(),
+    	}
+
+    	store.messages.push(newMessage)
+    	await writeStore(store)
+
+    	return { ok: true }
+    }
+
+    if (intent === 'update') {
+    	const id = formData.get('id')
+    	const messageText = formData.get('messageText')
+
+    	if (typeof id !== 'string') {
+    		return { ok: false, error: 'Invalid update payload.' }
+    	}
+
+    	const validatedMessageText = validateMessageText(messageText)
+
+    	if (!validatedMessageText.ok) {
+    		return validatedMessageText
+    	}
+
+    	const store = await readStore()
+    	const message = store.messages.find(m => m.id === id)
+
+    	if (!message) {
+    		return { ok: false, error: 'Message not found.' }
+    	}
+
+    	message.text = validatedMessageText.value
+    	await writeStore(store)
+
+    	return { ok: true }
+    }
+
+    if (intent === 'delete') {
+    	const id = formData.get('id')
+
+    	if (typeof id !== 'string') {
+    		return { ok: false, error: 'Invalid delete payload.' }
+    	}
+
+    	const store = await readStore()
+    	const initialLength = store.messages.length
+
+    	store.messages = store.messages.filter(m => m.id !== id)
+
+    	if (store.messages.length === initialLength) {
+    		return { ok: false, error: 'Message not found.' }
+    	}
+
+    	await writeStore(store)
+
+    	return { ok: true }
+    }
+
+    if (intent === 'toggle-follow') {
+    	const store = await readStore()
+
+    	store.profile.isFollowing = !store.profile.isFollowing
+
+    	await writeStore(store)
+
+    	return { ok: true }
+    }
+
+    return { ok: false, error: 'Unsupported intent' }
+
+}
+
+export async function loader() {
+	const store = await readStore()
+	return store
+}
+
+export default function Home({ actionData, loaderData }: Route.ComponentProps) {
+	const { messages, profile } = loaderData
+
+    const messagesSentCount = messages.length
+
+    // 👇 Uncomment to simulate a render-time crash
+    // throw new Error('Simulated render failure')
+    const [isComposing, setIsComposing] = useState(false)
+    const [messageText, setMessageText] = useState('')
+    const [hasEditedSinceLastSubmit, setHasEditedSinceLastSubmit] =
+    	useState(false)
+    const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+    const [editText, setEditText] = useState('')
+
+    const navigation = useNavigation()
+    const isSubmitting = navigation.state === 'submitting'
+
+    useEffect(() => {
+    	if (actionData) {
+    		setHasEditedSinceLastSubmit(false)
+    	}
+
+    	if (actionData?.ok) {
+    		setMessageText('')
+    		setIsComposing(false)
+    	}
+    }, [actionData])
+
+    useEffect(() => {
+    	if (actionData?.ok && editingMessageId !== null) {
+    		setEditingMessageId(null)
+    	}
+    }, [actionData, editingMessageId])
+
+    return (
+    	<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+    		{/* Card */}
+    		<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center'>
+    			{/* Avatar */}
+    			<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+    				<img
+    					src={cartoonAntelopeAvatar}
+    					alt='Profile avatar'
+    					className='h-20 w-20 rounded-full object-cover'
+    				/>
+    			</div>
+
+    			{/* Name */}
+    			<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+    				Peter Olum
+    			</h2>
+
+    			{/* Role */}
+    			<p className='text-sm text-slate-500'>Modern Fullstack Web Developer</p>
+
+    			{/* Bio */}
+    			<p className='mt-4 text-sm text-slate-500'>Simplifying the web</p>
+
+    			{/* Messages */}
+    			<div className='mt-4 text-left'>
+    				<p className='text-xs text-slate-400'>
+    					Messages sent: {messagesSentCount}
+    				</p>
+
+    				{messages.length > 0 && (
+    					<section className='mt-3 rounded-xl bg-slate-50 p-4'>
+    						<h3 className='mb-3 text-[11px] font-semibold tracking-wider text-slate-500 uppercase'>
+    							Recent messages
+    						</h3>
+
+    						<ul className='space-y-3'>
+    							{messages.map(message => {
+    								const isEditing = editingMessageId === message.id
+
+    								return (
+    									<li
+    										key={message.id}
+    										className='flex items-center gap-2 rounded border bg-white p-2 text-sm text-slate-700'
+    									>
+    										{isEditing ? (
+    											<Form
+    												method='post'
+    												className='flex w-full items-center gap-2'
+    											>
+    												<input
+    													type='hidden'
+    													name='intent'
+    													value='update'
+    												/>
+    												<input
+    													type='hidden'
+    													name='id'
+    													value={message.id}
+    												/>
+
+    												<textarea
+    													name='messageText'
+    													value={editText}
+    													onChange={e => setEditText(e.target.value)}
+    													className='flex-1 rounded border px-2 py-1 text-sm'
+    												/>
+
+    												<button
+    													type='submit'
+    													className='rounded-md bg-green-600 px-2 py-1 text-xs text-white transition hover:bg-green-700'
+    												>
+    													Save
+    												</button>
+
+    												<button
+    													type='button'
+    													className='rounded-md border px-2 py-1 text-xs transition hover:border-slate-400 hover:bg-slate-100'
+    													onClick={() => setEditingMessageId(null)}
+    												>
+    													Cancel
+    												</button>
+    											</Form>
+    										) : (
+    											<>
+    												<span className='flex-1'>{message.text}</span>
+
+    												<button
+    													type='button'
+    													className='rounded-md border px-2 py-1 text-xs transition hover:border-slate-400 hover:bg-slate-100'
+    													onClick={() => {
+    														setEditingMessageId(message.id)
+    														setEditText(message.text)
+    													}}
+    												>
+    													Edit
+    												</button>
+
+    												<Form method='post'>
+    													<input
+    														type='hidden'
+    														name='intent'
+    														value='delete'
+    													/>
+    													<input
+    														type='hidden'
+    														name='id'
+    														value={message.id}
+    													/>
+
+    													<button
+    														type='submit'
+    														className='rounded-md border px-2 py-1 text-xs text-red-600 transition hover:bg-red-50'
+    													>
+    														Delete
+    													</button>
+    												</Form>
+    											</>
+    										)}
+    									</li>
+    								)
+    							})}
+    						</ul>
+    					</section>
+    				)}
+    			</div>
+
+    			{/* Actions */}
+    			<div className='mt-6 flex gap-3'>
+    				<button
+    					type='button'
+    					onClick={() => setIsComposing(true)}
+    					disabled={isComposing}
+    					className='flex-1 rounded-lg border px-4 py-2 text-sm'
+    				>
+    					Message
+    				</button>
+
+    				<Form
+    					method='post'
+    					className='flex-1'
+    				>
+    					<input
+    						type='hidden'
+    						name='intent'
+    						value='toggle-follow'
+    					/>
+
+    					<button
+    						type='submit'
+    						className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+    					>
+    						{profile.isFollowing ? 'Following' : 'Follow'}
+    					</button>
+    				</Form>
+    			</div>
+
+    			{isComposing && (
+    				<Form
+    					method='post'
+    					className='mt-4 space-y-2'
+    				>
+    					<input
+    						type='hidden'
+    						name='intent'
+    						value='create'
+    					/>
+
+    					<textarea
+    						name='message'
+    						value={messageText}
+    						onChange={event => {
+    							setMessageText(event.target.value)
+    							setHasEditedSinceLastSubmit(true)
+    						}}
+    						className='w-full rounded-lg border p-2 text-sm'
+    						placeholder='Type your message...'
+    					/>
+
+    					{actionData?.error && !hasEditedSinceLastSubmit && (
+    						<p className='text-xs text-red-500'>{actionData.error}</p>
+    					)}
+
+    					<p className='text-xs text-slate-400'>
+    						Characters: {messageText.length}
+    					</p>
+
+    					<div className='mt-6 flex gap-3'>
+    						<button
+    							type='submit'
+    							disabled={isSubmitting}
+    							className='flex-1 rounded-lg bg-green-600 px-3 py-2 text-sm text-white transition hover:bg-green-700 disabled:opacity-50'
+    						>
+    							{isSubmitting ? 'Sending…' : 'Send'}
+    						</button>
+
+    						<button
+    							type='button'
+    							onClick={() => {
+    								setMessageText('')
+    								setIsComposing(false)
+    							}}
+    							className='flex-1 rounded-lg border px-3 py-2 text-sm transition hover:bg-slate-100'
+    						>
+    							Cancel
+    						</button>
+    					</div>
+    				</Form>
+    			)}
+    		</div>
+    	</div>
+    )
+
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+	console.error(error)
+
+    let errorMessage = 'Oh no, something went wrong. Sorry about that.'
+
+    if (isRouteErrorResponse(error)) {
+    	errorMessage = error.statusText || errorMessage
+    } else if (error instanceof Error) {
+    	errorMessage = error.message
+    }
+
+    return (
+    	<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+    		<div className='w-full max-w-md rounded-xl border bg-white p-6 text-center'>
+    			<h1 className='text-lg font-semibold text-slate-900'>
+    				Something went wrong
+    			</h1>
+    			<p className='mt-2 text-sm text-slate-600'>{errorMessage}</p>
+    		</div>
+    	</div>
+    )
+
+}
+
+```
+
+</details>
+
+### Current persistence boundary
+
+- The following file is the **only place where persistence currently lives**:
+
+```ts
+import fs from 'fs/promises'
+import path from 'path'
+
+const STORE_PATH = path.join(process.cwd(), 'app/data/store.json')
+
+export type Store = {
+  messages: {
+    id: string
+    text: string
+    createdAt: number
+  }[]
+  profile: {
+    id: string
+    isFollowing: boolean
+  }
+}
+
+export async function readStore(): Promise<Store> {
+  const raw = await fs.readFile(STORE_PATH, 'utf-8')
+  return JSON.parse(raw)
+}
+
+export async function writeStore(store: Store) {
+  await fs.writeFile(STORE_PATH, JSON.stringify(store, null, 2))
+}
+```
+
+- Everything else in the system depends on this file.
+- Nothing else knows **how** data is stored.
+
+That is the boundary we are about to replace.
+
+<hr className='my-8' />
+
+## Step 2: Introduce a Real Persistence Engine 🧩
+
+- Right now, persistence works.
+- But it works because **we implemented it ourselves**.
+- Real systems do not:
+  - Manually read JSON files.
+  - Manually write JSON files.
+  - Manually coordinate consistency.
+- They delegate persistence to a database.
+- And they delegate interaction with that database to a data layer.
+
+> **This step introduces infrastructure — not behavior.**
+
+- The system already knows:
+  - What exists.
+  - How truth changes.
+  - Who owns truth.
+- We are not changing any of that.
+- We are only replacing **how truth is stored**.
+
+<hr className='my-8' />
+
+## Step 3: Why SQLite? Why Prisma? 🧠
+
+- Before touching code, we clarify intent.
+
+### SQLite
+
+- A real relational database.
+- File-based.
+- No server required.
+- Deterministic
+  > SQLite is deterministic because it has no hidden background
+  > behavior—the same inputs always produce the same persisted state.
+- Perfect for local systems and learning.
+- SQLite is not a toy.
+  > It is a database used in production systems worldwide.
+
+### Prisma
+
+- A schema-first persistence tool.
+- Explicit data models.
+- Explicit migrations.
+- Strong typing.
+- No hidden magic.
+
+> Prisma is not your system.
+> Prisma is **infrastructure**.
+
+- It exists to:
+  - Express your data model.
+  - Enforce consistency.
+  - Generate safe queries.
+- The system still decides:
+  - What can be created.
+  - What can be updated.
+  - What can be deleted.
+
+<hr className='my-8' />
+
+## Step 4: Install and Initialize Prisma 📦
+
+- From your project root, run:
+
+```bash
+npm install prisma @prisma/client better-sqlite3 @prisma/adapter-better-sqlite3
+npx prisma init --datasource-provider sqlite
+```
+
+- This creates:
+  - `prisma/schema.prisma`
+  - `prisma.config.ts`
+  - `.env`
+- At this point:
+  - Nothing is connected
+  - Nothing is used
+  - Nothing has changed
+
+> Infrastructure exists — but does nothing yet.
+
+<hr className='my-8' />
+
+## Step 5: Model the Existing Reality 🧱
+
+- We already know what exists.
+- The system has exactly two entities:
+  - Message
+  - Profile
+- We do not redesign them.
+
+### Update `prisma/schema.prisma`
+
+- Open `prisma/schema.prisma`
+- Replace its contents with:
+
+```prisma
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Message {
+  id        String  @id
+  text      String
+  createdAt Int
+}
+
+model Profile {
+  id          String  @id
+  isFollowing Boolean
+}
+```
+
+#### Why we added `output`
+
+- In Prisma 7, the client generator requires an explicit output path.
+- We generate into:
+
+```text
+app/generated/prisma
+```
+
+- So application code can import the client explicitly — without hidden defaults.
+  > Generated infrastructure should be visible.
+
+<hr className='my-8' />
+
+## Step 6: Introduce the Environment Boundary 🌍
+
+- Before Prisma can connect to a database, it must be told **where** that
+  database lives.
+- Not in code.
+- Not in the schema.
+- But in **environment configuration.**
+
+> **Persistence location is infrastructure, not behavior.**
+
+### Step 6a: Create a `.env` file
+
+- Ensure your `.env` contains:
+
+```ts
+DATABASE_URL="file:./dev.db"
+```
+
+- Persistence location belongs to configuration — not code.
+
+#### What this does
+
+- The application does not know where the database lives.
+- Prisma does not hardcode paths.
+- Changing environments requires **zero code changes**.
+- This mirrors exactly what you learned in Lesson 10:
+
+> Configuration lives outside the system.
+
+<hr className='my-8' />
+
+## Step 7: Migrate the Database 🗄️
+
+- Now materialize reality:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+- This:
+  - Creates the SQLite database
+  - Applies migrations
+  - Generates Prisma Client
+- Still:
+  - No UI changed
+  - No route changed
+  - No behavior changed
+
+> Infrastructure appeared quietly.
+
+<hr className='my-8' />
+
+## Step 8: Create a Prisma Persistence Boundary 🔁
+
+- Now we replace the JSON store.
+
+- Create:
+
+```text
+app/data/prisma.server.ts
+```
+
+- Put the following code in the `prisma.server.ts` file.
+
+```ts
+import 'dotenv/config'
+import { PrismaClient } from '~/generated/prisma/client'
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+
+const databaseUrl = process.env.DATABASE_URL
+
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL is not set')
+}
+
+const adapter = new PrismaBetterSqlite3({
+  url: databaseUrl,
+})
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __prisma: PrismaClient | undefined
+}
+
+export const prisma =
+  global.__prisma ??
+  new PrismaClient({
+    adapter,
+  })
+
+if (process.env.NODE_ENV !== 'production') {
+  global.__prisma = prisma
+}
+```
+
+#### Why this looks different in Prisma 7
+
+- Prisma 7 requires a driver adapter.
+- The database connection must be declared explicitly.
+- This reinforces our mental model:
+
+> Infrastructure does not connect itself.
+
+<hr className='my-8' />
+
+## Step 9: Replace the JSON Store with Prisma
+
+- Replace the code in `app/data/store.server.ts` with the following code:
+
+```ts
+import { prisma } from './prisma.server'
+
+export type Store = {
+  messages: {
+    id: string
+    text: string
+    createdAt: number
+  }[]
+  profile: {
+    id: string
+    isFollowing: boolean
+  }
+}
+
+const PROFILE_ID = 'profile-1'
+
+export async function readStore(): Promise<Store> {
+  const messages = await prisma.message.findMany({
+    orderBy: { createdAt: 'asc' },
+  })
+
+  let profile = await prisma.profile.findUnique({
+    where: { id: PROFILE_ID },
+  })
+
+  if (!profile) {
+    profile = await prisma.profile.create({
+      data: {
+        id: PROFILE_ID,
+        isFollowing: false,
+      },
+    })
+  }
+
+  return {
+    messages,
+    profile,
+  }
+}
+
+export async function writeStore(store: Store) {
+  // We no longer write the entire store.
+  // Mutations are handled directly via Prisma in actions.
+}
+```
+
+- Notice:
+  - `readStore()` still returns the same shape.
+  - `writeStore()` becomes unnecessary.
+  - The contract remains intact.
+
+<hr className='my-8' />
+
+## Step 10: Update Actions to Use Prisma 🔧
+
+- Right now, your route file (`home.tsx`) still imports the JSON store:
+
+```ts
+import { readStore, writeStore } from '~/data/store.server'
+```
+
+- We are about to:
+  - Remove `writeStore`
+  - Keep `readStore`
+  - Introduce Prisma for mutations
+
+### Step 10a: Import Prisma
+
+- At the top of `home.tsx`, add:
+
+```ts
+import { prisma } from '~/data/prisma.server'
+```
+
+Your imports should now include:
+
+```ts
+import { readStore } from '~/data/store.server'
+import { prisma } from '~/data/prisma.server'
+```
+
+- Notice:
+  - The UI still does not know about Prisma.
+  - Only the server-side logic touches it.
+  - The boundary remains intact.
+
+### Step 10b: Replace JSON Mutations with Prisma
+
+- Now update the `action` function.
+- We will replace file writes with database queries.
+
+#### Create
+
+- Replace:
+
+```ts
+store.messages.push(newMessage)
+await writeStore(store)
+```
+
+- With:
+
+```ts
+await prisma.message.create({
+  data: newMessage,
+})
+```
+
+#### Update
+
+- Replace:
+
+```ts
+const message = store.messages.find(m => m.id === id)
+
+if (!message) {
+  return { ok: false, error: 'Message not found.' }
+}
+
+message.text = validatedMessageText.value
+await writeStore(store)
+```
+
+- With:
+
+```ts
+const existing = await prisma.message.findUnique({
+  where: { id },
+})
+
+if (!existing) {
+  return { ok: false, error: 'Message not found.' }
+}
+
+await prisma.message.update({
+  where: { id },
+  data: { text: validatedMessageText.value },
+})
+```
+
+#### Delete
+
+- Replace:
+
+```ts
+const initialLength = store.messages.length
+store.messages = store.messages.filter(m => m.id !== id)
+
+if (store.messages.length === initialLength) {
+  return { ok: false, error: 'Message not found.' }
+}
+
+await writeStore(store)
+```
+
+- With:
+
+```ts
+const existing = await prisma.message.findUnique({
+  where: { id },
+})
+
+if (!existing) {
+  return { ok: false, error: 'Message not found.' }
+}
+
+await prisma.message.delete({
+  where: { id },
+})
+```
+
+#### Toggle Follow
+
+- Replace:
+
+```ts
+store.profile.isFollowing = !store.profile.isFollowing
+await writeStore(store)
+```
+
+- With:
+
+```ts
+const profile = await prisma.profile.findUnique({
+  where: { id: 'profile-1' },
+})
+
+await prisma.profile.update({
+  where: { id: 'profile-1' },
+  data: { isFollowing: !profile?.isFollowing },
+})
+```
+
+### Important
+
+- What Did Not Change:
+  - The action signature
+  - The return values
+  - The validation logic
+  - The intent handling
+  - The loader
+  - The UI
+- The only thing that changed:
+  > Where truth is written.
+
+### Why We Still Keep `readStore`
+
+- Your loader still calls:
+
+```ts
+const store = await readStore()
+```
+
+- But now `readStore()` is backed by Prisma.
+- The loader does not know that.
+- The UI does not know that.
+- The boundary holds.
+
+<hr className='my-8' />
+
+## Step 11: Remove the Old JSON Infrastructure 🧹
+
+- At this point the system is already writing to the database.
+- However, some remnants of the JSON persistence layer still remain in
+  the codebase.
+- These remnants are no longer used and should now be removed.
+- Removing them is important because it proves that the persistence swap
+  is complete.
+
+### Step 11a: Remove `writeStore` From the Route
+
+- Earlier in Lesson 10, the route imported both helpers:
+
+```ts
+import { readStore, writeStore } from '~/data/store.server'
+```
+
+- But `writeStore` is no longer needed.
+- Replace the import with:
+
+```ts
+import { readStore } from '~/data/store.server'
+```
+
+- The loader still depends on `readStore`, but mutations now go directly
+  through Prisma.
+
+### Step 11b: Remove Unused `store` Variables
+
+- Inside the `action` function you may still see lines like this:
+
+```ts
+const store = await readStore()
+```
+
+- These were necessary when mutations happened in memory before writing
+  to the JSON file.
+- Now that Prisma writes directly to the database, these variables are
+  no longer used.
+- Delete them.
+- For example, change this:
+
+```ts
+const store = await readStore()
+
+await prisma.message.create({
+  data: newMessage,
+})
+```
+
+- to simply:
+
+```ts
+await prisma.message.create({
+  data: newMessage,
+})
+```
+
+- You should remove the unused `store` variable from each intent block.
+
+### Step 11c: Delete the JSON File
+
+- The file:
+
+```text
+app/data/store.json
+```
+
+- is no longer used.
+- Delete it.
+- The system no longer reads or writes JSON persistence.
+
+### Step 11d: Confirm the Loader Still Works
+
+- Your route loader **does not change**.
+- It should still look like this:
+
+```ts
+export async function loader() {
+	const store = await readStore()
+	return store
+}
+```
+
+> - Notice that the loader still calls `readStore()` instead of Prisma directly.
+> - This preserves the persistence boundary introduced in Lesson 10.
+
+- At first glance this might look strange because we introduced Prisma
+  in the previous steps.
+- However, remember the boundary we created earlier.
+- The loader does **not** know how persistence works.
+- It only knows that it can request the current state of the system
+  from `readStore()`.
+- Originally, `readStore()` loaded data from a JSON file.
+- Now `readStore()` loads data from Prisma and SQLite.
+- Because the **return shape stayed the same**, the loader does not need
+  to change.
+- The UI does not change.
+- The route does not change.
+- The boundary holds.
+
+> The loader still reads the store —
+> but the store is now backed by a real database.
+
+- This is the proof that the system was designed correctly.
+- Persistence changed completely, yet nothing above the boundary had to change.
+
+<hr className='my-8' />
+
+## What Just Happened? 🧠
+
+- We replaced:
+  - A JSON file
+  - Manual file reads
+  - Manual file writes
+- With:
+  - A relational database
+  - Explicit migrations
+  - A typed query layer
+- But we did not change:
+  - The UI
+  - The forms
+  - The route structure
+  - The validation logic
+  - The CRUD contract
+- Reload the page.
+- Everything still works.
+
+<hr className='my-8' />
+
+## The Architectural Proof 🧾
+
+- This lesson was not about learning Prisma.
+- It was about proving something deeper.
+- Earlier, we defined a boundary:
+
+> **Persistence lives below the application.**
+
+- The UI asks for data.
+- The loader retrieves data.
+- The actions change data.
+- But **none of them care how that data is stored**.
+- When we began this lesson, the system used:
+  - A JSON file
+  - Manual file reads
+  - Manual file writes
+- Now the system uses:
+  - SQLite
+  - Prisma
+  - A real relational database
+- Yet:
+  - The UI did not change.
+  - The routes did not change.
+  - The actions barely changed.
+  - The loader did not change at all.
+- This is the architectural signal you were looking for.
+
+> **A well-designed system absorbs infrastructure changes quietly.**
+
+<hr className='my-8' />
+
+## The Persistence Boundary (Revisited) 🔁
+
+At the end of Lesson 10 we created a simple idea:
+
+```text
+UI
+↓
+Routes
+↓
+CRUD Contract
+↓
+Persistence Boundary
+↓
+Storage
+```
+
+- Originally:
+  - Storage = JSON file
+- Now:
+  - Storage = SQLite database
+
+- The layers above it never noticed.
+- That is the entire point of the boundary.
+- If persistence leaks upward into the UI, the architecture is fragile.
+- If persistence can change without touching the UI, the architecture is correct.
+
+<hr className='my-8' />
+
+## What You Now Have 🧱
+
+- Your system now includes:
+  - React Router **server actions**
+  - A stable **CRUD contract**
+  - Explicit **data validation**
+  - A clear **persistence boundary**
+  - **Prisma** as a data layer
+  - **SQLite** as the storage engine
+  - A **single source of truth**
+- And importantly:
+  > **The UI is still a projection of persisted reality.**
+- Nothing about that mental model changed.
+- Only the storage mechanism did.
+
+<hr className='my-8' />
+
+## Why This Matters in Real Systems 🌍
+
+- Many applications start like this project did:
+
+```text
+Local state → temporary storage → real persistence
+```
+
+- The mistake most systems make is this:
+
+  > They couple the UI directly to persistence.
+
+- That leads to systems where:
+  - changing the database breaks the UI.
+  - changing the schema breaks routes.
+  - changing infrastructure requires rewriting features.
+- This lesson demonstrates the opposite approach.
+  > **Design boundaries early.  
+  > Infrastructure can change later.**
+
+<hr className='my-8' />
+
+## Where We Go Next 🚀
+
+- Right now your system has:
+  - A real database
+  - Server-side mutations
+  - Persistent state
+- But something is still missing.
+  - If two users opened this application at the same time:
+- They would share the same profile.
+- They would share the same messages.
+- In other words:
+  > **The system has persistence, but it does not yet have identity.**
+- In the next lesson we will introduce a new concept:
+  > **Users and ownership.**
+- This will allow the system to answer an important question:
+  > **Who does this data belong to?**
+- And once a system can answer that question, a whole new set of capabilities
+  becomes possible.
+
+<hr className='my-8' />
+
+## Lesson Summary 📌
+
+- In this lesson you:
+  - Introduced **Prisma**
+  - Introduced **SQLite**
+  - Migrated the system away from a JSON file
+  - Preserved the **CRUD contract**
+  - Preserved the **persistence boundary**
+  - Verified that the UI remained untouched
+- Most importantly, you demonstrated that:
+
+> **Good architecture allows infrastructure to change without rewriting
+> the system.**

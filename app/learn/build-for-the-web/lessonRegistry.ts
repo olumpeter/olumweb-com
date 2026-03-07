@@ -12,6 +12,7 @@ import submittingTheMessageWithFormAndNavigationThumbnail from '~/learn/build-fo
 import movingValidationToTheServerAndHandlingRejections from '~/learn/build-for-the-web/images/008-moving-validation-to-the-server-and-handling-rejections/thumbnail/moving-validation-to-the-server-and-handling-rejections.png?url'
 import handlingErrorsGracefully from '~/learn/build-for-the-web/images/009-handling-errors-gracefully/thumbnail/009-handling-errors-gracefully.png?url'
 import persistingDataAndBuildingCrud from '~/learn/build-for-the-web/images/010-persisting-data-and-building-crud/thumbnail/010-persisting-data-and-building-crud.png?url'
+import persistingDataWithPrismaAndSqlite from '~/learn/build-for-the-web/images/011-persisting-data-with-prisma-and-sqlite/thumbnail/011-persisting-data-with-prisma-and-sqlite.png?url'
 
 /**
  * Client-side lesson registry
@@ -118,6 +119,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Persisting Data and Building CRUD',
 			lessonNumber: 10,
+			published: true,
+		},
+	},
+	'persisting-data-with-prisma-and-sqlite': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/011-persisting-data-with-prisma-and-sqlite.mdx'),
+		thumbnail: persistingDataWithPrismaAndSqlite,
+		frontmatter: {
+			title: 'Persisting Data with Prisma and SQLite',
+			lessonNumber: 11,
 			published: true,
 		},
 	},
