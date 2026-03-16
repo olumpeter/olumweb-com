@@ -1,0 +1,855 @@
+---
+title: 'Introducing Users and Ownership'
+slug: 'introducing-users-and-ownership'
+series: 'build-for-the-web'
+lessonNumber: 12
+path: '/learn/build-for-the-web/introducing-users-and-ownership'
+published: true
+readingTime: '24 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 10, something important happened.
+- You introduced **persistent truth**.
+- Messages and profile state stopped living in React and moved to the server.
+- In Lesson 11, you proved something deeper:
+  > Infrastructure can change without breaking the system.
+- You replaced:
+  - A JSON file
+  - Manual file reads
+  - Manual file writes
+- With:
+  - SQLite
+  - Prisma
+  - A real database
+- And nothing above the persistence boundary changed.
+- The system remained calm.
+- But there is still a silent limitation.
+- Right now:
+  - All messages belong to **no one**
+  - The profile belongs to **everyone**
+- If two people opened this application at the same time:
+  - They would see the same messages
+  - They would share the same follow state
+  - They would be editing the same profile
+- In other words:
+  > The system has persistence — but it does not yet have identity.
+- A real system must answer a fundamental question:
+  > Who does this data belong to?
+- In this lesson, you will introduce that concept.
+- By the end of this lesson you will:
+  - Introduce a **User** model
+  - Attach messages to users
+  - Attach profiles to users
+  - Establish **ownership of data**
+- Nothing about CRUD changes.
+- Nothing about persistence changes.
+- But the system gains something essential:
+  > Identity.
+
+## The Constraint 🧩
+
+- As in previous lessons, we intentionally limit ourselves.
+- We will **not**:
+  - Build login forms
+  - Implement authentication
+  - Introduce passwords
+  - Add sessions
+  - Create sign-up flows
+  - Add OAuth providers
+- Those things come later.
+- Instead, we will focus on one idea:
+  > Data must belong to someone.
+- We will:
+  - Introduce a User model
+  - Attach messages and profiles to users
+  - Simulate a logged-in user
+  - Ensure data is scoped to that user
+- The goal is not authentication.
+- The goal is **ownership**.
+
+## Mental Model 🧠
+
+- Until now, the system looked like this:
+
+```text
+Message
+Profile
+```
+
+- But real systems look like this:
+
+```text
+User
+  ⊦ Messages
+  ⨽ Profile
+```
+
+- Ownership changes how we reason about data.
+- Without ownership:
+  - Data is global
+  - Everyone sees everything
+- With ownership:
+  - Data is scoped
+  - Each user sees only their data
+
+> Identity creates boundaries.
+
+- This is the foundation for:
+  - authentication
+  - authorization
+  - multi-user systems
+  - security
+
+## What You'll Build 🎯
+
+- By the end of this lesson:
+  - The system will support **multiple users**
+  - Messages will belong to specific users
+  - Profiles will belong to specific users
+  - Queries will return user-specific data
+- But the UI will remain the same.
+- You will still see:
+  - the profile card
+  - messages
+  - follow state
+- The difference is invisible:
+  - The system now knows who **owns the data**.
+
+## Step 1: Starting Point 🏁
+
+- Start from the end of Lesson 11.
+- Your system currently includes:
+  - React Router actions
+  - Prisma persistence
+  - SQLite database
+  - CRUD for messages
+  - Persistent profile state
+- But the database models currently look like this:
+
+```prisma
+model Message {
+  id        String @id
+  text      String
+  createdAt Int
+}
+
+model Profile {
+  id          String @id
+  isFollowing Boolean
+}
+```
+
+- Notice what is missing.
+- There is no:
+
+```text
+User
+```
+
+- And therefore nothing can belong to anyone.
+
+## Step 2: Introduce Identity Into the Schema 👤
+
+- Before ownership can exist, the system must define **who owns data**.
+- Right now the schema defines:
+  - `Message`
+  - `Profile`
+- But there is no concept of **User**.
+- We begin by introducing it.
+
+### Step 2a: Add the User Model
+
+- Open:
+
+```text
+prisma/schema.prisma
+```
+
+- Add the following model at the bottom of the file.
+
+```prisma
+model User {
+  id    String   @id
+  name  String
+
+  messages Message[]
+  profile  Profile?
+}
+```
+
+- Your schema now looks like this:
+
+```prisma
+model Message {
+  id        String @id
+  text      String
+  createdAt Int
+}
+
+model Profile {
+  id          String @id
+  isFollowing Boolean
+}
+
+model User {
+  id   String @id
+  name String
+}
+```
+
+#### Why this model matters
+
+- We introduce the **identity concept first**, before introducing relationships.
+- At this point:
+  - users exist
+  - messages exist
+  - profiles exist
+- But they are still **independent**.
+
+### Step 2b: Attach Messages to Users
+
+- Now we define ownership of messages.
+- Update the `Message` model:
+
+```prisma
+model Message {
+  id        String @id
+  text      String
+  createdAt Int
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+}
+```
+
+- Now every message must include a **userId**.
+- Messages cannot exist without an owner.
+- At first glance, this part of the schema may look confusing:
+
+```prisma
+userId String
+user   User @relation(fields: [userId], references: [id])
+```
+
+- It may raise an important question:
+  > Why does the model need both `userId` and `user`?
+- These two fields serve **different roles** in the system.
+
+#### `userId`
+
+- userId is the **actual value stored in the database**.
+- It represents the identity of the user who owns the message.
+- A real database row might look like this:
+
+```text
+id: "msg-1"
+text: "Hello world"
+createdAt: 1712345678
+userId: "user-1"
+```
+
+- The database stores **only the identifier** of the user.
+
+#### user
+
+```prisma
+user User @relation(fields: [userId], references: [id])
+```
+
+- The `user` field does **not store additional data** in the database.
+- Instead, it tells Prisma **how the `Message` model relates to the `User` model**.
+- This line means:
+
+  > The `Message.userId` field references the `User.id` field.
+
+- In other words:
+
+  > Every message belongs to the user whose `id` matches `userId`.
+
+#### What this enables
+
+- Because this relationship is defined, Prisma can perform relational queries.
+- For example:
+
+```ts
+await prisma.message.findMany({
+  include: { user: true }
+})
+```
+
+- This allows Prisma to automatically fetch:
+  - the message
+  - and the user who owns it
+- in a single query.
+
+#### The key idea
+
+- Databases store **identifiers**.
+- Prisma understands **relationships between those identifiers**.
+  - `userId` stores the owner of the message.
+  - `user` defines how that owner connects to the `User` model.
+- Without `userId`, the database would not know who owns the `message`.
+- Without the `user` relation, Prisma would not understand how messages
+  and users are connected.
+- Both are necessary to model ownership correctly.
+
+### Step 2c: Attach Profiles to Users
+
+- Messages are now owned by users.
+- But one piece of data in the system is still global:
+
+```text
+Profile
+```
+
+- Right now, the profile does not belong to anyone.
+- That means every user would share the **same profile state**.
+- That would be incorrect for a multi-user system.
+
+> A profile must belong to exactly one user.
+
+- So we attach the `Profile` model to the `User` model.
+- Update the `Profile` model in `prisma/schema.prisma`:
+
+```tsx
+model Profile {
+  id          String @id
+  isFollowing Boolean
+
+  userId String @unique
+  user   User @relation(fields: [userId], references: [id])
+}
+```
+
+- This change introduces the same two elements we saw earlier:
+  - a **stored identifier**.
+  - a **relation definition**
+- The meaning is identical:
+
+#### `userId`
+
+- stores **which user owns the profile**.
+
+#### `user User @relation(fields: [userId], references: [id])`
+
+- tells Prisma how the profile relates to the User model.
+
+#### Why `@unique` is important
+
+- Notice this line:
+
+```tsx
+userId String @unique
+```
+
+- This constraint ensures:
+
+```text
+One user → one profile
+```
+
+- Without `@unique`, a user could accidentally end up with multiple profiles.
+- That would violate the mental model of the system.
+- A profile is **personal state**, not a collection.
+
+## Step 2d: Verify the Full Schema
+
+- After these changes, your schema should now look like this:
+
+```tsx
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Message {
+  id        String @id
+  text      String
+  createdAt Int
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Profile {
+  id          String  @id
+  isFollowing Boolean
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id   String @id
+  name String
+
+  messages Message[]
+  profile  Profile?
+}
+```
+
+- This schema now models the ownership structure of the system.
+
+```text
+User
+  ⊦ messages
+  ∟ Profile
+```
+
+- The database now understands that:
+  - messages belong to users
+  - profiles belong to users
+- Ownership is now encoded directly in the schema.
+
+## Step 3: Apply the Database Migration 🗄️
+
+- The schema has changed.
+- The database must now be updated to reflect those changes.
+
+- Run the following command in your terminal:
+
+```bash
+npx prisma migrate dev --name add-user-ownership
+```
+
+- This command will:
+  - create a new migration
+  - update the SQLite database
+  - regenerate the Prisma client
+- Nothing in the application code has changed yet.
+- But the **structure of the database** has changed.
+- At this moment:
+  - Users exist in the database.
+  - Messages must belong to users.
+  - Profiles must belong to users.
+- However, the application still behaves as if there is only one global user.
+- We fix that next.
+
+### Note: Regenerating the Prisma Client ⚠️
+
+- After modifying `schema.prisma`, you may see a TypeScript error like this:
+
+```ts
+Property 'user' does not exist on type 'PrismaClient'
+```
+
+- This happens because Prisma generates TypeScript types from the schema.
+- Until the Prisma client is regenerated, TypeScript still believes the schema
+  looks like this:
+
+```text
+Message
+Profile
+```
+
+- Running the migration command normally regenerates the client automatically:
+
+```bash
+npx prisma migrate dev --name add-user-ownership
+```
+
+- If you still see the error after running the migration, regenerate the Prisma
+  client manually:
+
+```bash
+npx prisma generate
+```
+
+- This command rebuilds the generated Prisma client based on the current schema.
+- After running it, TypeScript will correctly recognize the new model:
+
+```ts
+prisma.user.findUnique()
+prisma.user.create()
+```
+
+- If the error still appears in your editor, restart the TypeScript server:
+
+```text
+VS Code → Command Palette → "TypeScript: Restart TS Server"
+```
+
+- Once the Prisma client is regenerated, the error should disappear.
+
+## Step 4: Simulate a Logged-In User 👤
+
+- In a real system, users authenticate themselves.
+- Authentication tells the server:
+  > Who is currently using the application?
+- But this lesson is not about authentication yet.
+- So instead of implementing login flows, we **simulate a logged-in user**.
+- This allows us to focus purely on **ownership**.
+
+### Step 4a: Define a stable user identity
+
+- Open:
+
+```text
+app/data/store.server.ts
+```
+
+- Near the top of the file you will see an existing constant:
+
+```ts
+const PROFILE_ID = 'profile-1'
+```
+
+- Add a new constant **directly below it**:
+
+```ts
+const PROFILE_ID = 'profile-1'
+const USER_ID = 'user-1'
+```
+
+- These constants represent **stable identifiers used by the system**.
+  - `PROFILE_ID` identifies the single profile record used in the application.
+  - `USER_ID` represents the `currently active user`.
+- At this stage of the course we are **simulating authentication**, so the
+  application behaves as if the same user is always logged in.
+- Later lessons will replace this constant with **real user identity obtained
+  from authentication and sessions**.
+
+### Step 4b: Ensure the user exists
+
+- Now the system must ensure that a user with this ID actually exists in the
+  database.
+- Inside the readStore function, locate the beginning of the function:
+
+```ts
+export async function readStore(): Promise<Store> {
+```
+
+- Immediately **after this line**, insert the following code:
+
+```ts
+let user = await prisma.user.findUnique({
+  where: { id: USER_ID },
+})
+
+if (!user) {
+  user = await prisma.user.create({
+    data: {
+      id: USER_ID,
+      name: 'Peter Olum',
+    },
+  })
+}
+```
+
+### Step 4c: Fix the Profile Creation Error
+
+- After updating the schema, the application code that creates a profile is
+  now invalid.
+- Open:
+
+```text
+app/data/store.server.ts
+```
+
+- Locate the profile creation block inside the `readStore` function.
+- It currently looks like this:
+
+```tsx
+if (!profile) {
+	profile = await prisma.profile.create({
+		data: {
+			id: PROFILE_ID,
+			isFollowing: false,
+		},
+	})
+}
+```
+
+- After introducing ownership in the schema, TypeScript will report an error
+  similar to this:
+
+```text
+Type '{ id: string; isFollowing: false; }' is not assignable to type '(Without<ProfileCreateInput, ProfileUncheckedCreateInput> & ProfileUncheckedCreateInput) | (Without<...> & ProfileCreateInput)'.
+  Type '{ id: string; isFollowing: false; }' is not assignable to type 'Without<ProfileUncheckedCreateInput, ProfileCreateInput> & ProfileCreateInput'.
+    Property 'user' is missing in type '{ id: string; isFollowing: false; }' but required in type 'ProfileCreateInput'.ts(2322)
+Profile.ts(210, 3): 'user' is declared here.
+```
+
+- This error occurs because the schema now requires every profile to belong
+  to a user.
+- The requirement was introduced in Step 2c:
+
+```prisma
+userId String @unique
+```
+
+- This means every profile must include the identifier of its owner.
+- To satisfy this requirement, update the profile creation code to include `userId`.
+- Replace the existing block with this:
+
+```ts
+if (!profile) {
+	profile = await prisma.profile.create({
+		data: {
+			id: PROFILE_ID,
+			isFollowing: false,
+			userId: USER_ID,
+		},
+	})
+}
+```
+
+- Now the profile record will contain the owner of the profile.
+- A database row will look like this:
+
+```ts
+id: "profile-1"
+isFollowing: false
+userId: "user-1"
+```
+
+- The database now understands that this profile belongs to the user
+  with ID `user-1`.
+
+### Step 4d:Scope Queries to the Current User
+
+- After introducing ownership in the database schema, the application queries
+  must also respect ownership.
+- Open:
+
+```text
+app/data/store.server.ts
+```
+
+- Update the readStore function so that messages and the profile are retrieved
+  **for the current user only**.
+- Your `readStore` function should now look like this:
+
+```ts
+export async function readStore(): Promise<Store> {
+	let user = await prisma.user.findUnique({
+		where: { id: USER_ID },
+	})
+
+	if (!user) {
+		user = await prisma.user.create({
+			data: {
+				id: USER_ID,
+				name: 'Peter Olum',
+			},
+		})
+	}
+
+	const messages = await prisma.message.findMany({
+		where: { userId: USER_ID },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId: USER_ID },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				id: PROFILE_ID,
+				isFollowing: false,
+				userId: USER_ID,
+			},
+		})
+	}
+
+	return {
+		messages,
+		profile,
+	}
+}
+```
+
+#### What changed
+
+- Two queries were updated.
+- **Message query**:
+
+  ```ts
+  where: { userId: USER_ID }
+  ```
+
+- This ensures the system retrieves only the messages owned by the current user.
+- **Profile lookup**:
+
+  ```ts
+  where: { userId: USER_ID }
+  ```
+
+- This retrieves **the profile belonging to the current user**.
+- Because `userId` was declared as `@unique` in the schema, Prisma
+  allows it to be used with `findUnique`.
+
+#### What the system now understands
+
+- Before this lesson, the system treated all data as **global**.
+
+```tsx
+Messages
+Profile
+```
+
+- After introducing ownership, the data model now looks like this:
+
+```tsx
+User
+  ⊦ Messages
+  ∟ Profile
+```
+
+- The database schema enforces ownership.
+- The application queries now respect ownership.
+- At this point:
+  - Messages belong to users
+  - Profiles belong to users
+  - Queries return **only the data owned by the current user**
+- But there is still one missing piece.
+- The system now **reads data correctly**, but it must also ensure that **new
+  data records who created it**.
+- We fix that next.
+
+### Step 4e: Record Ownership When Creating Messages
+
+- Messages must also record **who created them**.
+- Otherwise, newly created messages would not belong to any user.
+- Open the route where messages are created.
+
+```text
+app/routes/home.tsx
+```
+
+- **Below the imports and above the route functions**, add the same constant
+  used in `store.server.ts`:
+
+```ts
+const USER_ID = 'user-1'
+```
+
+> Files cannot automatically share variables.
+> If we want the same value in multiple files,
+> we must either define it again or import it.
+
+- Locate the Prisma mutation that creates a message.
+- It will look similar to this:
+
+```ts
+await prisma.message.create({
+	data: newMessage,
+})
+```
+
+- This mutation does not yet include ownership information.
+- Update the code so the message stores the user identifier.
+
+```ts
+await prisma.message.create({
+	data: {
+		...newMessage,
+		userId: USER_ID,
+	},
+})
+```
+
+- Now every new message stored in the database records its owner.
+- A message row will look like this:
+
+```tsx
+id: "msg-1"
+text: "Hello world"
+createdAt: 1712345678
+userId: "user-1"
+```
+
+- The database now understands **who created each message**.
+- Ownership now exists in both:
+  - **Reads** (queries)
+  - **Writes** (mutations)
+
+## Step 5: Verify the System
+
+- Run the application and test the behavior.
+
+```bash
+npm run dev
+```
+
+- Try the following:
+  - Create new messages
+  - Refresh the page
+  - Toggle the follow state
+- Everything should behave exactly the same as before.
+- The UI has not changed.
+- This may feel surprising.
+- We made several deep changes to the database and application logic, yet
+  the user interface behaves exactly the same.
+- This is an important property of well-structured systems.
+- When responsibilities are separated correctly, internal changes
+  (such as database structure) do not necessarily affect the UI.
+- The system became more powerful without becoming more complex
+  for the user.
+- But the data now has a completely different structure.
+- The system now understands:
+
+```text
+User
+  ⊦ Messages
+  ∟ Profile
+```
+
+- Every piece of data now belongs to someone.
+
+## What You Just Introduced 🧠
+
+- In this lesson you introduced a new concept:
+  > Identity
+- Before this lesson the system only knew **what data existed**.
+- Now the system knows:
+  > who owns the data
+- This idea unlocks several important capabilities:
+  > multi-user systems
+  > data privacy
+  > access control
+  > secure applications
+- Without identity, these are impossible.
+
+### A Subtle but Important Insight
+
+- Notice something interesting about this lesson.
+- You did **not** build:
+  - login forms
+  - password authentication
+  - sessions
+  - user registration
+- But the system already understands **users and ownership**.
+- Authentication answers the question:
+  > Who is currently using the system?
+- Ownership answers a different question:
+  > Who does this data belong to?
+- In this lesson you solved the second question.
+
+## What Comes Next 🚀
+
+- Right now the system assumes that the active user is always:
+
+```text
+user-1
+```
+
+- This is only a **simulation**.
+- Real applications must determine the current user dynamically.
+- In the next lessons you will introduce:
+  - authentication
+  - login flows
+  - sessions
+  - real user identity
+- And the system will finally be able to answer:
+  > Who is currently using this application?
+- At that point, the ownership model you introduced in this lesson will
+  become essential.

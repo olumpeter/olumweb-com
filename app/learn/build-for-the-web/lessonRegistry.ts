@@ -13,6 +13,7 @@ import movingValidationToTheServerAndHandlingRejections from '~/learn/build-for-
 import handlingErrorsGracefully from '~/learn/build-for-the-web/images/009-handling-errors-gracefully/thumbnail/009-handling-errors-gracefully.png?url'
 import persistingDataAndBuildingCrud from '~/learn/build-for-the-web/images/010-persisting-data-and-building-crud/thumbnail/010-persisting-data-and-building-crud.png?url'
 import persistingDataWithPrismaAndSqlite from '~/learn/build-for-the-web/images/011-persisting-data-with-prisma-and-sqlite/thumbnail/011-persisting-data-with-prisma-and-sqlite.png?url'
+import introducingUsersAndOwnership from '~/learn/build-for-the-web/images/012-introducing-users-and-ownership/thumbnail/012-introducing-users-and-ownership.png?url'
 
 /**
  * Client-side lesson registry
@@ -129,6 +130,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Persisting Data with Prisma and SQLite',
 			lessonNumber: 11,
+			published: true,
+		},
+	},
+	'introducing-users-and-ownership': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/012-introducing-users-and-ownership.mdx'),
+		thumbnail: introducingUsersAndOwnership,
+		frontmatter: {
+			title: 'Introducing Users and Ownership',
+			lessonNumber: 12,
 			published: true,
 		},
 	},
