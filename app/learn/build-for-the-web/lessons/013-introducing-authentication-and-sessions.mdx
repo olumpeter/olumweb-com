@@ -1,0 +1,817 @@
+---
+title: 'Introducing Authentication and Sessions'
+slug: 'introducing-authentication-and-sessions'
+series: 'build-for-the-web'
+lessonNumber: 13
+path: '/learn/build-for-the-web/introducing-authentication-and-sessions'
+published: true
+readingTime: '27 min'
+---
+
+## Introduction 🧭
+
+- In the previous lesson, something fundamental changed.
+- The system gained **identity**.
+  - Messages now belong to users
+  - Profiles now belong to users
+
+```text
+user
+  ⊦ Messages
+  ∟ Profile
+```
+
+- Ownership exists.
+- But something is still missing.
+- Right now, the system assumes:
+
+```ts
+const USER_ID = 'user-1'
+```
+
+- That works for learning.
+- But it is not how real systems work.
+
+#### The Problem
+
+- The system knows:
+
+> **Who owns the data**
+
+- But it does **not** know:
+
+> **Who is using the system right now**
+
+- Those are different problems.
+
+#### The Real Question
+
+- A real system must answer:
+  > **Who is making this request — right now?**
+- Not once.
+- Not globally.
+- But **on every request**.
+
+#### What This Lesson Introduces
+
+- By the end of this lesson, you will:
+  - Introduce **authentication**
+  - Introduce **sessions**
+  - Identify the **current user**
+  - Remove `USER_ID`
+  - Move identity into the **request lifecycle**
+- The UI will not changed.
+- The system will.
+
+<hr className='my-8' />
+
+## The Constraint 🧩
+
+- We are not building a full auth system.
+- We will **not**:
+  - Hash passwords
+  - Use OAuth
+  - Design production security
+- We will:
+  - Introduce sessions
+  - Resolve the current user per request
+
+  > This lesson is about **identity at runtime**
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+#### Ownership
+
+> Who owns the data?
+
+- Already implemented.
+- Lives in the **database**.
+
+#### Authentication
+
+> Who is using the system?
+
+- Resolved **per request**.
+
+#### Sessions
+
+```text
+Request → Session → User
+```
+
+```text
+sessionId → userId
+```
+
+- Browser stores a session
+- Server resolves the user
+
+#### Key Insight
+
+> - Ownership is stored
+> - Identity is resolved
+
+<hr className='my-8' />
+
+## Step 1: The Current Limitation 🏁
+
+- Current system:
+
+```ts
+const USER_ID = 'user-1'
+```
+
+- This assumes:
+
+```text
+There is always one user.
+```
+
+- That is false.
+
+#### Reality
+
+```ts
+Each request may come from a different user
+```
+
+- So the system must become:
+
+```ts
+Request → User → Data
+```
+
+<hr className='my-8' />
+
+## Step 2: Introduce a Session Store 🔑
+
+- Create:
+
+```bash
+app/data/session.server.ts
+```
+
+- Add:
+
+```ts
+import { createCookieSessionStorage } from 'react-router'
+
+const sessionSecret = process.env.SESSION_SECRET
+
+if (!sessionSecret) {
+	throw new Error('SESSION_SECRET is not set')
+}
+
+export const sessionStorage = createCookieSessionStorage({
+	cookie: {
+		name: '__session',
+		httpOnly: true,
+		path: '/',
+		sameSite: 'lax',
+		secrets: [sessionSecret],
+	},
+})
+
+export const { getSession, commitSession, destroySession } = sessionStorage
+```
+
+#### What just happened?
+
+- The system can now:
+  - Read sessions
+  - Create sessions
+  - Destroy sessions
+- But:
+  - No session contains a user yet
+
+<hr className='my-8' />
+
+## Step 3: Configuration 🌍
+
+- The session system needs a secret.
+- This secret is used to:
+  - Sign cookies
+  - Prevent tampering
+  - Ensure session integrity
+
+> Without it, sessions are not secure.
+
+### Add to your environment
+
+```env
+SESSION_SECRET=super-secret-dev-key
+```
+
+#### Why this matters
+
+- This value is **not application logic**
+- It is **environment-specific configuration**
+
+> Secrets do not belong in your code.
+
+#### Important
+
+- Never commit this to source control
+- Use different values in:
+  - development
+  - production
+
+#### Key idea
+
+> The system depends on configuration to operate securely.
+
+<hr className='my-8' />
+
+## Step 4: Introduce Login 🔐
+
+- The system can now store sessions.
+- But nothing is creating them yet.
+
+> A session does not exist until you create it.
+
+#### What we need
+
+- We need a way to:
+  - Take a user
+  - Attach that user to a session
+  - Send that session to the browser
+- This is the moment where:
+
+> **Identity enters the system**
+
+#### Create the authentication helper
+
+```bash
+app/data/auth.server.ts
+```
+
+```ts
+import { getSession, commitSession } from './session.server'
+
+export async function login(request: Request, userId: string) {
+	const session = await getSession(request.headers.get('Cookie'))
+
+	session.set('userId', userId)
+
+	return new Response(null, {
+		headers: {
+			'Set-Cookie': await commitSession(session),
+		},
+	})
+}
+```
+
+#### What this does
+
+- Reads or creates a session
+- Stores userId inside it
+- Sends it back as a cookie
+- From now on:
+
+> Every request carries identity
+
+<hr className='my-8' />
+
+## Step 5: Resolve the Current User 👤
+
+- We can now:
+  - Create a session
+  - Store a `userId` inside it
+- But we still cannot answer:
+
+  > **Who is making this request?**
+
+- We need a way to:
+  - Read the session
+  - Extract the user from it
+
+### Step 5a: Read the user from the session
+
+- Open:
+
+```bash
+app/data/auth.server.ts
+```
+
+- At the **top of the file**, add the following import:
+
+```ts
+import { getSession } from './session.server'
+```
+
+- Then, below the `login` function, add:
+
+```ts
+export async function getCurrentUserId(request: Request) {
+	const session = await getSession(
+		request.headers.get('Cookie')
+	)
+
+	return session.get('userId')
+}
+```
+
+#### What this does
+
+- Reads the session attached to the request
+- Extracts the `userId`
+
+### Step 5b: Why this matters
+
+- Before:
+
+```text
+Requests had no identity
+```
+
+- After:
+
+```text
+Request → Session → userId
+```
+
+- The system can now answer:
+
+> Who is making this request right now?
+
+<hr className='my-8' />
+
+## Step 6: Require Authentication 🚧
+
+- There is still a problem.
+
+```tsx
+const userId = await getCurrentUserId(request)
+```
+
+- This can return:
+
+```bash
+undefined
+```
+
+- That means:
+  - No session exists
+  - Or no user is logged in
+
+> - Identity is possible — but not enforced
+
+### Step 6a: Enforce identity
+
+- Open:
+
+```bash
+app/data/auth.server.ts
+```
+
+- Add:
+
+```ts
+export async function requireUserId(request: Request) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		throw new Response('Unauthorized', { status: 401 })
+	}
+
+	return userId
+}
+```
+
+#### What this does
+
+- Ensures a user exists
+- Stops execution if not
+
+## Step 6b: Meaning
+
+- Before:
+
+```text
+Identity optional
+```
+
+- After:
+
+```text
+Identity required
+```
+
+> The system now protects itself
+
+<hr className='my-8' />
+
+## Step 7: Move Identity into the Request Lifecycle 🔄
+
+- In Lesson 12, identity was global:
+
+```ts
+const USER_ID = 'user-1'
+```
+
+- That worked because:
+
+```text
+We simulated one user
+```
+
+- But in real systems:
+
+```text
+Each request may have a different user
+```
+
+> Identity must move from global → request
+
+### Step 7a: Update the loader
+
+- Open:
+
+```bash
+app/routes/home.tsx
+```
+
+#### Replace the loader signature
+
+- Find:
+
+```ts
+export async function loader()
+```
+
+- Replace with:
+
+```ts
+export async function loader({ request }: Route.LoaderArgs)
+```
+
+#### Resolve the user from the request
+
+- At the top of the loader, add:
+
+```ts
+const userId = await requireUserId(request)
+```
+
+#### Your loader should now look like this
+
+- After making the changes above, your entire `loader` function should
+  match the code below.
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				userId,
+				isFollowing: false,
+			},
+		})
+	}
+
+	return { messages, profile }
+}
+```
+
+- This version:
+  - reads the user from the request
+  - scopes data to that user
+  - removes all usage of `USER_ID`
+
+#### What changed?
+
+- Before:
+
+```text
+USER_ID → Data
+```
+
+- After:
+
+```text
+Request → Session → userId → Data
+```
+
+> Identity is now dynamic
+
+### Step 7b: Update the action
+
+- Still in:
+
+```bash
+app/routes/home.tsx
+```
+
+#### Update action signature
+
+- Your action already has the correct signature:
+
+```ts
+export async function action({ request }: Route.ActionArgs)
+```
+
+- No changes needed here
+
+#### Add at the top of the function:
+
+```ts
+const userId = await requireUserId(request)
+```
+
+#### Update message creation
+
+- Find:
+
+```ts
+const USER_ID = 'user-1'
+```
+
+- Remove this line entirely.
+- Then find:
+
+```ts
+userId: USER_ID
+```
+
+- Replace with:
+
+```ts
+userId
+```
+
+#### Update follow toggle
+
+- Apply the same changes here as you did in the loader:
+- Remove the hardcoded user constant:
+
+```ts
+const USER_ID = 'user-1'
+```
+
+- Replace:
+
+```ts
+where: { userId: USER_ID }
+```
+
+- with
+
+```ts
+where: { userId }
+```
+
+#### What changed?
+
+- Identity is no longer:
+  - Hardcoded
+- Identity is now:
+  - Derived from the request
+
+> Every action now depends on the current user
+
+<hr className='my-8' />
+
+## Step 8: Add a Minimal Login UI 🎯
+
+- At this point:
+  - The system requires a user
+  - But no session exists yet
+
+> You will see a 401 Unauthorized error
+
+### Step 8a: Add a simple login route
+
+- Create:
+
+```tsx
+app/routes/login.tsx
+```
+
+### Step 8b: Add action to create session
+
+```ts
+import { login } from '~/data/auth.server'
+import type { Route } from './+types/login'
+
+export async function action({ request }: Route.ActionArgs) {
+	return login(request, 'user-1')
+}
+```
+
+### Step 8c: Add the login UI
+
+- Now create a simple login page so users can trigger the login action.
+  - This page renders a form that submits a POST request.
+  - When the button is clicked, it will log the user in.
+  - Make sure the import statement is placed at the very top of the file,
+    before any other code.
+
+```ts
+import { Form } from 'react-router'
+```
+
+#### Update your Login component to submit to an action
+
+- This component renders a form that will trigger the route's `action` when
+  submitted.
+- When the button is clicked, a POST request is sent, allowing you to handle
+  login logic in your action function.
+
+```tsx
+export default function Login() {
+	return (
+		<div className='flex min-h-screen items-center justify-center bg-slate-100 p-6'>
+			<div className='w-full max-w-sm rounded-2xl border bg-white p-6 text-center shadow-sm'>
+				<h1 className='text-xl font-semibold text-slate-900'>Login</h1>
+
+				<p className='mt-2 text-sm text-slate-500'>
+					This page lets you choose which user to log in as.
+				</p>
+
+				<Form
+					method='post'
+					className='mt-6'
+				>
+					<button
+						type='submit'
+						name='userId'
+						value='user-1'
+						className='w-full rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+					>
+						Log in as User 1
+					</button>
+				</Form>
+			</div>
+		</div>
+	)
+}
+```
+
+### What this does
+
+- Clicking the button:
+  - Creates a session
+  - Stores `userId`
+  - Sends cookie to browser
+
+<hr className='my-8' />
+
+## Step 9: Test the System 🧪
+
+- At this point:
+  - You have added session storage
+  - You have created authentication helpers
+  - You have updated your loader and action to use request
+  - You have created a login page
+
+> Now we verify that everything works together.
+
+### Step 9a: Start the development server
+
+- Open your terminal
+- Make sure you are in your project root directory (where package.json
+  is located)
+- Run:
+
+```bash
+npm run dev
+```
+
+### Step 9b: Visit the login page
+
+- Open your browser and go to:
+
+```text
+http://localhost:5174/login
+```
+
+- You should see the login UI
+
+### Step 9c: Log in
+
+- Click:
+
+```text
+Log in as User 1
+```
+
+- This will:
+  - Create a session
+  - Store userId in the session
+  - Send a cookie to the browser
+
+### Step 9d: Navigate to the home page
+
+- Go to:
+
+```text
+http://localhost:517x/
+```
+
+#### Expected result
+
+- The page loads without errors
+- Messages are visible
+- Profile loads correctly
+- No `401 Unauthorized` error
+
+#### What just happened?
+
+```text
+Browser → Cookie → Session → userId → Loader → Data
+```
+
+> The system now resolves identity on every request
+
+## Step 10: What Just Changed 🧠
+
+- In Lesson 12, identity was:
+
+```text
+USER_ID → static identity
+```
+
+- In this lesson, identity is now:
+
+```text
+Request → Session → userId → dynamic identity
+```
+
+#### The key transformation
+
+- Before:
+
+```text
+Global constant → used everywhere
+```
+
+- After:
+
+```text
+Request → carries identity → resolved per request
+```
+
+> Identity is no longer global — it is contextual
+
+## Step 11: The Big Idea 💡
+
+- You have now separated two critical concepts:
+
+#### Ownership
+
+```text
+Who does this data belong to?
+```
+
+- Stored in the database
+- Implemented in Lesson 12
+
+#### Authentication
+
+```text
+Who is using the system right now?
+```
+
+- Resolved per request
+- Implemented in Lesson 13
+
+#### The connection
+
+```text
+Request → Session → userId → Database → Data
+```
+
+> - Ownership is stored
+> - Identity is resolved
+
+## Step 12: What This Enables 🚀
+
+- The system can now:
+  - Identify the current user per request
+  - Scope data to that user
+  - Enforce authentication using `requireUserId`
+
+> Identity is now part of the request lifecycle
+
+#### What comes next (high level)
+
+- Now that identity is working, future improvements become possible:
+  - Logging out users
+  - Supporting multiple users
+  - Redirecting after login
+  - Protecting specific routes
+
+> These build on top of the foundation you just created
