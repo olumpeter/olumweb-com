@@ -1,0 +1,1314 @@
+---
+title: 'Redirects, Logout, and Protecting Routes'
+slug: 'redirects-logout-and-protecting-routes'
+series: 'build-for-the-web'
+lessonNumber: 14
+path: '/learn/build-for-the-web/redirects-logout-and-protecting-routes'
+publish: true
+readingTime: '24 min'
+---
+
+## Introduction 🧭
+
+- In the previous lesson, something fundamental changed.
+  - The system gained **identity at runtime**.
+
+  ```text
+  Request → Session → userId
+  ```
+
+  - The system can now answer:
+
+  > **Who is making this request right now?**
+  - That is a major step.
+
+- But something is still missing.
+
+#### The Problem
+
+- The system knows:
+
+  > Who is using the system
+
+- But it does not decide:
+  > What should happen next
+
+#### What this looks like
+
+- After login:
+
+  ```text
+  Session created → stay on /login
+  ```
+
+- If not logged in:
+
+  ```text
+  Request → no userId → error
+  ```
+
+- There is no:
+  - Redirection
+  - Logout
+  - Flow control
+
+#### The Real Question
+
+- A real system must decide:
+
+> What should happen after identity is known?
+
+- Not sometimes
+- Not manually
+- But **on every request**
+
+#### What This Lesson Introduces
+
+- By the end of this lesson, you will:
+  - Redirect users after login
+  - Prevent access to invalid routes
+  - Add logout functionality
+  - Control application flow
+
+> This lesson is about **flow at runtime**
+
+<hr className='my-8' />
+
+## The Constraint 🧩
+
+- We are not building a full authentication system.
+- We will **not**:
+  - Handle complex redirects
+  - Store return URLs
+  - Implement roles or permissions
+- We will:
+  - Introduce redirects
+  - Add logout
+  - Control basic flow
+
+> This lesson is about **flow at runtime**
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+#### Authentication
+
+> Who is using the system?
+
+- Already implemented
+- Resolved per request
+
+#### Flow
+
+> What should happen next?
+
+- Determined per request
+
+#### The System
+
+```text
+Request → Session → userId → Response
+```
+
+#### Key Insight
+
+> - Authentication identifies the user
+> - Flow determines what happens next
+
+<hr className='my-8' />
+
+## Step 1: The Current Limitation 🏁
+
+- Open:
+
+```bash
+app/routes/login.tsx
+```
+
+- Inside the `action` function, the current login flow looks like this:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+	return login(request, 'user-1')
+}
+```
+
+- This creates a session.
+- But after login:
+
+```text
+Session created → stay on /login
+```
+
+- That is incomplete.
+
+#### Reality
+
+```text
+/login → /
+```
+
+- The user should move forward.
+
+#### Why this matters
+
+- Without this:
+
+```text
+User → no navigation → stuck
+```
+
+```text
+- The system completes authentication
+- But not the flow
+```
+
+<hr className='my-8' />
+
+## Step 2: Redirect After Login 🔁
+
+- Open:
+
+```text
+app/data/auth.server.ts
+```
+
+- Your current `login` function should look like this:
+
+```ts
+export async function login(request: Request, userId: string) {
+	const session = await getSession(request.headers.get('Cookie'))
+
+	session.set('userId', userId)
+
+	return new Response(null, {
+		headers: {
+			'Set-Cookie': await commitSession(session),
+		},
+	})
+}
+```
+
+- Right now:
+  - The session is created
+  - The cookie is sent
+  - But nothing tells the browser where to go next
+
+```text
+Login → session created → stay on current page
+```
+
+#### Replace the return statement
+
+- Inside the same `login` function:
+  - Find:
+
+  ```ts
+  return new Response(null, {
+    headers: {
+      'Set-Cookie': await commitSession(session),
+    },
+  })
+  ```
+
+  - Replace with:
+
+  ```ts
+  return redirect('/', {
+    headers: {
+      'Set-Cookie': await commitSession(session),
+    },
+  })
+  ```
+
+  - Also add this import at the top of the file
+
+  ```ts
+  import { redirect } from 'react-router'
+  ```
+
+  - Your updated file should now look like this
+
+  ```ts
+  import { redirect } from 'react-router'
+  import { getSession, commitSession } from './session.server'
+
+  export async function login(request: Request, userId: string) {
+    const session = await getSession(request.headers.get('Cookie'))
+
+    session.set('userId', userId)
+
+    return redirect('/', {
+      headers: {
+        'Set-Cookie': await commitSession(session),
+      },
+    })
+  }
+  ```
+
+#### What just happened?
+
+- Before:
+
+```text
+Login → session created → stay on current page
+```
+
+- After:
+
+```text
+Login → session created → redirect → /
+```
+
+#### Why this matters
+
+- Authentication now completes with navigation.
+
+> - The system not only creates identity
+> - It also moves the user forward
+
+## Step 3: Protect the Login Route 🚧
+
+- There is another problem.
+- Right now:
+
+```text
+User logs in → session exists → /login still accessible
+```
+
+- That means:
+
+```text
+Authenticated user → can still visit login page
+```
+
+- That is incorrect.
+
+#### Why this matters
+
+- Once a user is logged in:
+
+```text
+/login no longer makes sense
+```
+
+- The system already knows who the user is.
+
+> Logged-in users should not see login again
+
+#### Reality
+
+```text
+Logged-in user → /login → redirect → /
+```
+
+- The login page should only exist for users who are **not authenticated**.
+
+### Step 3a: Add a loader to the login route
+
+- Open:
+
+```bash
+app/routes/login.tsx
+```
+
+- Your file currently contains:
+
+```ts
+import { Form } from 'react-router'
+import type { Route } from './+types/login'
+import { login } from '~/data/auth.server'
+
+export async function action({ request }: Route.ActionArgs) {
+	return login(request, 'user-1')
+}
+```
+
+- This route can create a session.
+- But it does not yet check whether a session already exists.
+
+#### Add a loader above the action
+
+- Add the following import:
+
+```ts
+import { redirect } from 'react-router'
+import { getCurrentUserId } from '~/data/auth.server'
+```
+
+- Then add this loader **above** your `action` function:
+
+```ts
+import { Form } from 'react-router'
+import { redirect } from 'react-router'
+
+import type { Route } from './+types/login'
+
+import { login } from '~/data/auth.server'
+import { getCurrentUserId } from '~/data/auth.server'
+
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		return null
+	}
+
+	return redirect('/')
+}
+
+export async function action({ request }: Route.ActionArgs) {
+	return login(request, 'user-1')
+}
+```
+
+#### What this does
+
+- When someone visits `/login`:
+
+```text
+Request → check session → check userId
+```
+
+- If no user exists:
+
+```text
+No session → allow login page
+```
+
+- If a user already exists:
+
+```text
+Session exists → redirect → /
+```
+
+#### What just happened?
+
+- Before:
+
+```text
+Authenticated user → /login → allowed
+```
+
+- After:
+
+```text
+Authenticated user → /login → redirect
+```
+
+#### Key Insight
+
+> - Routes should not only render
+> - They should also decide access based on identity
+
+<hr className='my-8' />
+
+## Step 4: Introduce Logout 🚪
+
+- The system can now:
+  - Create a session
+  - Identify the current user
+  - Keep the user authenticated across requests
+- But something is still missing.
+
+#### The Problem
+
+- Once a session is created:
+
+```text
+Login → session created → user stays authenticated
+```
+
+- That session remains active.
+- Right now, there is no way to:
+
+```text
+Remove the session
+```
+
+- The system can log a user in.
+- But it cannot log a user out.
+
+#### Why this matters
+
+- Authentication should not be permanent.
+- Users should be able to:
+  - Leave the system
+  - End their session
+  - Remove identity from the browser
+
+> Identity must be removable
+
+#### Reality
+
+```tsx
+User → logout → session removed
+```
+
+- The system must support both:
+
+```text
+Login → create identity
+Logout → remove identity
+```
+
+<hr className='my-8' />
+
+### Step 4a: Create a Logout Function
+
+- Open:
+
+```bash
+app/data/auth.server.ts
+```
+
+- Your file currently looks similar to this:
+
+```ts
+import { redirect } from 'react-router'
+import { getSession, commitSession } from './session.server'
+
+export async function login(request: Request, userId: string) {
+	const session = await getSession(request.headers.get('Cookie'))
+
+	session.set('userId', userId)
+
+	return redirect('/', {
+		headers: {
+			'Set-Cookie': await commitSession(session),
+		},
+	})
+}
+
+export async function getCurrentUserId(request: Request) {
+	const session = await getSession(request.headers.get('Cookie'))
+
+	return session.get('userId')
+}
+
+export async function requireUserId(request: Request) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		throw new Response('Unauthorized', { status: 401 })
+	}
+
+	return userId
+}
+```
+
+- Right now:
+  - You can create a session
+  - But you cannot destroy one
+
+#### Update the import
+
+- Find:
+
+```ts
+import { getSession, commitSession } from './session.server'
+```
+
+- Replace with:
+
+```ts
+import { getSession, commitSession, destroySession } from './session.server'
+```
+
+#### Add the logout function
+
+- Below `requireUserId`, add:
+
+```ts
+export async function logout(request: Request) {
+	const session = await getSession(request.headers.get('Cookie'))
+
+	return redirect('/login', {
+		headers: {
+			'Set-Cookie': await destroySession(session),
+		},
+	})
+}
+```
+
+#### Your file should now include
+
+```ts
+import { redirect } from 'react-router'
+import { getSession, commitSession, destroySession } from './session.server'
+
+export async function login(request: Request, userId: string) {
+	const session = await getSession(request.headers.get('Cookie'))
+
+	session.set('userId', userId)
+
+	return redirect('/', {
+		headers: {
+			'Set-Cookie': await commitSession(session),
+		},
+	})
+}
+
+export async function logout(request: Request) {
+	const session = await getSession(request.headers.get('Cookie'))
+
+	return redirect('/login', {
+		headers: {
+			'Set-Cookie': await destroySession(session)
+		}
+	})
+}
+
+export async function getCurrentUserId(request: Request) {
+	const session = await getSession(request.headers.get('Cookie'))
+
+	return session.get('userId')
+}
+
+export async function requireUserId(request: Request) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		throw new Response('Unauthorized', { status: 401 })
+	}
+
+	return userId
+}
+```
+
+#### What this does
+
+- Reads the current session
+- Destroys the session
+- Removes the cookie from the browser
+- Redirects the user to `/login`
+
+#### What just happened?
+
+- Before:
+
+```text
+Session created → identity persists
+```
+
+- After:
+
+```text
+Session destroyed → identity removed
+```
+
+#### Why this matters
+
+- Authentication is not only about entering
+- It is also about leaving
+
+<hr className='my-8' />
+
+## Step 5: Add Logout Route 🔌
+
+- You now have a `logout()` function inside:
+
+```bash
+app/data/auth.server.ts
+```
+
+- That function can:
+
+```text
+Request → Session → destroySession → redirect
+```
+
+- But there is still a missing piece.
+
+#### The Problem
+
+- The logout logic exists.
+- But nothing can trigger it yet.
+- Right now:
+
+```text
+logout() exists → never called
+```
+
+- The system knows **how** to log out.
+- But there is no route connected to it.
+
+#### Why this matters
+
+- In React Router:
+
+```text
+UI → Route → Action → Server Logic
+```
+
+- A button cannot directly call server code.
+- The browser must send a request to a route.
+
+> The logout function needs a route entry point
+
+#### Reality
+
+```text
+Button click → POST request → logout route → logout()
+```
+
+### Step 5a: Create a Logout Route
+
+- Create:
+
+```bash
+app/routes/logout.tsx
+```
+
+- This route will not render a page.
+- Its only responsibility is:
+
+```text
+Receive request → run logout → return response
+```
+
+### Step 5b: Add the action
+
+- Open:
+
+```bash
+app/routes/logout.tsx
+```
+
+- Add:
+
+```ts
+import type { Route } from './+types/logout'
+
+import { logout } from '~/data/auth.server'
+
+export async function action({ request }: Route.ActionArgs) {
+	return logout(request)
+}
+```
+
+#### What this does
+
+- When a POST request reaches `/logout`:
+
+```text
+Request → action → logout() → redirect
+```
+
+- The route becomes a bridge between:
+
+```text
+Browser ↔ auth.server.ts
+```
+
+#### What just happened?
+
+- Before:
+
+```text
+logout() existed → unreachable
+```
+
+- After:
+
+```text
+/logout → action → logout()
+```
+
+#### Why this matters
+
+- The system now has a dedicated endpoint for ending identity.
+
+> Logout is no longer just logic It is now part of the request lifecycle
+
+<hr className='my-8' />
+
+## Step 6: Add Logout UI 🧱
+
+- You now have:
+
+  ```text
+  /logout → action → logout()
+  ```
+
+  - The logout route exists.
+  - The server logic exists.
+
+- But the user still has no way to trigger it.
+
+#### The Problem
+
+- Your current `home.tsx` already contains:
+  - Message actions
+  - Follow action
+  - Create/update/delete flows
+- But there is no:
+
+  ```text
+  Logout action in the interface
+  ```
+
+- Right now:
+
+  ```text
+  User authenticated → cannot leave system
+  ```
+
+#### Why this matters
+
+- Users interact through UI.
+- The system needs a visible way to send:
+
+  ```text
+  POST /logout
+  ```
+
+> Logout must become part of the page interface
+
+### Step 6a: Open the Home Route
+
+- Open:
+
+```tsx
+app/routes/home.tsx
+```
+
+- Your file already imports:
+
+```tsx
+import { Form, useNavigation, isRouteErrorResponse } from 'react-router'
+```
+
+- This means:
+
+  ```tsx
+  No new import is needed
+  ```
+
+- `Form` is already available.
+
+### Step 6b: Find the Actions Section
+
+- Inside your component, locate this section:
+
+```tsx
+{/* Actions */}
+<div className='mt-6 flex gap-3'>
+	<button
+		type='button'
+		onClick={() => setIsComposing(true)}
+		disabled={isComposing}
+		className='flex-1 rounded-lg border px-4 py-2 text-sm'
+	>
+		Message
+	</button>
+
+	<Form
+		method='post'
+		className='flex-1'
+	>
+		<input
+			type='hidden'
+			name='intent'
+			value='toggle-follow'
+		/>
+
+		<button
+			type='submit'
+			className='flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+		>
+			{profile.isFollowing ? 'Following' : 'Follow'}
+		</button>
+	</Form>
+</div>
+```
+
+- This section already contains:
+
+  ```text
+  User actions
+  ```
+
+- This is the best place to add logout.
+
+### Step 6c: Add Logout Form Below Actions
+
+- Directly below the Actions section, add:
+
+```tsx
+<Form
+	method='post'
+	action='/logout'
+	className='mt-4'
+>
+	<button
+		type='submit'
+		className='text-sm text-red-600 hover:underline'
+	>
+		Logout
+	</button>
+</Form>
+```
+
+#### What this form does
+
+- When clicked:
+
+  ```text
+  Browser → POST /logout
+  ```
+
+- React Router sends the request to:
+
+  ```text
+  app/routes/logout.tsx
+  ```
+
+- That route runs:
+
+  ```text
+  logout(request)
+  ```
+
+- Which then:
+
+  ```text
+  destroySession → redirect → /login
+  ```
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Logout existed → unreachable
+  ```
+
+- After:
+
+  ```text
+  User → click logout → session destroyed
+  ```
+
+#### Why this matters
+
+> The system now exposes logout through the interface
+
+<hr className='my-8' />
+
+## Step 7: Improve Unauthorized Behavior ⚠️
+
+- The system now supports:
+  - Login
+  - Logout
+  - Sessions
+  - Identity per request
+- But there is still one problem.
+
+#### The Problem
+
+- Protected routes depend on:
+
+```ts
+requireUserId(request)
+```
+
+- This function is responsible for enforcing authentication.
+- Right now, your `auth.server.ts` contains:
+
+```ts
+export async function requireUserId(request: Request) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		throw redirect('/login')
+	}
+
+	return userId
+}
+```
+
+- This means:
+
+```text
+No session → redirect → /login
+```
+
+- Your file already reflects the improved version.
+- But it is important to understand **why this change matters**.
+
+#### Why this matters
+
+- Earlier in Lesson 13, the function looked like this:
+
+```ts
+export async function requireUserId(request: Request) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		throw new Response('Unauthorized', { status: 401 })
+	}
+
+	return userId
+}
+```
+
+- That produced:
+
+```tsx
+Unauthorized → error page
+```
+
+- The system rejected the request.
+- But it did not help the user recover.
+
+#### Reality
+
+- When a user is not authenticated:
+
+```tsx
+No session → send user to login
+```
+
+- That creates a better experience.
+
+> Protected routes should guide users toward authentication
+
+### Step 7a: Understand the Change
+
+- Open:
+
+```ts
+app/data/auth.server.ts
+```
+
+- Find:
+
+  ```ts
+  export async function requireUserId(request: Request)
+  ```
+
+- Inside that function, replace this line:
+
+  ```ts
+  throw new Response('Unauthorized', { status: 401 })
+  ```
+
+- with:
+
+  ```ts
+  throw redirect('/login')
+  ```
+
+#### What changed?
+
+- Before:
+
+  ```
+  No userId → 401 Unauthorized
+  ```
+
+- After:
+
+  ```
+  No userId → redirect → /login
+  ```
+
+#### Your file should already look like this
+
+```ts
+export async function requireUserId(request: Request) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		throw redirect('/login')
+	}
+
+	return userId
+}
+```
+
+#### What this does
+
+- When a protected loader or action runs:
+
+  ```text
+  Request → requireUserId → check session
+  ```
+
+- If no user exists:
+
+  ```text
+  Redirect → /login
+  ```
+
+- If a user exists:
+
+  ```text
+  Continue request
+  ```
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Unauthorized → error response
+  ```
+
+- After:
+
+  ```text
+  Unauthorized → guided navigation
+  ```
+
+#### Key Insight
+
+> Authentication protects routes Flow improves experience
+
+<hr className='my-8' />
+
+## Step 8: The Full System Flow 🔄
+
+- At this point:
+  - Users can log in
+  - Sessions can be created
+  - Sessions can be destroyed
+  - Protected routes can redirect
+  - Identity now affects behavior
+
+> - The system no longer only knows the user
+> - It now responds to the user
+
+#### Login Flow
+
+- A user visits:
+
+```text
+/login
+```
+
+- Then submits the login form.
+- The system performs:
+
+  ```text
+  Request → login() → session created → redirect → /
+  ```
+
+- This means:
+  - A session is stored
+  - A cookie is sent to the browser
+  - The user becomes authenticated
+
+#### Authenticated Request
+
+- When a user visits a protected route:
+
+  ```text
+  Request → requireUserId(request)
+  ```
+
+- The system checks:
+
+  ```text
+  Does this request contain identity?
+  ```
+
+- If a user exists:
+
+  ```text
+  Request → Session → userId → Response
+  ```
+
+- The request continues normally.
+
+#### Logout Flow
+
+- When the user clicks Logout:
+
+```text
+POST /logout
+```
+
+- The system performs:
+
+```text
+Request → logout() → destroySession() → redirect → /login
+```
+
+- This means:
+  - The session cookie is removed
+  - Identity is removed
+  - The user leaves the authenticated state
+
+#### Unauthorized Request
+
+- If a request reaches a protected route:
+
+```text
+No session → requireUserId()
+```
+
+- The system responds with:
+
+  ```text
+  Redirect → /login
+  ```
+
+- The request does not continue.
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Identity existed
+  ```
+
+- After:
+
+  ```text
+  Identity controls system behavior
+  ```
+
+> Every request now produces a decision
+
+<hr className='my-8' />
+
+## Step 9: What Just Changed 🧠
+
+- In Lesson 13, the system learned:
+
+  ```text
+  Who is making the request?
+  ```
+
+- Identity became available.
+- In this lesson, the system learned:
+
+  ```text
+  What should happen because of identity?
+  ```
+
+- Identity now changes behavior.
+
+#### Before
+
+```text
+Request → Session → userId
+```
+
+- The system could identify the user.
+
+#### After
+
+```text
+Request → Session → userId → Response
+```
+
+- The system now decides:
+  - Redirect
+  - Allow access
+  - Reject access
+  - Destroy session
+
+#### The Transformation
+
+- Before:
+
+  ```text
+  Identity resolved
+  ```
+
+- After:
+
+  ```text
+  Identity → drives response
+  ```
+
+> The system now acts on identity
+
+<hr className='my-8' />
+
+## Step 10: The Big Idea 💡
+
+- You now have three connected layers.
+
+#### Ownership
+
+> Who owns the data?
+
+- Stored in the database
+- Implemented in Lesson 12
+
+#### Authentication
+
+> Who is using the system?
+
+- Resolved per request
+- Implemented in Lesson 13
+
+#### Flow
+
+> What should happen next?
+
+- Determined per request
+- Implemented in this lesson
+
+#### The Progression
+
+```text
+Lesson 12 → Ownership
+Lesson 13 → Authentication
+Lesson 14 → Flow
+```
+
+- Each lesson builds on the previous one.
+
+#### The Connection
+
+```text
+Request → Session → userId → Decision → Response
+```
+
+- The request carries identity.
+- Identity influences behavior.
+- Behavior produces a response.
+
+#### Key Insight
+
+> - Ownership is stored
+> - Identity is resolved
+> - Flow is enforced
+
+<hr className='my-8' />
+
+## Step 11: What This Enables 🚀
+
+- The system can now:
+  - Redirect users after login
+  - Protect routes automatically
+  - End authenticated sessions
+  - Control navigation flow
+
+#### What this means
+
+- The application is no longer passive.
+- It can now:
+
+  ```text
+  Observe → Decide → Respond
+  ```
+
+- The system reacts to identity on every request.
+
+#### What comes next (high level)
+
+- Now that flow exists, future improvements become possible:
+  - Real authentication (email + password)
+  - Multiple users
+  - Permissions
+  - Access rules
+
+> These build on top of authentication and flow

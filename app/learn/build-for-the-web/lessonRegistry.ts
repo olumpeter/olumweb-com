@@ -15,6 +15,7 @@ import persistingDataAndBuildingCrud from '~/learn/build-for-the-web/images/010-
 import persistingDataWithPrismaAndSqlite from '~/learn/build-for-the-web/images/011-persisting-data-with-prisma-and-sqlite/thumbnail/011-persisting-data-with-prisma-and-sqlite.png?url'
 import introducingUsersAndOwnership from '~/learn/build-for-the-web/images/012-introducing-users-and-ownership/thumbnail/012-introducing-users-and-ownership.png?url'
 import introducingAuthenticationAndSessions from '~/learn/build-for-the-web/images/013-introducing-authentication-and-sessions/thumbnail/introducing-authentication-and-sessions.png?url'
+import redirectsLogoutAndProtectingRoutes from '~/learn/build-for-the-web/images/014-redirects-logout-and-protecting-routes/thumbnail/014-redirects-logout-and-protecting-routes.png?url'
 
 /**
  * Client-side lesson registry
@@ -151,6 +152,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Introducing Authentication and Sessions',
 			lessonNumber: 13,
+			published: true,
+		},
+	},
+	'redirects-logout-and-protecting-routes': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/014-redirects-logout-and-protecting-routes.mdx'),
+		thumbnail: redirectsLogoutAndProtectingRoutes,
+		frontmatter: {
+			title: 'Redirects, Logout, and Protecting Routes',
+			lessonNumber: 14,
 			published: true,
 		},
 	},
