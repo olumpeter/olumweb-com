@@ -16,6 +16,7 @@ import persistingDataWithPrismaAndSqlite from '~/learn/build-for-the-web/images/
 import introducingUsersAndOwnership from '~/learn/build-for-the-web/images/012-introducing-users-and-ownership/thumbnail/012-introducing-users-and-ownership.png?url'
 import introducingAuthenticationAndSessions from '~/learn/build-for-the-web/images/013-introducing-authentication-and-sessions/thumbnail/introducing-authentication-and-sessions.png?url'
 import redirectsLogoutAndProtectingRoutes from '~/learn/build-for-the-web/images/014-redirects-logout-and-protecting-routes/thumbnail/014-redirects-logout-and-protecting-routes.png?url'
+import verificationAndTrustedIdentity from '~/learn/build-for-the-web/images/015-real-authentication-with-credentials/thumbnail/015-verification-and-trusted-dentity.png?url'
 
 /**
  * Client-side lesson registry
@@ -162,6 +163,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Redirects, Logout, and Protecting Routes',
 			lessonNumber: 14,
+			published: true,
+		},
+	},
+	'verification-and-trusted-identity': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/015-verification-and-trusted-identity.mdx'),
+		thumbnail: verificationAndTrustedIdentity,
+		frontmatter: {
+			title: 'Verification and Trusted Identity',
+			lessonNumber: 15,
 			published: true,
 		},
 	},

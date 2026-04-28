@@ -1,0 +1,1050 @@
+---
+title: 'Verification and Trusted Identity'
+slug: 'verification-and-trusted-identity'
+series: 'build-for-the-web'
+lessonNumber: 15
+path: '/learn/build-for-the-web/real-authentication-with-credentials'
+publish: true
+readingTime: '28 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 14, the system learned how to control flow.
+- The application can now:
+  - Create a session
+  - Redirect users
+  - Protect routes
+  - Destroy sessions
+
+```text
+Request → Session → userId → Decision → Response
+```
+
+- The system now knows:
+
+  > What should happen after identity exists?
+
+- That was a major step.
+- But something is still missing.
+
+#### The Problem
+
+- Open:
+
+```bash
+app/routes/login.tsx
+```
+
+- Your login route currently looks like this:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+	return login(request, 'user-1')
+}
+```
+
+- And your UI contains a single button:
+
+```tsx
+<button
+	type='submit'
+	name='userId'
+	value='user-1'
+>
+	Log in as User 1
+</button>
+```
+
+- Right now, login behaves like this:
+
+```tsx
+Click button → login(request, 'user-1') → Session created
+```
+
+- This means:
+
+```tsx
+Any login request → same identity
+```
+
+- No matter who submits the form:
+  - The same user is assigned
+  - The same session is created
+  - The same identity is trusted
+- The system does not check:
+  - Who submitted the request
+  - Whether a user exists
+  - Whether credentials are valid
+- Authentication happens immediately.
+- Validation never happens.
+
+#### Reality
+
+```tsx
+Login request → identity assumed
+```
+
+- The system creates a session.
+- But it never asks:
+
+> Who is actually logging in?
+
+- There is no:
+  - Email lookup
+  - Password validation
+  - User verification
+
+#### What this means
+
+- The application knows:
+
+> How to create authentication
+
+- But it does not know:
+
+> Whether authentication should happen
+
+- Identity exists.
+- But identity is not trusted.
+
+#### Reality
+
+- A real system should behave like this:
+
+```text
+Email + Password → Verify User → Create Session
+```
+
+- Authentication should not assume identity.
+- Authentication should validate identity.
+
+#### The Real Question
+
+- A real system must decide:
+
+> Does this request belong to a real user?
+
+- Not assumed
+- Not hardcoded
+- But verified on every login request
+
+#### What This Lesson Introduces
+
+- By the end of this lesson, you will:
+  - Accept credentials
+  - Read email and password
+  - Find users from stored data
+  - Verify credentials
+  - Reject invalid authentication
+  - Create sessions from real identity
+
+> This lesson is about proving identity
+
+## The Constraint 🧩
+
+- We are still not building full production authentication.
+- We will **not**:
+  - Hash passwords
+  - Build signup
+  - Add email verification
+  - Add password reset
+  - Add OAuth providers
+- We will:
+  - Accept credentials
+  - Validate identity
+  - Authenticate real users
+
+> This lesson is about identity verification
+
+## Mental Model 🧠
+
+#### Authentication Before
+
+```text
+Request → Login → user-1 → Session
+```
+
+#### Authentication After
+
+```text
+Request → Credentials → Validation → Session
+```
+
+#### The System
+
+```text
+Email → Find User → Validate Password → Session
+```
+
+#### Key Insight
+
+> - Authentication is not creating identity
+> - Authentication is proving identity
+
+## Step 1: The Current Limitation 🏁
+
+- Open:
+
+```bash
+app/routes/login.tsx
+```
+
+- Inside the `action` function, your current login flow likely looks like this:
+
+  ```ts
+  export async function action({ request }: Route.ActionArgs) {
+    return login(request, 'user-1')
+  }
+  ```
+
+- This creates a session.
+- But it does not verify who is logging in.
+
+#### Reality
+
+```ts
+Any request → user-1
+```
+
+- The system always creates the same identity.
+
+#### Why this matters
+
+- Without validation:
+
+  ```tsx
+  User identity → assumed
+
+  - The system creates authentication
+  - But it does not validate authentication
+  ```
+
+## Step 2: Replace the Hardcoded Login UI ✍️
+
+- Open:
+
+  ```bash
+  app/routes/login.tsx
+  ```
+
+- Your current login component looks similar to this:
+
+  ```tsx
+  <Form
+    method='post'
+    className='mt-6'
+  >
+    <button
+      type='submit'
+      name='userId'
+      value='user-1'
+      className='w-full rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+    >
+      Log in as User 1
+    </button>
+  </Form>
+  ```
+
+- Right now:
+
+  ```text
+  User clicks button → user-1 assigned → session created
+  ```
+
+- The interface does not ask for identity.
+- It only submits a hardcoded user.
+
+#### Why this matters
+
+- Authentication normally begins with credentials.
+
+```text
+User → enters identity → submits request
+```
+
+- But your current UI skips that step.
+
+#### Replace the Form
+
+- Replace your current form with:
+
+  ```tsx
+  <Form
+    method='post'
+    className='mt-6 space-y-4 text-left'
+  >
+    <div>
+      <label
+        htmlFor='email'
+        className='block text-sm font-medium text-slate-700'
+      >
+        Email
+      </label>
+
+      <input
+        id='email'
+        name='email'
+        type='email'
+        className='mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm'
+      />
+    </div>
+
+    <div>
+      <label
+        htmlFor='password'
+        className='block text-sm font-medium text-slate-700'
+      >
+        Password
+      </label>
+
+      <input
+        id='password'
+        name='password'
+        type='password'
+        className='mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm'
+      />
+    </div>
+
+    <button
+      type='submit'
+      className='w-full rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+    >
+      Login
+    </button>
+  </Form>
+  ```
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Button click → fixed userId → session
+  ```
+
+- After:
+
+  ```text
+  Email + Password → request sent to server
+  ```
+
+#### Why this matters
+
+- Authentication now starts with user input.
+
+> Identity must be entered before it can be verified
+
+## Step 3: Read Credentials from the Request 📥
+
+- Open:
+
+  ```tsx
+  app/routes/login.tsx
+  ```
+
+- Inside your `action` function:
+- Replace:
+
+  ```ts
+  export async function action({ request }: Route.ActionArgs) {
+    return login(request, 'user-1')
+  }
+  ```
+
+- With:
+
+  ```ts
+  export async function action({ request }: Route.ActionArgs) {
+    const formData = await request.formData()
+
+    const email = formData.get('email')
+    const password = formData.get('password')
+  }
+  ```
+
+#### What this does
+
+- Reads submitted credentials.
+
+```text
+Request → FormData → Credentials
+```
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Request → immediate login
+  ```
+
+  - After:
+
+  ```text
+  Request → extract credentials
+  ```
+
+#### Why this matters
+
+- The server must inspect the request before authentication.
+
+> Identity begins as input
+
+## Step 4: Introduce Real User Lookup with Prisma 🔎
+
+- Authentication requires stored identity.
+
+#### The Problem
+
+- Right now:
+
+  ```text
+  Credentials exist → no user lookup
+  ```
+
+- The system receives email and password.
+- But it has nowhere to verify them.
+
+#### Reality
+
+```text
+Email → Database → User → Validation
+```
+
+- A real system does not authenticate from memory.
+- It authenticates from persistent data.
+
+### Step 4a: Update the User Model
+
+- Open:
+
+  ```bash
+  prisma/schema.prisma
+  ```
+
+- Your current `User` model looks like this:
+
+  ```prisma
+  model User {
+    id   String @id @default(cuid())
+    name String
+
+    messages Message[]
+    profile  Profile?
+  }
+  ```
+
+- Right now:
+
+  ```text
+  User exists → no credentials stored
+  ```
+
+#### Update the model
+
+- Replace the `User` model with:
+
+  ```prisma
+  model User {
+    id       String @id @default(cuid())
+    name     String
+    email    String? @unique
+    password String?
+
+    messages Message[]
+    profile  Profile?
+  }
+  ```
+
+#### Why are the fields optional?
+
+- Your database already contains users.
+- Right now, existing rows do not contain:
+
+  ```text
+  email
+  password
+  ```
+
+- If you add required fields immediately:
+
+  ```text
+  Existing rows → missing values → migration fails
+  ```
+
+- Making the fields optional allows Prisma to safely update the schema.
+
+#### Reality
+
+```text
+Existing users → preserved
+New auth fields → added safely
+```
+
+- Later, once all users contain credentials, these fields can become required.
+
+#### What changed?
+
+- Before:
+
+  ```text
+  User → display identity only
+  ```
+
+- After:
+
+  ```text
+  User → authentication identity
+  ```
+
+#### Why this matters
+
+- Authentication requires lookup fields.
+
+> Identity must be searchable
+
+### Step 4b: Run Prisma Migration
+
+- After updating the schema, run:
+
+  ```prisma
+  npx prisma migrate dev --name add-auth-fields
+  ```
+
+#### What this does
+
+- Updates the database schema.
+- Adds new columns.
+- Synchronizes Prisma with SQLite.
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Database → no authentication fields
+  ```
+
+- After:
+
+  ```text
+  Database → supports credentials
+  ```
+
+### Step 4c: Regenerate the Prisma Client
+
+- After running the migration, Prisma must regenerate its client.
+- Run:
+
+```bash
+npx prisma generate
+```
+
+#### Why this matters
+
+- Your schema changed.
+- Your database changed.
+- But TypeScript still uses the previous generated types.
+
+#### Without regeneration
+
+- You may see an error like:
+
+```bash
+Object literal may only specify known properties,
+and 'email' does not exist in type 'UserWhereUniqueInput'
+```
+
+#### Reality
+
+```bash
+Schema updated → Prisma client outdated
+```
+
+- Regenerating updates Prisma's TypeScript knowledge.
+
+```text
+Schema → Generated Client → Type Safety
+```
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Database updated → Prisma types stale
+  ```
+
+- After:
+
+  ```text
+  Database updated → Prisma client synchronized
+  ```
+
+### Step 4d: Create a User Lookup Function
+
+- Create:
+
+```bash
+app/data/user.server.ts
+```
+
+- Add:
+
+```ts
+import { prisma } from '~/db.server'
+
+export async function getUserByEmail(email: string) {
+	return prisma.user.findUnique({
+		where: {
+			email,
+		},
+	})
+}
+```
+
+#### What this does
+
+- Searches the database.
+
+```text
+Email → Prisma → User
+```
+
+#### What just happened?
+
+- Before:
+
+```text
+Credentials → nowhere to verify
+```
+
+- After:
+
+```text
+Credentials → database lookup
+```
+
+#### Why this matters
+
+> Authentication should come from stored reality
+
+## Step 5: Validate Credentials 🔐
+
+- You now have:
+  - Email input
+  - Password input
+  - User lookup
+- But the system still does not verify identity.
+
+#### The Problem
+
+```text
+Credentials received → no validation
+```
+
+- The system must decide:
+
+> Do these credentials belong to a real user?
+
+### Step 5a: Update the Login Action
+
+- Open:
+
+```bash
+app/routes/login.tsx
+```
+
+- Add the import:
+
+```ts
+import { getUserByEmail } from '~/data/user.server'
+```
+
+- Then update your action:
+
+```tsx
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+
+	const email = formData.get('email')
+	const password = formData.get('password')
+
+	if (typeof email !== 'string' || typeof password !== 'string') {
+		return null
+	}
+
+	const user = await getUserByEmail(email)
+
+	if (!user) {
+		return null
+	}
+
+	if (user.password !== password) {
+		return null
+	}
+
+	return login(request, user.id)
+}
+```
+
+#### What this does
+
+- Reads credentials
+- Searches for a user
+- Validates password
+- Creates identity
+
+```text
+Request → Credentials → User → Validation → Session
+```
+
+#### What just happened?
+
+- Before:
+
+```text
+Any request → authenticated
+```
+
+- After:
+
+```text
+Valid credentials → authenticated
+```
+
+#### Why this matters
+
+> Authentication now depends on proof
+
+## Step 6: Improve Invalid Login Behavior ⚠️
+
+- There is another problem.
+- Right now:
+
+```text
+Invalid credentials → return null
+```
+
+- The system rejects authentication.
+- But the user does not know why.
+
+### Why this matters
+
+- Authentication should communicate failure.
+
+```text
+Rejected identity → visible explanation
+```
+
+### Reality
+
+```text
+Invalid credentials → error message
+```
+
+### Step 6a: Return an Error Object
+
+- Inside your login action:
+  - Replace:
+
+    ```ts
+    return null
+    ```
+
+  - With:
+
+  ```ts
+  return {
+    error: 'Invalid email or password',
+  }
+  ```
+
+## Step 6b: Read Action Data
+
+- Add:
+
+  ```ts
+  import { useActionData } from 'react-router'
+  ```
+
+- Inside your component:
+
+  ```ts
+  const actionData = useActionData<typeof action>()
+  ```
+
+## Step 6c: Render the Error
+
+- Below your form:
+
+  ```tsx
+  {actionData?.error ? (
+    <p className='text-sm text-red-600'>{actionData.error}</p>
+  ) : null}
+  ```
+
+#### What this does
+
+- Failed authentication now becomes visible.
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Authentication failed → silence
+  ```
+
+- After:
+
+  ```text
+  Authentication failed → explanation
+  ```
+
+#### Why this matters
+
+> Systems should explain rejected identity
+
+## Step 7: The Full Authentication Flow 🔄
+
+- At this point:
+  - Users can enter credentials
+  - Credentials can be validated
+  - Users can be found
+  - Sessions can be created
+  - Authentication can fail safely
+
+> The system no longer assumes identity It now validates identity
+
+#### Login Flow
+
+- A user visits:
+
+```text
+/login
+```
+
+- Then submits credentials.
+- The system performs:
+
+  ```text
+  Request → FormData → Email → User Lookup → Password Validation → Session → Redirect
+  ```
+
+- This means: Credentials are read Identity is validated A session is created
+  The user becomes authenticated
+
+#### Invalid Request
+
+- When credentials fail:
+
+  ```
+  Request → Validation Failed
+  ```
+
+- The system responds with:
+
+  ```
+  Error → Login remains visible
+  ```
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Identity was assumed
+  ```
+
+- After:
+
+  ```text
+  Identity must be proven
+  ```
+
+> Every login now produces a decision
+
+## Step 8: What Just Changed 🧠
+
+- In Lesson 13, the system learned:
+
+  ```text
+  Who is making the request?
+  ```
+
+- Identity became available.
+- In Lesson 14, the system learned:
+
+  ```text
+  What should happen because of identity?
+  ```
+
+- Flow became available.
+- In this lesson, the system learned:
+
+  ```text
+  Whether identity should exist at all
+  ```
+
+#### Before
+
+```text
+Request → Login → userId
+```
+
+- The system created identity.
+
+#### After
+
+```text
+Request → Credentials → Validation → userId
+```
+
+- The system now decides:
+  - Whether credentials are valid
+  - Whether authentication should continue
+  - Whether identity should be created
+
+#### The Transformation
+
+- Before:
+
+  ```text
+  Identity assumed
+  ```
+
+- After:
+
+  ```text
+  Identity verified
+  ```
+
+> Authentication now depends on evidence
+
+## Step 9: The Big Idea 💡
+
+- You now have four connected layers.
+
+#### Ownership
+
+> Who owns the data?
+
+- Stored in the database
+- Implemented in Lesson 12
+
+#### Authentication
+
+> Who is using the system?
+
+- Resolved per request
+- Introduced in Lesson 13
+
+#### Flow
+
+> What should happen next?
+
+- Determined per request
+- Implemented in Lesson 14
+
+#### Verification
+
+> Should identity be trusted?
+
+- Determined during login
+- Implemented in this lesson
+
+#### The Progression
+
+```text
+Lesson 12 → Ownership
+Lesson 13 → Authentication
+Lesson 14 → Flow
+Lesson 15 → Verification
+```
+
+- Each lesson builds on the previous one.
+
+#### The Connection
+
+```text
+Request → Credentials → Validation → Session → Response
+```
+
+- Credentials enter the request.
+- Validation creates trust.
+- Trust creates identity.
+- Identity affects response.
+
+#### Key Insight
+
+> - Ownership is stored
+> - Identity is resolved
+> - Flow is enforced
+> - Verification creates trust
+
+## Step 10: What This Enables 🚀
+
+- The system can now:
+  - Authenticate real users
+  - Validate credentials
+  - Reject invalid identity
+  - Create trusted sessions
+  - Connect login to stored data
+
+#### What this means
+
+- The application no longer assumes identity.
+- It can now:
+
+```text
+Receive → Validate → Trust → Respond
+```
+
+- Authentication now behaves more like a real system.
+
+#### What comes next (high level)
+
+- The system can now:
+  - Validate credentials
+  - Authenticate existing users
+  - Create trusted sessions
+- But something is still missing.
+
+#### The Remaining Problem
+
+- Right now:
+
+  ```text
+  Authentication depends on existing users
+  ```
+
+- The system can verify identity.
+- But it cannot create identity.
+- Users must already exist in the database.
+
+#### Reality
+
+```text
+No account → no identity → no authentication
+```
+
+- The application can authenticate users.
+- But it cannot yet create new users.
+
+#### What comes next
+
+- The next lesson introduces:
+
+```text
+Lesson 16 → Creating Identity (Signup)
+```
+
+- The system will learn:
+  - How users are created
+  - How identity enters the database
+  - How authentication begins from creation
+
+> - Verification proves identity
+> - Signup creates identity
