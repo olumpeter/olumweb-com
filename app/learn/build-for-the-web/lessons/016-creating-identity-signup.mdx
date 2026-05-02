@@ -1,0 +1,1159 @@
+---
+title: 'Creating Identity (Signup)'
+slug: 'creating-identity-signup'
+series: 'build-for-the-web'
+lessonNumber: 16
+path: '/learn/build-for-the-web/creating-identity-signup'
+publish: true
+readingTime: '30 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 15, the system learned how to verify identity.
+- The application can now:
+  - Accept credentials
+  - Read email and password
+  - Find users
+  - Validate credentials
+  - Create sessions from trusted identity
+
+```text
+Request → Credentials → Validation → Session
+```
+
+- The system now knows:
+
+  > How to prove identity
+
+- That was a major step.
+- But something is still missing.
+
+#### The Problem
+
+- Right now:
+  `
+
+  > Login → Existing user required
+
+- Authentication only works when a user already exists.
+- The system can verify identity.
+- But it cannot create identity.
+
+#### Reality
+
+- Open:
+
+```bash
+app/routes/login.tsx
+```
+
+- Your login flow now behaves like this:
+
+  ```text
+  Email + Password → User Lookup → Validation → Session
+  ```
+
+- This means:
+
+  > No matching user → Authentication stops
+
+- The system expects identity to already exist.
+- But there is no way to create identity.
+
+#### What this means
+
+- The application knows:
+
+  > How to trust a user
+
+- But it does not know:
+
+  > How a user enters the system
+
+- Identity can be verified.
+- But identity cannot be created.
+
+#### Reality
+
+```text
+Database → Existing users only
+```
+
+- The system can authenticate.
+- But it cannot onboard.
+
+#### The Real Question
+
+- A real system must decide:
+
+  > How does identity begin?
+
+- Not assumed
+- Not manually inserted
+- But created through a request
+
+#### What This Lesson Introduces
+
+- By the end of this lesson, you will:
+  - Create a signup route
+  - Accept user credentials
+  - Create users in the database
+  - Store identity
+  - Prevent duplicate accounts
+  - Create sessions after signup
+
+> This lesson is about creating identity
+
+<hr className='my-8' />
+
+## The Constraint 🧩
+
+- We are still not building full production signup.
+- We will **not**:
+  - Hash passwords
+  - Send verification emails
+  - Add CAPTCHA
+  - Build social login
+  - Add password recovery
+- We will:
+  - Create new users
+  - Store identity
+  - Connect signup to authentication
+
+> This lesson is about identity creation
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+#### Before
+
+```text
+User must already exist → Login allowed
+```
+
+#### After
+
+```text
+Signup → Identity Created → Login Possible
+```
+
+#### The System
+
+```text
+Form → Validation → Database → Identity
+```
+
+#### Key Insight
+
+> - Authentication proves identity
+> - Signup creates identity
+
+<hr className='my-8' />
+
+## Step 1: The Current Limitation 🏁
+
+- Right now:
+
+```text
+No account → No login
+```
+
+- The system only recognizes existing users.
+- But a real application must support new users.
+
+#### Reality
+
+```text
+Identity cannot appear automatically
+```
+
+- Identity must enter the database.
+
+#### Why this matters
+
+- Without signup:
+
+  ```text
+  Application → closed system
+  ```
+
+- Only manually inserted users can authenticate.
+
+> Identity must be created before it can be verified
+
+<hr className='my-8' />
+
+## Step 2: Create a Signup Route ✍️
+
+- Create:
+
+```bash
+app/routes/signup.tsx
+```
+
+- Add a basic route:
+
+```ts
+import { Form } from 'react-router'
+
+export default function SignupRoute() {
+	return (
+		<div className='mx-auto max-w-md'>
+			<h1 className='text-2xl font-bold'>Create Account</h1>
+
+			<Form
+				method='post'
+				className='mt-6 space-y-4'
+			>
+				<div>
+					<label
+						htmlFor='name'
+						className='block text-sm font-medium text-slate-700'
+					>
+						Name
+					</label>
+
+					<input
+						id='name'
+						name='name'
+						type='text'
+						className='mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm'
+					/>
+				</div>
+
+				<div>
+					<label
+						htmlFor='email'
+						className='block text-sm font-medium text-slate-700'
+					>
+						Email
+					</label>
+
+					<input
+						id='email'
+						name='email'
+						type='email'
+						className='mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm'
+					/>
+				</div>
+
+				<div>
+					<label
+						htmlFor='password'
+						className='block text-sm font-medium text-slate-700'
+					>
+						Password
+					</label>
+
+					<input
+						id='password'
+						name='password'
+						type='password'
+						className='mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm'
+					/>
+				</div>
+
+				<button
+					type='submit'
+					className='w-full rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+				>
+					Create Account
+				</button>
+			</Form>
+		</div>
+	)
+}
+```
+
+#### What this does
+
+- Introduces a dedicated signup page.
+
+```text
+User → Form → Account Creation
+```
+
+#### What just happened?
+
+- Before:
+
+```text
+Only login existed
+```
+
+- After:
+
+```text
+Identity can now be submitted
+```
+
+#### Why this matters
+
+> Signup begins identity creation
+
+<hr className='my-8' />
+
+## Step 3: Read Signup Data 📥
+
+- Open:
+
+```bash
+app/routes/signup.tsx
+```
+
+- Add an action function:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData()
+
+  const name = formData.get('name')
+  const email = formData.get('email')
+  const password = formData.get('password')
+}
+```
+
+#### What this does
+
+- Reads submitted identity.
+
+```text
+Request → FormData → Credentials
+```
+
+#### Why this matters
+
+- Signup starts as request data.
+
+> Identity begins as input
+
+<hr className='my-8' />
+
+## Step 4: Create a User Creation Function 🔎
+
+- Authentication required lookup.
+- Signup requires creation.
+
+#### The Problem
+
+- Right now:
+
+```text
+Credentials received → nowhere to save
+```
+
+- The system reads data.
+- But it does not persist identity.
+
+### Step 4a: Extend the Existing User Data File
+
+- Open:
+
+```bash
+app/data/user.server.ts
+```
+
+- Your file already contains:
+
+```text
+import { prisma } from './prisma.server'
+
+export async function getUserByEmail(email: string) {
+  return prisma.user.findUnique({
+    where: {
+      email,
+    },
+  })
+}
+```
+
+- Right now:
+
+```text
+User lookup exists → user creation missing
+```
+
+- You do not need a new file.
+- You only need to extend the existing one.
+
+#### Add a Create Function
+
+- Below `getUserByEmail`, add:
+
+```ts
+export async function createUser({
+	name,
+	email,
+	password,
+}: {
+	name: string
+	email: string
+	password: string
+}) {
+	return prisma.user.create({
+		data: {
+			name,
+			email,
+			password,
+		},
+	})
+}
+```
+
+#### What this does
+
+- Adds persistence.
+
+```text
+Credentials → Prisma → Database → User
+```
+
+#### What just happened?
+
+- Before:
+
+```text
+Identity could only be found
+```
+
+- After:
+
+```text
+Identity can now be created
+```
+
+#### Why this matters
+
+> Signup must create stored identity
+
+<hr className='my-8' />
+
+## Step 5: Prevent Duplicate Accounts 🔐
+
+- There is another problem.
+
+#### The Problem
+
+```text
+Same email → multiple users
+```
+
+- Without validation:
+  - Duplicate identity becomes possible
+  - Email loses uniqueness
+  - Authentication becomes unreliable
+
+#### Reality
+
+```text
+One email → one identity
+```
+
+### Step 5a: Reuse User Lookup
+
+- Open:
+
+  ```text
+  app/routes/signup.tsx
+  ```
+
+- Add imports:
+
+  ```text
+  import { getUserByEmail, createUser } from '~/data/user.server'
+  ```
+
+### Step 5b: Check Existing User
+
+- Update your action:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+
+	const name = formData.get('name')
+	const email = formData.get('email')
+	const password = formData.get('password')
+
+	if (
+		typeof name !== 'string' ||
+		typeof email !== 'string' ||
+		typeof password !== 'string'
+	) {
+		return null
+	}
+
+	const existingUser = await getUserByEmail(email)
+
+	if (existingUser) {
+		return {
+			error: 'Email already exists',
+		}
+	}
+}
+```
+
+#### What this does
+
+- Prevents duplicate identity.
+
+```text
+Email → Lookup → Existing User → Reject
+```
+
+#### Why this matters
+
+> Identity should remain unique
+
+<hr className='my-8' />
+
+## Step 6: Create the User 🏗️
+
+- After validation:
+  - The system knows the email is available
+  - The request contains credentials
+  - Identity can now be created
+
+### Step 6a: Create the User Record
+
+- Continue inside the action:
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+
+	const name = formData.get('name')
+	const email = formData.get('email')
+	const password = formData.get('password')
+
+	if (
+		typeof name !== 'string' ||
+		typeof email !== 'string' ||
+		typeof password !== 'string'
+	) {
+		return null
+	}
+
+	const existingUser = await getUserByEmail(email)
+
+	if (existingUser) {
+		return {
+			error: 'Email already exists',
+		}
+	}
+
+	const user = await createUser({
+		name,
+		email,
+		password,
+	})
+}
+```
+
+#### What this does
+
+- Creates a new identity.
+
+```text
+Form → Validation → Database → User Created
+```
+
+#### What just happened?
+
+- Before:
+
+```text
+Identity could not enter the system
+```
+
+- After:
+
+```text
+Identity becomes persistent
+```
+
+#### Why this matters
+
+> Signup converts input into ownership
+
+<hr className='my-8' />
+
+## Step 7: Automatically Authenticate After Signup 🔄
+
+- There is another opportunity.
+- Right now:
+
+```text
+Signup complete → User must login manually
+```
+
+- But the system already knows who the user is.
+
+#### Reality
+
+```text
+Identity created → Session created
+```
+
+### Step 7a: Add Login Import
+
+- Open:
+
+```bash
+app/routes/signup.tsx
+```
+
+- Your authentication utilities live inside:
+
+```ts
+app/data/auth.server.ts
+```
+
+- Add the import:
+
+```ts
+import { login } from '~/data/auth.server'
+```
+
+#### Why this matters
+
+- Your project already contains authentication helpers.
+- Signup should reuse the same login system.
+
+```text
+Signup → Existing Auth Utilities → Session Creation
+```
+
+### Step 7b: Create Session After Signup
+
+- Right now:
+
+```text
+User created → Request ends
+```
+
+- The database now contains identity.
+- But the user is still not authenticated.
+
+#### The Problem
+
+- After signup:
+
+```ts
+User exists → Session missing
+```
+
+- The system knows who the user is.
+- But the browser does not yet have authentication.
+
+#### Reality
+
+```ts
+Identity created → Identity should become active
+```
+
+- Since the user just created an account:
+  - We already know who they are
+  - We already have their user ID
+  - We can immediately authenticate them
+
+#### Continue Inside the Action
+
+- After creating the user:
+
+```ts
+const user = await createUser({
+  name,
+  email,
+  password,
+})
+```
+
+- Add:
+
+```ts
+return login(request, user.id)
+```
+
+#### Your Full Action Now Looks Like This
+
+```tsx
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+
+	const name = formData.get('name')
+	const email = formData.get('email')
+	const password = formData.get('password')
+
+	if (
+		typeof name !== 'string' ||
+		typeof email !== 'string' ||
+		typeof password !== 'string'
+	) {
+		return null
+	}
+
+	const existingUser = await getUserByEmail(email)
+
+	if (existingUser) {
+		return {
+			error: 'Email already exists',
+		}
+	}
+
+	const user = await createUser({
+		name,
+		email,
+		password,
+	})
+
+	return login(request, user.id)
+}
+```
+
+#### What this does
+
+- Creates identity.
+- Creates a session.
+- Redirects the user.
+
+```text
+Signup → User Created → Session Created → Redirects
+```
+
+#### What just happened?
+
+- Before:
+
+```text
+Signup → User stored only
+```
+
+- After:
+
+```text
+Signup → User authenticated immediately
+```
+
+#### Why this matters
+
+> Identity creation can immediately become identity ownership
+
+<hr className='my-8' />
+
+## Step 8: Improve Signup Errors ⚠️
+
+- Right now:
+
+  ```text
+  Duplicate email → error object returned
+  ```
+
+- The action already returns:
+
+  ```ts
+  return {
+  	error: 'Email already exists',
+  }
+  ```
+
+- But there is still a problem.
+
+#### The Problem
+
+```text
+Server knows about failure → UI does not
+```
+
+- The action returns an error.
+- But the component never reads it.
+- The user submits the form.
+- Nothing appears.
+
+#### Reality
+
+```text
+Returned action data → component must consume it
+```
+
+- React Router automatically passes action data into the route component.
+- You already use typed route props.
+
+### Step 8a: Add Action Data to the Route Component
+
+- Your current component likely looks like this:
+
+  ```ts
+  export default function SignupRoute() {
+  ```
+
+- Replace it with:
+
+  ```ts
+  export default function SignupRoute({ actionData }: Route.ComponentProps) {
+  ```
+
+#### What this does
+
+- Gives the component access to returned action data.
+
+```text
+Action → Return Value → Route Component
+```
+
+#### Why this matters
+
+- The UI can now react to validation failures.
+
+## Step 8b: Render the Error Message
+
+- Below your form:
+
+```ts
+{actionData?.error ? (
+	<p className='text-sm text-red-600'>{actionData.error}</p>
+) : null}
+```
+
+- Your component now looks like this:
+
+  ```ts
+  export default function SignupRoute({ actionData }: Route.ComponentProps) {
+  	return (
+  		<div className='mx-auto max-w-md'>
+  			<h1 className='text-2xl font-bold'>Create Account</h1>
+
+  			<Form
+  				method='post'
+  				className='mt-6 space-y-4'
+  			>
+  				<div>
+  					<label
+  						htmlFor='name'
+  						className='block text-sm font-medium text-slate-700'
+  					>
+  						Name
+  					</label>
+
+  					<input
+  						id='name'
+  						name='name'
+  						type='text'
+  						className='mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm'
+  					/>
+  				</div>
+
+  				<div>
+  					<label
+  						htmlFor='email'
+  						className='block text-sm font-medium text-slate-700'
+  					>
+  						Email
+  					</label>
+
+  					<input
+  						id='email'
+  						name='email'
+  						type='email'
+  						className='mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm'
+  					/>
+  				</div>
+
+  				<div>
+  					<label
+  						htmlFor='password'
+  						className='block text-sm font-medium text-slate-700'
+  					>
+  						Password
+  					</label>
+
+  					<input
+  						id='password'
+  						name='password'
+  						type='password'
+  						className='mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm'
+  					/>
+  				</div>
+
+  				<button
+  					type='submit'
+  					className='w-full rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700'
+  				>
+  					Create Account
+  				</button>
+  			</Form>
+
+  			{actionData?.error ? (
+  				<p className='text-sm text-red-600'>{actionData.error}</p>
+  			) : null}
+  		</div>
+  	)
+  }
+  ```
+
+#### What this does
+
+- Displays validation feedback.
+
+```text
+Action returns error → Component renders message
+```
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Signup failure → invisible
+  ```
+
+- After:
+
+  ```text
+  Signup failure → visible
+  ```
+
+#### Why this matters
+
+> Systems should explain rejected identity
+
+<hr className='my-8' />
+
+## Step 9: The Full Signup Flow 🔄
+
+- At this point:
+  - Users can submit identity
+  - Users can be validated
+  - Duplicate accounts can be prevented
+  - New users can be created
+  - Sessions can be created immediately
+
+> The system no longer depends only on existing identity
+
+#### Signup Flow
+
+- A user visits:
+
+  ```ts
+  /signup
+  ```
+
+- Then submits credentials.
+- The system performs:
+
+  ```text
+  Request → FormData → Validation → Existing User Check → User Creation → Session → Redirect
+  ```
+
+#### Invalid Request
+
+- When signup fails:
+
+  > Request → Validation Failed
+
+- The system responds with:
+  > Error → Signup remains visible
+
+#### What just happened?
+
+- Before:
+
+  ```tsx
+  Identity had to already exist
+  ```
+
+- After:
+
+  ```tsx
+  Identity can now begin
+  ```
+
+> Every account now begins from a request
+
+<hr className='my-8' />
+
+## Step 10: What Just Changed 🧠
+
+- In Lesson 13, the system learned:
+
+  ```text
+  Who is making the request?
+  ```
+
+- Identity became visible.
+- In Lesson 14, the system learned:
+
+  > What should happen after identity exists?
+
+- Flow became possible.
+- In Lesson 15, the system learned:
+
+  > Whether identity should be trusted
+
+- Verification became possible.
+- In this lesson, the system learned:
+
+  ```text
+  How identity enters the system
+  ```
+
+#### Before
+
+```text
+Identity must already exist
+```
+
+#### After
+
+```text
+Identity can now be created
+```
+
+#### The Transformation
+
+- Before:
+
+  ```text
+  Authentication depended on existing users
+  ```
+
+- After:
+
+  ```text
+  Authentication can begin from signup
+  ```
+
+> Identity now has an origin
+
+<hr className='my-8' />
+
+## Step 11: The Big Idea 💡
+
+- You now have five connected layers.
+
+#### Ownership
+
+> Who owns the data?
+
+- Stored in the database
+- Introduced in Lesson 12
+
+#### Authentication
+
+> Who is using the system?
+
+- Resolved per request
+- Introduced in Lesson 13
+
+#### Flow
+
+> What should happen next?
+
+- Controlled through redirects
+- Introduced in Lesson 14
+
+#### Verification
+
+> Should identity be trusted?
+
+- Determined during login
+- Introduced in Lesson 15
+
+#### Creation
+
+> How does identity begin?
+
+- Created through signup
+- Introduced in this lesson
+
+#### The Progression
+
+```
+Lesson 12 → Ownership
+Lesson 13 → Authentication
+Lesson 14 → Flow
+Lesson 15 → Verification
+Lesson 16 → Creation
+```
+
+### The Connection
+
+```text
+Request → Signup → Database → Session → Response
+```
+
+- Identity begins with input.
+- Input becomes data.
+- Data becomes trust.
+- Trust becomes ownership.
+
+#### Key Insight
+
+> - Ownership stores identity
+> - Authentication resolves identity
+> - Flow controls identity
+> - Verification proves identity
+> - Signup creates identity
+
+<hr className='my-8' />
+
+## Step 12: What This Enables 🚀
+
+The system can now: - Create new users - Store identity - Prevent duplicates - Authenticate immediately - Connect signup to sessions
+
+#### What this means
+
+- The application no longer depends on pre-existing users.
+- It can now:
+
+  ```text
+  Receive → Validate → Create → Authenticate → Respond
+  ```
+
+#### What comes next (high level)
+
+- The system can now:
+  - Create identity
+  - Verify identity
+  - Authenticate users
+  - Control sessions
+- But something is still missing.
+
+#### The Remaining Problem
+
+- Right now:
+
+  ```text
+  Passwords are stored as plain text
+  ```
+
+- Identity exists.
+- Authentication works.
+- But security is still weak.
+
+#### Reality
+
+    ```text
+    Stored password → visible password
+    ```
+
+- The application can authenticate.
+- But it cannot yet protect credentials safely.
+
+#### What comes next
+
+- The next lesson introduces:
+
+  ```
+  Lesson 17 → Password Hashing and Secure Credentials
+  ```
+
+- The system will learn:
+  - How passwords should be stored
+  - Why hashing matters
+  - How security strengthens trust
+
+> - Signup creates identity
+> - Security protects identity

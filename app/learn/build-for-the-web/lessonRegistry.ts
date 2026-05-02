@@ -17,6 +17,7 @@ import introducingUsersAndOwnership from '~/learn/build-for-the-web/images/012-i
 import introducingAuthenticationAndSessions from '~/learn/build-for-the-web/images/013-introducing-authentication-and-sessions/thumbnail/introducing-authentication-and-sessions.png?url'
 import redirectsLogoutAndProtectingRoutes from '~/learn/build-for-the-web/images/014-redirects-logout-and-protecting-routes/thumbnail/014-redirects-logout-and-protecting-routes.png?url'
 import verificationAndTrustedIdentity from '~/learn/build-for-the-web/images/015-real-authentication-with-credentials/thumbnail/015-verification-and-trusted-dentity.png?url'
+import creatingIdentitySignup from '~/learn/build-for-the-web/images/016-creating-identity-signup/thumbnail/016-creating-identity-signup.png?url'
 
 /**
  * Client-side lesson registry
@@ -173,6 +174,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Verification and Trusted Identity',
 			lessonNumber: 15,
+			published: true,
+		},
+	},
+	'creating-identity-signup': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/016-creating-identity-signup.mdx'),
+		thumbnail: creatingIdentitySignup,
+		frontmatter: {
+			title: 'Creating Identity (Signup)',
+			lessonNumber: 16,
 			published: true,
 		},
 	},

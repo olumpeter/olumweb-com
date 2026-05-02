@@ -141,6 +141,8 @@ Email + Password → Verify User → Create Session
 
 > This lesson is about proving identity
 
+<hr className='my-8' />
+
 ## The Constraint 🧩
 
 - We are still not building full production authentication.
@@ -156,6 +158,8 @@ Email + Password → Verify User → Create Session
   - Authenticate real users
 
 > This lesson is about identity verification
+
+<hr className='my-8' />
 
 ## Mental Model 🧠
 
@@ -181,6 +185,8 @@ Email → Find User → Validate Password → Session
 
 > - Authentication is not creating identity
 > - Authentication is proving identity
+
+<hr className='my-8' />
 
 ## Step 1: The Current Limitation 🏁
 
@@ -219,6 +225,8 @@ Any request → user-1
   - The system creates authentication
   - But it does not validate authentication
   ```
+
+<hr className='my-8' />
 
 ## Step 2: Replace the Hardcoded Login UI ✍️
 
@@ -335,6 +343,8 @@ User → enters identity → submits request
 
 > Identity must be entered before it can be verified
 
+<hr className='my-8' />
+
 ## Step 3: Read Credentials from the Request 📥
 
 - Open:
@@ -390,6 +400,8 @@ Request → FormData → Credentials
 - The server must inspect the request before authentication.
 
 > Identity begins as input
+
+<hr className='my-8' />
 
 ## Step 4: Introduce Real User Lookup with Prisma 🔎
 
@@ -630,6 +642,8 @@ Credentials → database lookup
 
 > Authentication should come from stored reality
 
+<hr className='my-8' />
+
 ## Step 5: Validate Credentials 🔐
 
 - You now have:
@@ -718,6 +732,8 @@ Valid credentials → authenticated
 
 > Authentication now depends on proof
 
+<hr className='my-8' />
+
 ## Step 6: Improve Invalid Login Behavior ⚠️
 
 - There is another problem.
@@ -730,7 +746,7 @@ Invalid credentials → return null
 - The system rejects authentication.
 - But the user does not know why.
 
-### Why this matters
+#### Why this matters
 
 - Authentication should communicate failure.
 
@@ -738,7 +754,7 @@ Invalid credentials → return null
 Rejected identity → visible explanation
 ```
 
-### Reality
+#### Reality
 
 ```text
 Invalid credentials → error message
@@ -761,7 +777,7 @@ Invalid credentials → error message
   }
   ```
 
-## Step 6b: Read Action Data
+### Step 6b: Read Action Data
 
 - Add:
 
@@ -775,7 +791,7 @@ Invalid credentials → error message
   const actionData = useActionData<typeof action>()
   ```
 
-## Step 6c: Render the Error
+### Step 6c: Render the Error
 
 - Below your form:
 
@@ -806,6 +822,8 @@ Invalid credentials → error message
 #### Why this matters
 
 > Systems should explain rejected identity
+
+<hr className='my-8' />
 
 ## Step 7: The Full Authentication Flow 🔄
 
@@ -866,6 +884,8 @@ Invalid credentials → error message
 
 > Every login now produces a decision
 
+<hr className='my-8' />
+
 ## Step 8: What Just Changed 🧠
 
 - In Lesson 13, the system learned:
@@ -922,6 +942,8 @@ Request → Credentials → Validation → userId
   ```
 
 > Authentication now depends on evidence
+
+<hr className='my-8' />
 
 ## Step 9: The Big Idea 💡
 
@@ -983,6 +1005,8 @@ Request → Credentials → Validation → Session → Response
 > - Identity is resolved
 > - Flow is enforced
 > - Verification creates trust
+
+<hr className='my-8' />
 
 ## Step 10: What This Enables 🚀
 
