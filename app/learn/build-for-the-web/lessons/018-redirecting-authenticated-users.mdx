@@ -1,0 +1,564 @@
+---
+title: 'Redirecting Authenticated Users'
+slug: 'redirecting-authenticated-users'
+series: 'build-for-the-web'
+lessonNumber: 18
+path: '/learn/build-for-the-web/redirecting-authenticated-users'
+publish: true
+readingTime: '30 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 17, the system learned how to secure identity.
+- The application can now:
+  - Hash passwords
+  - Store protected credentials
+  - Verify passwords safely
+  - Authenticate users securely
+
+```text
+Request → Password → Hash → Database → Verification → Session
+```
+
+- The system now knows:
+
+  > How identity becomes secure
+
+- That was a critical step.
+- But something is still missing.
+
+#### The Problem
+
+- Right now:
+
+  > Authenticated users can still access auth pages
+
+- A logged-in user can:
+  - Visit `/login`
+  - Visit `/signup`
+- This creates a broken experience.
+
+#### Reality
+
+```text
+Authenticated user → Still sees login/signup
+```
+
+- The system knows the user.
+- But it does not act on that knowledge.
+
+#### What this means
+
+- The application knows:
+
+  > Who the user is
+
+- But it does not yet use that to control navigation.
+
+#### The Real Question
+
+- A real system must decide:
+
+  > What should happen when a user is already authenticated?
+
+- Prevent unnecessary actions
+- Avoid redundant pages
+- Improve navigation flow
+
+#### What This Lesson Introduces
+
+- By the end of this lesson, you will:
+  - Detect authenticated users early
+  - Redirect users away from auth pages
+  - Control access flow
+  - Improve user experience
+  - Strengthen application behavior
+
+> This lesson is about controlling user flow
+
+## The Constraint 🧩
+
+- We are still not building full production routing systems.
+- We will **not**:
+  - Add role-based access control
+  - Add permission layers
+  - Add route guards for every page
+- We will:
+  - Detect authentication state
+  - Redirect authenticated users
+  - Improve navigation logic
+
+> This lesson is about flow control, not full authorization systems
+
+## Mental Model 🧠
+
+#### Before
+
+```text
+Authenticated user → Can access everything
+```
+
+#### After
+
+```text
+Authenticated user → Redirected away from auth pages
+```
+
+#### The System
+
+```text
+Request → Session → Authentication State → Decision → Redirect or Continue
+```
+
+#### Core Rule
+
+```text
+If user is authenticated → Redirect away from auth pages
+```
+
+#### Even Simpler
+
+```text
+Authenticated → No auth pages → Redirect
+```
+
+#### Key Insight
+
+> Systems respond to authentication state
+> Not just data, not just users
+
+## Step 1: The Current Flow Problem 🏁
+
+- Right now:
+
+  ```text
+  User logs in → Still allowed on /login
+  ```
+
+- This leads to:
+
+  ```text
+  Confusion → Redundant actions → Poor UX
+  ```
+
+#### Reality
+
+- A logged-in user does not need:
+  - Signup page
+  - Login page
+
+#### Why this matters
+
+> Systems should respond to user state
+
+## Step 2: Define Expected Behavior 🎯
+
+- A real system behaves like this:
+
+#### When NOT authenticated
+
+```text
+User → Can access login/signup
+```
+
+#### When authenticated
+
+```text
+User → Should NOT access login/signup
+```
+
+#### Instead
+
+```text
+Authenticated user → Redirect → Home/Dashboard
+```
+
+#### Mental Model
+
+```text
+Authenticated → No auth pages → Redirect
+```
+
+> The system should guide the user forward
+
+## Step 3: Where This Logic Lives 📍
+
+- This logic should happen:
+
+  ```text
+  Before rendering the page
+  ```
+
+- In React Router Framework Mode:
+
+  ```text
+  loader()
+  ```
+
+#### Why loader?
+
+- Runs on every request
+- Executes before UI renders
+- Has access to the session
+- Can redirect early
+
+#### Mental Model
+
+```text
+Request → Loader → Session Check → Authentication State → Decision
+```
+
+> Flow control belongs where the request is handled
+
+## Step 4: Redirect Authenticated Users from Login 🔐
+
+### Step 4a: Open Login Route
+
+- Open:
+
+```bash
+app/routes/login.tsx
+```
+
+### Step 4b: Understand the Existing Loader
+
+- Your loader already looks like this:
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		return null
+	}
+
+	return redirect('/')
+}
+```
+
+### Step 4c: What This Actually Means
+
+#### Important
+
+```text
+userId exists → user is authenticated
+```
+
+- This does **not** mean "user exists in database"
+- It means:
+
+  ```text
+  Request → Session → userId → Authenticated
+  ```
+
+#### Step-by-step behavior
+
+1. Request hits `/login`
+2. Loader runs before UI renders
+3. `getCurrentUserId(request)` checks session
+4. If session exists → user is authenticated
+5. Redirect to `/`
+6. If no session → allow access to login page
+
+#### Mental Model
+
+```text
+Request → Session → Authentication State → Decision → Redirect or Continue
+```
+
+#### Core Rule
+
+```text
+If user is authenticated → Redirect away from login page
+```
+
+#### What just happened?
+
+- Before:
+
+  ```text
+  Authenticated user → sees login page
+  ```
+
+- After:
+
+  ```text
+  Authenticated user → redirected away immediately
+  ```
+
+> The system now respects authentication state before rendering
+
+#### Why this matters
+
+- The UI never renders unnecessarily
+- The system behaves intentionally
+- The user is guided forward
+
+> Authenticated → No login page → Redirect
+
+#### Important Distinction
+
+- The system is not checking:
+
+```text
+Does this user exist in the database?
+```
+
+- The system is checking:
+
+```text
+Is this request associated with a session?
+```
+
+#### Why this matters
+
+```text
+Database → Identity storage
+Session → Identity in use
+```
+
+> Authentication is about the session, not just the user record
+
+## Step 5: Apply the Same Logic to Signup 🧾
+
+- Open:
+
+  ```text
+  app/routes/signup.tsx
+  ```
+
+#### Reality
+
+```text
+Signup route → No loader exists
+```
+
+- Right now:
+
+```text
+Authenticated user → Can still access /signup
+```
+
+- This creates a problem:
+
+> A user who already has an account can still see "Create Account"
+
+### Step 5a: Add Required Imports
+
+- At the top of your file, add:
+
+```ts
+import { redirect } from 'react-router'
+import { getCurrentUserId } from '~/data/auth.server'
+```
+
+### Step 5b: Add a Loader
+
+- Add this above your `action`:
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await getCurrentUserId(request)
+
+	if (userId) {
+		return redirect('/')
+	}
+
+	return null
+}
+```
+
+### Step 5c: What This Does
+
+- When a request hits `/signup`:
+
+  ```text
+  Request → Session → Authentication State → Decision
+  ```
+
+- If authenticated:
+
+  ```text
+  Authenticated → Redirect → Home
+  ```
+
+- If not:
+
+  ```text
+  Unauthenticated → Allow signup page
+  ```
+
+#### Mental Model
+
+```text
+Authenticated → Already has identity → No signup → Redirect
+```
+
+#### What Just Changed?
+
+- Before:
+
+  ```text
+  Authenticated user → sees signup page
+  ```
+
+- After:
+
+  ```text
+  Authenticated user → redirected away
+  ```
+
+> Signup now respects authentication state
+
+## Step 6: Understand the Shift 🧠
+
+#### Important Distinction
+
+- The system is NOT checking:
+
+  ```text
+  Does this user exist in the database?
+  ```
+
+- The system IS checking:
+
+```text
+Is this request associated with a session?
+```
+
+#### Reality
+
+```text
+Database → Stores identity
+Session → Represents active identity
+```
+
+> Authentication is about the session
+
+## Step 7: The Full Flow Now 🔄
+
+#### Login
+
+```text
+Unauthenticated → Allowed
+Authenticated   → Redirected
+```
+
+#### Signup
+
+```text
+Unauthenticated → Allowed
+Authenticated   → Redirected
+```
+
+#### System Behavior
+
+```text
+Request → Session → Auth State → Decision → Redirect or Continue
+```
+
+## Step 8: Why This Matters 💡
+
+- Without this:
+  - Users repeat actions
+  - UX feels broken
+  - System feels unaware
+- With this:
+  - Flow feels intentional
+  - Navigation feels smart
+
+```text
+Good systems guide users
+```
+
+## Step 9: What Just Changed 🧠
+
+- Lesson 16 → Identity created
+- Lesson 17 → Identity secured
+- Lesson 18 → Identity guides navigation
+
+#### Before
+
+```text
+Authentication existed but was ignored
+```
+
+#### After
+
+```text
+Authentication drives flow decisions
+```
+
+> Identity now shapes experience
+
+## Step 10: The Big Idea 💡
+
+- You now have:
+
+```text
+Ownership → Authentication → Flow → Verification → Creation → Security → Navigation Control
+```
+
+## Step 11: What This Enables 🚀
+
+- Detect authenticated users
+- Prevent unnecessary pages
+- Redirect intelligently
+- Improve UX
+
+```text
+User → Authenticated → Guided → Directed
+```
+
+## Step 12: What Comes Next 🔮
+
+#### The Remaining Problem
+
+- The system can now:
+  - Create identity
+  - Protect identity
+  - Authenticate users
+  - Redirect intelligently
+
+- But route protection logic is still duplicated.
+
+#### Reality
+
+```text
+Multiple routes → Repeating authentication checks
+```
+
+- Right now:
+  - The home page protects itself
+  - Login protects itself
+  - Signup protects itself
+- But every route is implementing authentication logic manually.
+
+#### The Real Question
+
+> How can route protection become reusable?
+
+- The application already protects routes.
+- But the protection pattern is not centralized yet.
+
+```text
+Authentication logic → Repeated across routes
+```
+
+#### Next Lesson
+
+```text
+Lesson 19 → Centralizing Route Protection
+```
+
+- The system will learn:
+  - How to centralize authentication checks
+  - How to reuse protection logic
+  - How to simplify protected routes
+  - How to create `requireUser()`
+
+> - Signup creates identity
+> - Security protects identity
+> - Authentication guides flow
+> - Protection enforces boundaries

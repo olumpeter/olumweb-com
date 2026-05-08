@@ -19,6 +19,7 @@ import redirectsLogoutAndProtectingRoutes from '~/learn/build-for-the-web/images
 import verificationAndTrustedIdentity from '~/learn/build-for-the-web/images/015-real-authentication-with-credentials/thumbnail/015-verification-and-trusted-dentity.png?url'
 import creatingIdentitySignup from '~/learn/build-for-the-web/images/016-creating-identity-signup/thumbnail/016-creating-identity-signup.png?url'
 import passwordHashingSecureCredentials from '~/learn/build-for-the-web/images/017-password-hashing-secure-credentials/thumbnail/017-password-hashing-secure-credentials.png?url'
+import redirectingAuthenticatedUsers from '~/learn/build-for-the-web/images/018-redirecting-authenticated-users/thumbnail/018-redirecting-authenticated-users.png?url'
 
 /**
  * Client-side lesson registry
@@ -195,6 +196,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Password Hashing and Secure Credentials',
 			lessonNumber: 17,
+			published: true,
+		},
+	},
+	'redirecting-authenticated-users': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/018-redirecting-authenticated-users.mdx'),
+		thumbnail: redirectingAuthenticatedUsers,
+		frontmatter: {
+			title: 'Redirecting Authenticated Users',
+			lessonNumber: 18,
 			published: true,
 		},
 	},
