@@ -1,0 +1,771 @@
+---
+title: 'Centralizing Route Protection'
+slug: 'centralizing-route-protection'
+series: 'build-for-the-web'
+lessonNumber: 19
+path: '/learn/build-for-the-web/centralizing-route-protection'
+publish: true
+readingTime: '35 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 18, the system learned how to control navigation flow.
+- The application can now:
+  - Detect authenticated users
+  - Redirect authenticated users
+  - Prevent unnecessary auth pages
+  - Improve navigation behavior
+
+```text
+Request → Session → Authentication State → Redirect Decision
+```
+
+- The system now understands:
+
+> Authentication affects navigation
+
+- But another problem now exists.
+
+## The Problem
+
+- Right now:
+
+```text
+Authentication logic is repeated across routes
+```
+
+#### Example
+
+```ts
+const userId = await getCurrentUserId(request)
+
+if (!userId) {
+	return redirect('/login')
+}
+```
+
+- Multiple routes repeat this same pattern.
+
+#### Reality
+
+- Home route checks authentication
+- Login route checks authentication
+- Signup route checks authentication
+
+```text
+Route → Authentication Check → Repeated Logic
+```
+
+#### The Real Problem
+
+- Copy-pasted security logic becomes difficult to maintain.
+
+#### Why this matters
+
+- If authentication behavior changes:
+
+  ```text
+  Every route must change manually
+  ```
+
+- This creates:
+  - Repetition
+  - Fragile code
+  - Inconsistent behavior
+  - Maintenance problems
+
+> Important rules should not be duplicated everywhere
+
+- By the end of this lesson, you will:
+  - Centralize route protection
+  - Reuse authentication logic
+  - Simplify protected routes
+  - Create `requireUserId()`
+  - Understand enforcement vs checking
+
+```text
+Authentication Check → Reusable Protection System
+```
+
+## The Constraint 🧩
+
+- We are still not building:
+  - Full authorization systems
+  - Role-based access control
+  - Permission engines
+  - Middleware architectures
+- We are building:
+
+```tsx
+Reusable authentication enforcement
+```
+
+> This lesson is about centralizing protection logic
+
+## Mental Model 🧠
+
+#### Before
+
+```text
+Every route → Manually protects itself
+```
+
+#### After
+
+```text
+Routes → Use shared protection logic
+```
+
+#### System Shift
+
+```text
+Repeated checks → Centralized enforcement
+```
+
+#### Core Idea
+
+```text
+Important rules belong in one place
+```
+
+#### Even Simpler
+
+```text
+Protect once → Reuse everywhere
+```
+
+> Good systems centralize important rules
+
+## Step 1: Understand the Current Repetition 🔁
+
+- Right now, protected routes look like this:
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		return redirect('/login')
+	}
+
+	return null
+}
+```
+
+#### What this means
+
+- Every protected route:
+  - Reads session state
+  - Checks authentication
+  - Redirects manually
+
+#### Reality
+
+```text
+Route → Session Check → Auth Check → Redirect Logic
+```
+
+- The same logic appears repeatedly.
+
+#### Why this becomes dangerous
+
+- Imagine changing authentication behavior later.
+
+#### Example
+
+- What if:
+  - Redirect path changes
+  - Session validation changes
+  - Logging gets added
+  - Expiration handling changes
+
+#### Problem
+
+```text
+Every protected route must be updated manually
+```
+
+> Repeated security logic becomes difficult to maintain
+
+## Step 2: Understand the Real Goal 🎯
+
+- The goal is NOT:
+
+  ```text
+  Remove authentication checks
+  ```
+
+- The goal IS:
+
+  ```text
+  Move authentication enforcement into reusable logic
+  ```
+
+#### Important Distinction
+
+- Right now:
+
+  ```text
+  Routes know HOW to protect themselves
+  ```
+
+- After this lesson:
+
+```text
+Routes simply ASK for protection
+```
+
+#### Mental Model
+
+```text
+Route → require protection → System enforces rules
+```
+
+> Routes should not manage security details themselves
+
+## Step 3: Create requireUserId() 🛡️
+
+### Step 3a: Open auth.server.ts
+
+- Open
+
+```text
+app/data/auth.server.ts
+```
+
+#### You already have this helper:
+
+```ts
+export async function requireUserId(request: Request) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		throw redirect('/login')
+	}
+
+	return userId
+}
+```
+
+#### Important
+
+- The application already has centralized authentication enforcement.
+- This means:
+
+  ```text
+  Authentication rules already exist in one shared place
+  ```
+
+#### What this function actually does
+
+- `requireUserId()` is responsible for enforcing authentication.
+
+#### Step-by-step behavior
+
+1. Route calls `requireUserId(request)`
+2. Session gets checked
+3. `getCurrentUserId(request)` reads authentication state
+4. If no authenticated user exists:
+
+- Execution stops
+- Redirect to `/login`
+
+5. If authenticated:
+
+- Return `userId`
+
+#### Mental Model
+
+```text
+Route → requireUserId() → Authentication Enforcement
+```
+
+#### Core Rule
+
+```text
+No authenticated user → No route access
+```
+
+#### Even Simpler
+
+```text
+Authenticated → Continue
+Unauthenticated → Redirect
+```
+
+> Authentication enforcement now belongs to the authentication system itself
+
+## Step 4: Understand the Architectural Shift 🧠
+
+#### Before
+
+- Routes handled protection manually.
+
+```ts
+const userId = await getCurrentUserId(request)
+
+if (!userId) {
+	return redirect('/login')
+}
+```
+
+#### Reality
+
+```text
+Every route → Repeated protection logic
+```
+
+#### Problem
+
+- Every protected route:
+  - Reads session state
+  - Checks authentication manually
+  - Handles redirects manually
+
+#### Why this becomes dangerous
+
+- If authentication behavior changes:
+
+> Every protected route must change manually
+
+- This creates:
+  - Repetition
+  - Inconsistency
+  - Fragile security logic
+  - Maintenance problems
+
+> Important rules should not be duplicated across the application
+
+#### After
+
+- Routes can now delegate protection to the authentication system.
+
+```ts
+await requireUserId(request)
+```
+
+#### What this changes
+
+- Routes no longer:
+  - Manage redirect logic manually
+  - Repeat authentication checks manually
+  - Handle protection details themselves
+
+#### Instead
+
+```text
+Route → Ask system for protection
+```
+
+#### Mental Model
+
+```text
+Manual protection → Centralized enforcement
+```
+
+#### System Shift
+
+```text
+Repeated auth checks → Shared authentication enforcement
+```
+
+> Good systems centralize important rules
+
+## Step 5: Observe Centralized Protection in the Application 🔍
+
+- Open:
+
+  ```text
+  app/routes/home.tsx
+  ```
+
+#### Reality
+
+- The application is already using centralized protection.
+
+#### Loader
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	return { messages }
+}
+```
+
+#### Action
+
+```ts
+export async function action({ request }: Route.ActionArgs) {
+	const userId = await requireUserId(request)
+
+	// Action logic...
+}
+```
+
+#### Important
+
+- Both the `loader()` and `action()` rely on:
+
+```ts
+requireUserId(request)
+```
+
+#### What this means
+
+```text
+Authentication enforcement is shared across the application
+```
+
+### Step 5a: Understand Why This Matters 🧠
+
+#### Before centralized protection
+
+- Every route would need:
+
+```ts
+const userId = await getCurrentUserId(request)
+
+if (!userId) {
+	return redirect('/login')
+}
+```
+
+#### Reality
+
+```text
+Repeated authentication logic everywhere
+```
+
+#### After centralized protection
+
+- Routes now simply ask for authenticated identity:
+
+```ts
+const userId = await requireUserId(request)
+```
+
+#### Mental Model
+
+```ts
+Route → requireUserId() → Protected
+```
+
+#### Important Shift
+
+- Routes no longer:
+  - Handle redirect logic manually
+  - Check authentication manually
+  - Manage protection behavior themselves
+
+#### Instead
+
+```text
+Authentication enforcement belongs to the authentication system
+```
+
+> Routes now focus on application behavior, not authentication mechanics
+
+### Step 5b: Observe the Architectural Improvement 🏗️
+
+#### Loader Responsibility
+
+```text
+Load protected data
+```
+
+#### Action Responsibility
+
+```text
+Handle protected mutations
+```
+
+#### Authentication Responsibility
+
+```text
+Enforce authenticated access
+```
+
+#### Important
+
+- Each system now has:
+  - A clear responsibility
+  - A focused purpose
+  - Less duplicated logic
+
+#### System Design
+
+```text
+Authentication System
+  → Handles protection
+
+Route Loaders
+  → Handle loading
+
+Route Actions
+  → Handle mutations
+```
+
+> Good systems separate responsibilities clearly
+
+## Step 6: Understand getCurrentUserId() vs requireUserId() 🔍
+
+#### Important Distinction
+
+- `getCurrentUserId()`:
+
+```text
+Reads authentication state
+```
+
+- requireUserId():
+
+```text
+Enforces authentication
+```
+
+#### This distinction matters
+
+- **Getter**
+
+```text
+Reads information
+```
+
+- **Require**
+
+```
+Enforces rules
+```
+
+- **Mental Model**
+
+```text
+Getter → Observation
+Require → Enforcement
+```
+
+- **Reality**
+
+```text
+Is a user authenticated?
+```
+
+- Other times the application must enforce:
+
+```text
+This route requires authentication
+```
+
+- **Important**
+
+```text
+Reading state and enforcing rules are different responsibilities
+```
+
+> Good naming reflects system behavior clearly
+
+## Step 7: Why throw redirect()? ⚡
+
+#### Important
+
+- Inside `requireUserId()`:
+
+```ts
+throw redirect('/login')
+```
+
+#### What this does
+
+- Immediately stops execution.
+- Prevents the route from continuing.
+- Transfers control to the redirect response.
+
+#### Mental Model
+
+```text
+Unauthenticated → Stop execution → Redirect
+```
+
+#### Why this matters
+
+- The route should never continue running if authentication fails.
+
+#### Reality
+
+```text
+Protection logic controls flow immediately
+```
+
+> Enforcement should stop invalid execution as early as possible
+
+## Step 8: The Full Flow Now 🔄
+
+#### Before
+
+```text
+- Route
+  → Session Check
+  → Authentication Check
+  → Redirect Logic
+  → Continue
+```
+
+#### After
+
+```text
+- Route
+  → requireUserId()
+  → Continue
+```
+
+#### Internally
+
+```text
+- requireUserId()
+  → Session Check
+  → Authentication Enforcement
+  → Redirect or Continue
+```
+
+#### System Shift
+
+```text
+Manual route protection
+  → Shared authentication enforcement
+```
+
+> Authentication enforcement is now reusable system behavior
+
+#### Step 9: What Just Changed in the Architecture 🏗️
+
+#### Lesson 16
+
+```text
+Identity was created
+```
+
+#### Lesson 17
+
+```text
+Identity was secured
+```
+
+#### Lesson 18
+
+```text
+Identity controlled navigation
+```
+
+#### Lesson 19
+
+```text
+Protection became reusable
+```
+
+#### System Evolution
+
+```text
+Creation
+  → Security
+  → Authentication
+  → Flow Control
+  → Centralized Protection
+```
+
+> The authentication system is becoming architectural
+
+## Step 10: Why This Matters 💡
+
+- Without centralized protection:
+  - Routes repeat logic
+  - Security becomes inconsistent
+  - Maintenance becomes painful
+- With centralized protection:
+  - Routes stay clean
+  - Authentication stays reusable
+  - Protection stays consistent
+
+#### Mental Model
+
+```text
+Protect once → Reuse everywhere
+```
+
+#### Reality
+
+```text
+Centralized systems scale better
+```
+
+> Reusability is one of the foundations of scalable software systems
+
+## Step 11: The Big Idea 🧠
+
+- The application can now:
+  - Create identity
+  - Secure identity
+  - Authenticate users
+  - Control navigation flow
+  - Reuse protection logic
+
+#### Important
+
+```text
+Authentication is no longer isolated route logic
+```
+
+#### Instead
+
+```text
+Authentication is now shared application behavior
+```
+
+#### System Design
+
+```text
+Authentication System
+  → Enforces boundaries consistently
+```
+
+> The application now protects routes through shared architectural rules
+
+## Step 12: What Comes Next 🔮
+
+#### Remaining Problem
+
+- Protected routes can now enforce authentication consistently.
+- But routes still repeatedly load user data manually.
+
+#### Reality
+
+```text
+Protected routes → Still manually fetch authenticated user information
+```
+
+#### The Real Question
+
+> How can authenticated user data become easier to access throughout
+> the application?
+
+#### Next Lesson
+
+```text
+Lesson 20 → Loading the Authenticated User
+```
+
+- The system will learn:
+  - How to load the authenticated user
+  - How to access user data consistently
+  - How to simplify authenticated routes further
+  - How identity reaches the UI
+
+> - Identity exists
+> - Protection enforces boundaries
+> - Next: Identity becomes usable throughout the application
