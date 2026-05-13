@@ -1,0 +1,1218 @@
+---
+title: 'Loading the Authenticated User'
+slug: 'loading-the-authenticated-user'
+series: 'build-for-the-web'
+lessonNumber: 20
+path: '/learn/build-for-the-web/loading-the-authenticated-user'
+publish: true
+readingTime: '40 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 19, the system learned how to:
+  - Centralize route protection
+  - Reuse authentication enforcement
+  - Protect routes consistently
+
+```text
+Route → requireUserId() → Protected Access
+```
+
+- The application can now:
+  - Detect authenticated users
+  - Enforce protected boundaries
+  - Redirect unauthenticated users
+  - Reuse authentication logic
+
+#### Important
+
+- The system now understands:
+
+> Authentication controls access
+
+- But another problem now exists.
+
+#### The Problem
+
+- Right now, the application only knows:
+
+  ```text
+  Authenticated identity exists
+  ```
+
+#### Example
+
+```ts
+const userId = await requireUserId(request)
+```
+
+#### Important
+
+- `userId` is only:
+  - An identity reference
+  - A database identifier
+  - A way to locate the user
+
+#### Reality
+
+- The application still does NOT load:
+  - The authenticated user
+  - User profile information
+  - User application data
+
+#### Example
+
+- Inside the UI:
+
+  ```ts
+  <h2>Peter Olum</h2>
+  <p>Modern Fullstack Web Developer</p>
+  ```
+
+#### Problem
+
+- The UI is still hardcoded.
+
+#### Reality
+
+```text
+Authentication exists
+BUT
+Authenticated user data has not reached the UI
+```
+
+> Authentication identifies users, but applications still need user data
+
+## The Constraint 🧩
+
+- We are still not building:
+  - Global state systems
+  - Context providers
+  - Root loaders
+  - Authorization engines
+  - User preference systems
+- We are building:
+
+  ```text
+  Authenticated user loading
+  ```
+
+> This lesson is about turning authenticated identity into usable
+> application data
+
+## Mental Model 🧠
+
+#### Before
+
+```text
+Application → Knows userId only
+```
+
+#### After
+
+```text
+Application → Loads authenticated user data
+```
+
+#### System Shift
+
+```text
+Authenticated identity
+  → Authenticated user
+```
+
+#### Core Idea
+
+```text
+Authentication identifies users
+Applications load user data
+```
+
+#### Even Simpler
+
+```text
+Identity → User
+```
+
+> Identity alone is not enough for real applications
+
+## Step 1: Observe the Current Authentication Flow 🔍
+
+- Open:
+
+```text
+app/routes/home.tsx
+```
+
+#### Loader
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				userId,
+				isFollowing: false,
+			},
+		})
+	}
+
+	return { messages, profile }
+}
+```
+
+#### Important
+
+- The route already:
+  - Protects authenticated access
+  - Reads authenticated identity
+  - Loads authenticated data
+
+#### Example
+
+```ts
+const userId = await requireUserId(request)
+```
+
+#### Reality
+
+```text
+The application already knows WHO is authenticated
+```
+
+- Then the route uses:
+
+  ```ts
+  where: { userId }
+  ```
+
+- to load:
+  - messages
+  - profile data
+
+- **But notice something important.**
+
+#### The UI Still Looks Like This
+
+```ts
+<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+	Peter Olum
+</h2>
+
+<p className='text-sm text-slate-500'>
+	Modern Fullstack Web Developer
+</p>
+
+<p className='mt-4 text-sm text-slate-500'>
+	Simplifying the web
+</p>
+```
+
+#### Problem
+
+- The UI is still hardcoded.
+
+#### Reality
+
+```text
+Authentication exists
+BUT
+Authenticated user information is not reaching the UI
+```
+
+> The application knows who is authenticated, but the UI still does not
+> use authenticated user data
+
+## Step 2: Observe the Database Limitation 🧩
+
+- Open:
+
+  ```text
+  prisma/schema.prisma
+  ```
+
+#### Current User model
+
+```prisma
+model User {
+  id       String  @id @default(cuid())
+  name     String
+  email    String? @unique
+  password String?
+
+  messages Message[]
+  profile  Profile?
+}
+```
+
+#### Important
+
+- The database currently stores:
+  - identity
+  - authentication credentials
+  - relationships
+
+#### But the UI currently displays:
+
+```text
+Peter Olum
+Modern Fullstack Web Developer
+Simplifying the web
+```
+
+#### Problem
+
+- The database does NOT store:
+  - role/title
+  - bio
+  - avatar information
+
+#### Reality
+
+```text
+The UI knows more about the user than the database does
+```
+
+#### Important
+
+```text
+Applications can only render the user information the database actually stores
+```
+
+> Database design affects application capabilities
+
+## Step 3: Expand the User Model 🛠️
+
+- Then add:
+
+  ```prisma
+  model User {
+    id           String  @id @default(cuid())
+    name         String
+    username     String? @unique
+    email        String? @unique
+    password     String?
+
+    role         String?
+    bio          String?
+    avatarUrl    String?
+
+    messages Message[]
+    profile  Profile?
+  }
+  ```
+
+#### role
+
+- Supports:
+
+  ```text
+  Modern Fullstack Web Developer
+  ```
+
+#### bio
+
+- Supports:
+
+  ```text
+  Simplifying the web
+  ```
+
+#### avatarUrl
+
+- Supports dynamic avatars later.
+
+#### username
+
+- Introduces public-facing identity.
+
+## Step 4: Understand Why the User Model Changed 🧠
+
+#### Before
+
+```text
+The database only stored minimal authentication information
+```
+
+#### Reality
+
+- The system could:
+  - Identify authenticated users
+  - Verify passwords
+  - Protect routes
+
+#### But the application could NOT naturally support:
+
+- Dynamic user interfaces
+- Personalized experiences
+- User profile rendering
+
+#### Example
+
+- The UI still depended on hardcoded values:
+
+```tsx
+<h2>Peter Olum</h2>
+
+<p>Modern Fullstack Web Developer</p>
+
+<p>Simplifying the web</p>
+```
+
+#### After
+
+- The database now supports:
+
+  ````text
+  Authenticated application user data
+  ```
+  ````
+
+#### Mental Model
+
+```text
+Authentication system
+  → Identifies users
+
+Database
+  → Stores user information
+
+UI
+  → Renders authenticated experiences
+```
+
+#### Important
+
+```text
+Application requirements shape database design
+```
+
+> Databases evolve alongside application capabilities
+
+## Step 5: Create a Database Migration ⚡
+
+- The Prisma schema has now changed.
+
+#### Important
+
+- The actual database must also change.
+
+#### Why this matters
+
+- Updating `schema.prisma` alone does NOT update:
+  - the database
+  - the Prisma client
+
+#### Reality
+
+```text
+Schema file
+  → Defines intended structure
+
+Migration
+  → Updates database structure
+
+Prisma Client
+  → Updates generated database types
+```
+
+#### Run the Migration
+
+```text
+npx prisma migrate dev --name expand-user-model
+```
+
+#### What this does
+
+- Prisma will:
+  - detect schema changes
+  - generate a migration
+  - update the SQLite database
+
+#### But one more step still matters.
+
+- Regenerate the Prisma Client
+
+```bash
+npx prisma generate
+```
+
+#### Why this matters
+
+- The generated Prisma client must understand:
+  - new fields
+  - updated models
+  - updated database types
+
+#### Important
+
+- Without regeneration:
+  - TypeScript may not recognize new fields
+  - Prisma queries may show type errors
+
+#### Example
+
+```ts
+role: 'Modern Fullstack Web Developer'
+```
+
+- The Prisma client must know:
+
+```ts
+User now contains a role field
+```
+
+#### Mental Model
+
+```text
+Schema changes
+  → Database changes
+  → Prisma client changes
+```
+
+> The Prisma client reflects the current database structure
+
+## Step 6: Understand What Just Changed in the Database 🗄️
+
+#### Before
+
+```text
+User table
+  → Minimal authentication information
+```
+
+#### After
+
+```text
+User table
+  → Authentication + application user data
+```
+
+#### Important
+
+- The User model now supports:
+  - identity
+  - authentication
+  - profile rendering
+  - user personalization
+
+#### System Shift
+
+- Authentication user
+  → Application user
+
+#### Reality
+
+- The application can now store:
+  - names
+  - bios
+  - roles
+  - avatar information
+
+#### Important
+
+```text
+The database can now support authenticated UI experiences
+```
+
+> The backend now supports richer frontend behavior
+
+## Step 7: Add User Information to the Database 🗄️
+
+#### Important
+
+- The database schema now supports:
+  - role
+  - bio
+  - avatar information
+  - public identity information
+
+#### But existing users may still contain:
+
+```text
+Empty values
+```
+
+#### Why this happens
+
+- The schema changed AFTER users were already created.
+
+#### Reality
+
+```text
+Database structure evolved
+BUT
+Existing records did not automatically gain new data
+```
+
+#### Important
+
+- The application can only render:
+  - data that actually exists
+  - values stored in the database
+
+#### Open Prisma Studio
+
+```bash
+npx prisma studio
+```
+
+#### Then update your existing user record.
+
+- **Example**
+
+```text
+name: Peter Olum
+
+username: peterolum
+
+role: Modern Fullstack Web Developer
+
+bio: Simplifying the web
+
+avatarUrl: /assets/Cartoon-Antelope-Avatar.png
+```
+
+#### Important
+
+- `avatarUrl` stores:
+
+```text
+A reference to the image
+```
+
+- **NOT:**
+
+```text
+The image file itself
+```
+
+#### Mental Model
+
+```text
+Database
+  → Stores asset references
+
+Frontend
+  → Renders assets
+```
+
+#### Important
+
+- This lesson is NOT about:
+  - onboarding systems
+  - settings pages
+  - image uploads
+  - avatar management systems
+
+#### The goal is simply:
+
+```text
+Store authenticated user information in the database
+```
+
+> The UI can only render the information the database actually contains
+
+## Step 8: Load the Authenticated User 🔍
+
+- Open:
+
+```tsx
+app/routes/home.tsx
+```
+
+#### Current loader
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				userId,
+				isFollowing: false,
+			},
+		})
+	}
+
+	return { messages, profile }
+}
+```
+
+#### Important
+
+- The route currently loads:
+  - messages
+  - profile data
+
+#### But NOT:
+
+```text
+The authenticated user itself
+```
+
+#### Add User Loading
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	})
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				userId,
+				isFollowing: false,
+			},
+		})
+	}
+
+	return { user, messages, profile }
+}
+```
+
+#### What changed
+
+- The route now:
+  - authenticates the request
+  - loads authenticated identity
+  - loads authenticated user data
+
+#### System Flow
+
+```text
+Request
+  → Session
+  → userId
+  → User Lookup
+  → Authenticated User
+```
+
+#### Important
+
+```text
+Identity is now becoming usable application information
+```
+
+> Authentication now powers application behavior
+
+## Step 9: Access the User Inside the Component 🎨
+
+#### Before
+
+```ts
+const { messages, profile } = loaderData
+```
+
+#### Update it
+
+```ts
+const { user, messages, profile } = loaderData
+```
+
+#### Important
+
+- The component now has access to:
+  - authenticated user data
+  - authenticated route data
+  - authenticated application state
+
+#### Mental Model
+
+```text
+Loader
+  → Returns authenticated user
+
+Component
+  → Renders authenticated user
+```
+
+> Route loaders connect backend identity to frontend UI
+
+## Step 10: Replace the Hardcoded UI 🖥️
+
+#### Before
+
+```ts
+<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+	<img
+		src={cartoonAntelopeAvatar}
+		alt='Profile avatar'
+		className='h-20 w-20 rounded-full object-cover'
+	/>
+</div>
+
+<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+	Peter Olum
+</h2>
+
+<p className='text-sm text-slate-500'>
+	Modern Fullstack Web Developer
+</p>
+
+<p className='mt-4 text-sm text-slate-500'>
+	Simplifying the web
+</p>
+```
+
+#### Problem
+
+```text
+UI is still hardcoded
+```
+
+#### Important
+
+- The component still depends on:
+  - hardcoded identity information
+  - imported avatar assets
+
+#### Reality
+
+```text
+Authenticated user data still has not fully reached the UI
+```
+
+#### Remove the Avatar Import
+
+- Remove:
+
+```ts
+import cartoonAntelopeAvatar from '~/assets/Cartoon-Antelope-Avatar.png?url'
+```
+
+#### Important
+
+```ts
+- The avatar will now come directly from:
+  - authenticated database data
+  - user information loaded by the route
+```
+
+#### Replace it with
+
+```ts
+<div className='mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-slate-100'>
+	<img
+		src={user?.avatarUrl || undefined}
+		alt={user?.name ?? 'Profile avatar'}
+		className='h-20 w-20 rounded-full object-cover'
+	/>
+</div>
+
+<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+	{user?.name}
+</h2>
+
+<p className='text-sm text-slate-500'>
+	{user?.role}
+</p>
+
+<p className='mt-4 text-sm text-slate-500'>
+	{user?.bio}
+</p>
+```
+
+#### What changed
+
+- The UI now renders:
+  - authenticated user data
+  - database information
+  - avatar information
+  - real application state
+
+#### Important
+
+- The avatar now comes directly from:
+
+  ```text
+  user.avatarUrl
+  ```
+
+#### Example database value
+
+```text
+/images/Cartoon-Antelope-Avatar.png
+```
+
+#### Important
+
+- The database stores:
+
+```text
+Public asset URLs
+```
+
+- **NOT:**
+
+  ```text
+  Imported frontend assets
+  ```
+
+- **Mental Model:**
+
+```text
+Database
+  → Stores public asset URLs
+
+Frontend
+  → Renders authenticated user data
+```
+
+#### Why `|| undefined` matters
+
+```ts
+src={user?.avatarUrl || undefined}
+```
+
+- Prisma database fields may contain:
+
+  ```text
+  null
+  ```
+
+- But the `<img>` element expects:
+
+  ```text
+  string | undefined
+  ```
+
+- Reality
+
+```text
+Database null values
+  → Converted into undefined for the browser
+```
+
+> Real applications render authenticated user information directly from
+> the database
+
+## Step 11: Understand the Architectural Shift 🧠
+
+#### Before
+
+```text
+Authentication system
+  → Only controlled access
+```
+
+#### After
+
+```text
+Authentication system
+  → Powers authenticated experiences
+```
+
+#### Important
+
+- The application can now:
+  - identify users
+  - authenticate users
+  - protect routes
+  - load authenticated users
+  - personalize interfaces
+
+#### System Evolution
+
+- Identity
+  → Authentication
+  → Protection
+  → Authenticated user loading
+  → Dynamic authenticated UI
+
+#### Important
+
+- The UI is no longer:
+  - hardcoded
+  - static
+  - disconnected from authentication
+- Instead:
+  - Authenticated identity now flows directly into the UI
+
+> Identity is now flowing through the application architecture
+
+## Step 12: The Full Flow Now 🔄
+
+#### Current Architecture
+
+```text
+Request
+  → Session
+  → userId
+  → Database User Lookup
+  → Authenticated User
+  → Route Data
+  → UI
+```
+
+#### Important
+
+- The system now supports:
+  - authentication
+  - protection
+  - authenticated user loading
+  - personalized interfaces
+
+#### Example
+
+```text
+Database
+  → name
+  → role
+  → bio
+  → avatarUrl
+
+UI
+  → Renders authenticated user information
+```
+
+#### System Shift
+
+```text
+Authenticated identity
+  → Usable application user
+```
+
+> Authentication is now becoming application behavior
+
+## Step 13: Understand the Responsibility Separation 🧩
+
+#### Authentication System
+
+```text
+Identifies authenticated users
+```
+
+#### Database
+
+```text
+Stores authenticated user information
+```
+
+#### Routes
+
+```text
+Load authenticated application data
+```
+
+#### UI
+
+```text
+Render authenticated experiences
+```
+
+#### Important
+
+- Each system now has:
+  - a focused responsibility
+  - a clear architectural purpose
+
+#### Mental Model
+
+```text
+Authentication
+  → Identity
+
+Database
+  → User information
+
+Routes
+  → Data loading
+
+UI
+  → Rendering
+```
+
+> Good systems separate responsibilities clearly
+
+## Step 14: What Just Changed in the Architecture 🏗️
+
+#### Lesson 16
+
+```text
+Identity was created
+```
+
+#### Lesson 17
+
+```text
+Identity was secured
+```
+
+#### Lesson 18
+
+```text
+Identity controlled navigation
+```
+
+#### Lesson 19
+
+```text
+Protection became reusable
+```
+
+#### Lesson 20
+
+```text
+Authenticated identity became usable application data
+```
+
+#### System Evolution
+
+```text
+Identity
+  → Security
+  → Authentication
+  → Flow Control
+  → Centralized Protection
+  → Authenticated User Loading
+  → Dynamic Authenticated UI
+```
+
+> The authentication system is becoming part of the application architecture
+
+## Step 15: Why This Matters 💡
+
+- Without authenticated user loading:
+  - UIs stay hardcoded
+  - Applications cannot personalize
+  - User information stays disconnected
+
+#### With authenticated user loading
+
+- Applications can:
+  - personalize interfaces
+  - render user information
+  - build authenticated experiences
+  - connect identity to UI behavior
+
+#### Example
+
+```text
+Authenticated user
+  → Personalized profile card
+```
+
+#### Mental Model
+
+```text
+Authentication becomes useful when user data reaches the UI
+```
+
+> Protected systems become meaningful when identity becomes usable
+
+## Step 16: The Big Idea 🧠
+
+- The application can now:
+  - create identity
+  - secure identity
+  - authenticate users
+  - protect routes
+  - load authenticated users
+  - render authenticated user experiences
+
+#### Important
+
+```text
+Authentication is no longer only about access
+```
+
+#### Instead
+
+```text
+Authentication now powers application behavior
+```
+
+#### System Design
+
+```text
+Authentication System
+  → Identifies users
+
+Database
+  → Stores user information
+
+Routes
+  → Load authenticated data
+
+UI
+  → Render authenticated experiences
+```
+
+> Modern applications connect authentication directly to user experiences
+
+## Step 17: What Comes Next 🔮
+
+#### Remaining Problem
+
+- Routes can now load authenticated users.
+- But multiple routes may eventually repeat:
+
+```ts
+const userId = await requireUserId(request)
+
+const user = await prisma.user.findUnique({
+	where: { id: userId },
+})
+```
+
+#### Reality
+
+```ts
+Authenticated user loading may eventually become repeated logic
+```
+
+#### The Real Question
+
+> How can authenticated user loading become reusable throughout the application?
+
+#### Next Lesson
+
+```text
+Lesson 21 → Centralizing Authenticated User Loading
+```
+
+- The system will learn:
+  - how to reuse authenticated user loading
+  - how to simplify protected routes further
+  - how authentication abstractions evolve
+  - how user access becomes architectural
+
+> - Identity exists
+> - Protection enforces boundaries
+> - Authenticated users reach the application
+> - Next: Authenticated user loading becomes reusable

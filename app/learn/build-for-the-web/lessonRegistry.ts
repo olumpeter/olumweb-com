@@ -20,6 +20,8 @@ import verificationAndTrustedIdentity from '~/learn/build-for-the-web/images/015
 import creatingIdentitySignup from '~/learn/build-for-the-web/images/016-creating-identity-signup/thumbnail/016-creating-identity-signup.png?url'
 import passwordHashingSecureCredentials from '~/learn/build-for-the-web/images/017-password-hashing-secure-credentials/thumbnail/017-password-hashing-secure-credentials.png?url'
 import redirectingAuthenticatedUsers from '~/learn/build-for-the-web/images/018-redirecting-authenticated-users/thumbnail/018-redirecting-authenticated-users.png?url'
+import centralizingRouteProtection from '~/learn/build-for-the-web/images/019-centralizing-route-protection/thumbnail/019-centralizing-route-protection.png?url'
+import loadingTheAuthenticatedUser from '~/learn/build-for-the-web/images/020-loading-the-authenticated-user/thumbnail/020-loading-the-authenticated-user.png?url'
 
 /**
  * Client-side lesson registry
@@ -206,6 +208,26 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Redirecting Authenticated Users',
 			lessonNumber: 18,
+			published: true,
+		},
+	},
+	'centralizing-route-protection': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/019-centralizing-route-protection.mdx'),
+		thumbnail: centralizingRouteProtection,
+		frontmatter: {
+			title: 'Centralizing Route Protection',
+			lessonNumber: 19,
+			published: true,
+		},
+	},
+	'loading-the-authenticated-user': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/020-loading-the-authenticated-user.mdx'),
+		thumbnail: loadingTheAuthenticatedUser,
+		frontmatter: {
+			title: 'Loading the Authenticated User',
+			lessonNumber: 20,
 			published: true,
 		},
 	},
