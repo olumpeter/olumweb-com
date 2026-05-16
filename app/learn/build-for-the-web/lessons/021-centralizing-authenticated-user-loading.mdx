@@ -1,0 +1,1230 @@
+---
+title: 'Centralizing Authenticated User Loading'
+slug: 'centralizing-authenticated-user-loading'
+series: 'build-for-the-web'
+lessonNumber: 21
+path: '/learn/build-for-the-web/centralizing-authenticated-user-loading'
+publish: true
+readingTime: '40 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 20, the system learned how to:
+  - Load authenticated users
+  - Connect identity to application data
+  - Render authenticated UI experiences
+
+```text
+Request
+  → Session
+  → userId
+  → Database User Lookup
+  → Authenticated User
+  → Route Data
+  → UI
+```
+
+- The application can now:
+  - authenticate users
+  - protect routes
+  - load authenticated users
+  - render personalized interfaces
+
+#### Important
+
+- The system now understands:
+
+> Authentication is becoming application behavior
+
+- But another architectural problem now exists.
+
+#### The Problem
+
+- Multiple protected routes may eventually repeat:
+
+```ts
+const userId = await requireUserId(request)
+
+const user = await prisma.user.findUnique({
+	where: { id: userId },
+})
+```
+
+#### Reality
+
+```text
+Authenticated user loading is becoming repeated logic
+```
+
+#### Important
+
+- Right now:
+  - the application is still small
+  - route count is still low
+  - authentication flows are still simple
+
+#### But eventually:
+
+```text
+More protected routes
+  → More repeated authenticated user loading
+```
+
+#### Example
+
+- Future routes may include:
+
+```text
+/dashboard
+/settings
+/profile
+/messages
+/account
+```
+
+#### Reality
+
+- Each protected route may eventually repeat:
+
+```ts
+const userId = await requireUserId(request)
+
+const user = await prisma.user.findUnique({
+	where: { id: userId },
+})
+```
+
+#### Problem
+
+```text
+Authentication architecture is starting to duplicate itself
+```
+
+> Repeated authentication logic eventually becomes an architectural problem
+
+## The Constraint 🧩
+
+- We are still not building:
+  - global authentication state
+  - authorization systems
+  - role permissions
+  - user caching layers
+  - session synchronization systems
+
+- We are building:
+
+```text
+Reusable authenticated user loading
+```
+
+> This lesson is about centralizing authenticated user loading
+
+## Mental Model 🧠
+
+#### Before
+
+```text
+Every protected route
+  → Loads authenticated users manually
+```
+
+#### After
+
+```text
+Protected routes
+  → Reuse centralized authenticated user loading
+```
+
+#### System Shift
+
+```text
+Repeated authentication behavior
+  → Shared authentication abstraction
+```
+
+#### Core Idea
+
+```text
+Authentication patterns should become reusable
+```
+
+#### Even Simpler
+
+```text
+One authentication responsibility
+  → One reusable utility
+```
+
+> Good architecture reduces duplication
+
+## Step 1: Observe the Current User Loading Flow 🔍
+
+- Open:
+
+```text
+app/routes/home.tsx
+```
+
+#### Current Loader
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	})
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				userId,
+				isFollowing: false,
+			},
+		})
+	}
+
+	return { user, messages, profile }
+}
+```
+
+#### Important
+
+- The route currently:
+  - protects authenticated access
+  - loads authenticated identity
+  - loads authenticated users
+  - loads authenticated application data
+
+#### Example
+
+```ts
+const userId = await requireUserId(request)
+```
+
+#### Then
+
+```ts
+const user = await prisma.user.findUnique({
+	where: { id: userId },
+})
+```
+
+#### Reality
+
+```text
+The route is manually loading authenticated users
+```
+
+#### Important
+
+- Right now:
+  - this works correctly
+  - the architecture is still manageable
+  - the logic is still understandable
+
+#### But another problem is slowly appearing.
+
+#### Problem
+
+```text
+Authenticated user loading may eventually spread into many routes
+```
+
+> Working architecture can still evolve into duplicated architecture
+
+## Step 2: Observe the Repetition Pressure 🧩
+
+#### Imagine Another Protected Route
+
+```text
+app/routes/settings.tsx
+```
+
+#### Example
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	})
+
+	return { user }
+}
+```
+
+#### Then Another Route
+
+```text
+app/routes/profile.tsx
+```
+
+#### Example
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	})
+
+	return { user }
+}
+```
+
+#### Important
+
+- The authentication flow is now repeating.
+
+#### Reality
+
+```text
+Protected routes are starting to share identical authentication behavior
+```
+
+#### Problem
+
+- Repetition eventually creates:
+  - duplicated logic
+  - inconsistent behavior
+  - architectural maintenance problems
+
+#### Example
+
+- One route may eventually handle missing users correctly.
+
+```ts
+if (!user) {
+	throw redirect('/login')
+}
+```
+
+#### Another Route May Forget Entirely
+
+```ts
+return { user }
+```
+
+#### Problem
+
+- The UI may eventually assume:
+
+```ts
+user.name
+```
+
+#### But `findUnique()` may return:
+
+```text
+null
+```
+
+#### Reality
+
+```text
+Authentication behavior can slowly become inconsistent across routes
+```
+
+#### Important
+
+- The problem is NOT only:
+  - repeated code
+
+#### The deeper problem is:
+
+```text
+Repeated authentication responsibility
+```
+
+> Shared authentication behavior should eventually become centralized
+
+## Step 3: Understand the Responsibility Problem 🧠
+
+#### Current Route Responsibilities
+
+```text
+Route
+  → Protects access
+  → Loads identity
+  → Loads authenticated user
+  → Handles null safety
+  → Loads route data
+  → Renders UI
+```
+
+#### Important
+
+- The route is now handling:
+  - authentication enforcement
+  - authenticated user loading
+  - authentication safety
+  - application behavior
+
+#### Reality
+
+```text
+Authentication responsibilities are expanding inside routes
+```
+
+#### Mental Model
+
+```text
+Routes should focus on:
+  → Route-specific application behavior
+```
+
+#### Example
+
+```text
+Messages
+Profile data
+Settings data
+Dashboard data
+```
+
+#### NOT Eventually Handling
+
+```text
+Shared authentication infrastructure
+```
+
+#### System Shift
+
+```text
+Routes
+  → Consume authentication behavior
+
+Authentication utilities
+  → Handle authentication behavior
+```
+
+> Good architecture separates responsibilities clearly
+
+## Step 4: Observe the Existing Authentication Abstractions 🛠️
+
+- Open:
+
+```text
+app/data/auth.server.ts
+```
+
+#### Current Structure
+
+```ts
+export async function getCurrentUserId(request: Request) {
+	const session = await getSession(request.headers.get('Cookie'))
+
+	return session.get('userId')
+}
+
+export async function requireUserId(request: Request) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		throw redirect('/login')
+	}
+
+	return userId
+}
+```
+
+#### Important
+
+- The authentication system already separates:
+  - session reading
+  - authentication enforcement
+
+#### Example
+
+```text
+getCurrentUserId()
+  → Reads authenticated identity
+
+requireUserId()
+  → Enforces authenticated access
+```
+
+#### Reality
+
+```text
+Authentication abstractions are already evolving
+```
+
+#### Mental Model
+
+```text
+Authentication responsibility
+  → Small focused utility
+```
+
+#### But another authentication responsibility still remains outside.
+
+#### Problem
+
+```text
+Authenticated user loading still happens inside routes
+```
+
+#### Example
+
+```ts
+const user = await prisma.user.findUnique({
+	where: { id: userId },
+})
+```
+
+#### Reality
+
+```text
+Routes are still responsible for authenticated user loading
+```
+
+> Authentication architecture is only partially centralized
+
+## Step 5: Add a Reusable Authenticated User Loader ⚡
+
+- Inside:
+
+```text
+app/data/auth.server.ts
+```
+
+- Add:
+
+```ts
+import { prisma } from '~/data/prisma.server'
+
+export async function requireUser(request: Request) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	})
+
+	if (!user) {
+		throw redirect('/login')
+	}
+
+	return user
+}
+```
+
+#### Important
+
+- The authentication system already had:
+
+```text
+getCurrentUserId()
+  → Reads authenticated identity
+
+requireUserId()
+  → Enforces authenticated access
+```
+
+#### Now the system also has:
+
+```text
+requireUser()
+  → Loads authenticated users
+```
+
+#### System Evolution
+
+```text
+Session Reading
+  → Authentication Enforcement
+  → Authenticated User Loading
+```
+
+#### What `requireUser()` does
+
+- The utility now:
+  - verifies authenticated access
+  - loads authenticated user data
+  - guarantees authenticated users exist
+
+#### Example
+
+```text
+Authenticated session exists
+BUT
+Database user no longer exists
+```
+
+#### Reality
+
+- This can theoretically happen if:
+  - the database resets
+  - users are deleted manually
+  - orphaned sessions still exist
+
+#### Important
+
+```text
+Authenticated identity must map to a real database user
+```
+
+#### Example
+
+```ts
+if (!user) {
+	throw redirect('/login')
+}
+```
+
+#### Reality
+
+```text
+Protected routes should never receive invalid authenticated users
+```
+
+#### Mental Model
+
+```text
+getCurrentUserId()
+  → Reads identity
+
+requireUserId()
+  → Protects identity
+
+requireUser()
+  → Loads authenticated application users
+```
+
+> Authentication abstractions are evolving layer by layer
+
+## Step 6: Understand the Architectural Shift 🧠
+
+#### Before
+
+```text
+Routes
+  → Loaded authenticated users manually
+```
+
+#### Example
+
+```ts
+const userId = await requireUserId(request)
+
+const user = await prisma.user.findUnique({
+	where: { id: userId },
+})
+
+if (!user) {
+	throw redirect('/login')
+}
+```
+
+#### After
+
+```text
+Authentication utility
+  → Loads authenticated users
+```
+
+#### Example
+
+```ts
+const user = await requireUser(request)
+```
+
+#### Important
+
+- The architecture is now evolving from:
+
+```text
+Authentication enforcement only
+```
+
+#### Into:
+
+```text
+Authentication infrastructure
+```
+
+#### Reality
+
+- The authentication system now controls:
+  - session validation
+  - identity extraction
+  - authentication enforcement
+  - authenticated user loading
+  - authentication safety guarantees
+
+#### System Shift
+
+```text
+Authentication helpers
+  → Authentication infrastructure
+```
+
+> Authentication systems evolve into reusable infrastructure
+
+## Step 7: Use the New Utility 🔄
+
+- Open:
+
+```text
+app/routes/home.tsx
+```
+
+#### Current Loader
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	})
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				userId,
+				isFollowing: false,
+			},
+		})
+	}
+
+	return { user, messages, profile }
+}
+```
+
+#### Problem
+
+- The route is still manually loading authenticated users.
+
+#### Example
+
+```ts
+const user = await prisma.user.findUnique({
+	where: { id: userId },
+})
+```
+
+#### Replace it with
+
+```ts
+const user = await requireUser(request)
+```
+
+#### Update the Import
+
+```ts
+import { requireUserId, requireUser } from '~/data/auth.server'
+```
+
+#### Updated Loader
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const user = await requireUser(request)
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				userId,
+				isFollowing: false,
+			},
+		})
+	}
+
+	return { user, messages, profile }
+}
+```
+
+#### Important
+
+- `requireUser()` already internally uses:
+
+```ts
+requireUserId(request)
+```
+
+#### But the route still separately uses:
+
+```ts
+const userId = await requireUserId(request)
+```
+
+- for:
+  - message filtering
+  - profile filtering
+  - existing route behavior
+
+#### Reality
+
+```text
+The route is still evolving gradually toward centralized authentication behavior
+```
+
+#### Important
+
+- The route still uses:
+  - `userId`
+  - route-specific filtering
+  - existing application behavior
+
+#### But authenticated user loading is now centralized.
+
+#### Reality
+
+```text
+The route no longer manually loads authenticated users
+```
+
+#### Mental Model
+
+```text
+requireUserId()
+  → Route-specific identity usage
+
+requireUser()
+  → Centralized authenticated user loading
+```
+
+> Centralized authentication utilities simplify route architecture
+
+## Step 8: Observe What Just Changed 🧠
+
+#### Before
+
+```text
+Every protected route
+  → Implemented authenticated user loading manually
+```
+
+#### Example
+
+```ts
+const user = await prisma.user.findUnique({
+	where: { id: userId },
+})
+
+if (!user) {
+	throw redirect('/login')
+}
+```
+
+#### After
+
+```text
+Protected routes
+  → Reuse centralized authenticated user loading
+```
+
+#### Example
+
+```ts
+const user = await requireUser(request)
+```
+
+#### Important
+
+- Routes no longer need to remember:
+  - database user lookups
+  - null handling
+  - redirect enforcement
+  - authenticated user guarantees
+
+#### Reality
+
+```text
+Authentication complexity is becoming centralized
+```
+
+#### System Shift
+
+```text
+Repeated authentication behavior
+  → Centralized authentication infrastructure
+```
+
+> Good abstractions reduce repeated architectural mistakes
+
+## Step 9: Simplify the UI 🎨
+
+#### Before
+
+```tsx
+<img
+	src={user?.avatarUrl || undefined}
+	alt={user?.name ?? 'Profile avatar'}
+	className='h-20 w-20 rounded-full object-cover'
+/>
+
+<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+	{user?.name}
+</h2>
+
+<p className='text-sm text-slate-500'>
+	{user?.role}
+</p>
+
+<p className='mt-4 text-sm text-slate-500'>
+	{user?.bio}
+</p>
+```
+
+#### Problem
+
+```text
+The UI still assumes user may not exist
+```
+
+#### But now:
+
+```text
+requireUser() guarantees authenticated users exist
+```
+
+#### Important
+
+- `requireUser()` now guarantees:
+  - authenticated users exist
+  - protected routes always receive users
+
+#### Reality
+
+```text
+The component no longer needs defensive optional chaining
+```
+
+#### Replace it with
+
+```tsx
+<img
+	src={user.avatarUrl || undefined}
+	alt={user.name ?? 'Profile avatar'}
+	className='h-20 w-20 rounded-full object-cover'
+/>
+
+<h2 className='mt-4 text-xl font-semibold text-slate-900'>
+	{user.name}
+</h2>
+
+<p className='text-sm text-slate-500'>
+	{user.role}
+</p>
+
+<p className='mt-4 text-sm text-slate-500'>
+	{user.bio}
+</p>
+```
+
+#### Important
+
+- The UI now trusts:
+  - centralized authentication guarantees
+  - authenticated route guarantees
+  - reusable authentication infrastructure
+
+#### Reality
+
+```text
+Authenticated user existence is now guaranteed
+```
+
+#### System Shift
+
+```text
+Defensive UI rendering
+  → Guaranteed authenticated rendering
+```
+
+> Strong backend guarantees simplify frontend code
+
+## Step 10: The Full Flow Now 🔄
+
+#### Current Architecture
+
+```text
+Request
+  → requireUser()
+  → requireUserId()
+  → getCurrentUserId()
+  → Session Lookup
+  → userId
+  → Database User Lookup
+  → Authenticated User
+  → Route Data
+  → UI
+```
+
+#### Important
+
+- The system now supports:
+  - centralized authentication enforcement
+  - centralized authenticated user loading
+  - reusable authentication guarantees
+  - authenticated UI rendering
+
+#### Reality
+
+```text
+Authentication complexity is becoming centralized
+```
+
+> Centralized systems become easier to maintain
+
+## Step 11: Understand the Responsibility Separation 🧩
+
+#### getCurrentUserId()
+
+```text
+Reads authenticated identity
+```
+
+#### requireUserId()
+
+```text
+Enforces authenticated access
+```
+
+#### requireUser()
+
+```text
+Loads authenticated users
+```
+
+#### Routes
+
+```text
+Handle route-specific application behavior
+```
+
+#### Database
+
+```text
+Stores authenticated user information
+```
+
+#### UI
+
+```text
+Renders authenticated experiences
+```
+
+#### Important
+
+- Each layer now has:
+  - clearer responsibilities
+  - reduced duplication
+  - simpler architecture
+
+#### Mental Model
+
+```text
+Authentication Utilities
+  → Authentication behavior
+
+Database
+  → User information
+
+Routes
+  → Application behavior
+
+UI
+  → Rendering
+```
+
+> Good systems separate architectural responsibilities clearly
+
+## Step 12: What Just Changed in the Architecture 🏗️
+
+#### Lesson 16
+
+```text
+Identity was created
+```
+
+#### Lesson 17
+
+```text
+Identity was secured
+```
+
+#### Lesson 18
+
+```text
+Identity controlled navigation
+```
+
+#### Lesson 19
+
+```text
+Protection became reusable
+```
+
+#### Lesson 20
+
+```text
+Authenticated identity became usable application data
+```
+
+#### Lesson 21
+
+```text
+Authenticated user loading became centralized
+```
+
+#### System Evolution
+
+```text
+Identity
+  → Security
+  → Authentication
+  → Flow Control
+  → Centralized Protection
+  → Authenticated User Loading
+  → Reusable Authenticated User Loading
+```
+
+> Authentication is evolving into reusable application infrastructure
+
+## Step 13: Why This Matters 💡
+
+- Without centralized authenticated user loading:
+  - authentication logic spreads
+  - routes duplicate behavior
+  - inconsistencies slowly appear
+
+#### With centralized authenticated user loading
+
+- Applications gain:
+  - reusable authentication architecture
+  - simpler protected routes
+  - stronger guarantees
+  - cleaner system design
+
+#### Example
+
+```text
+One authentication utility
+  → Many protected routes
+```
+
+#### Mental Model
+
+```text
+Good abstractions reduce duplication while improving reliability
+```
+
+> Reusable authentication systems improve application architecture
+
+## Step 14: The Big Idea 🧠
+
+- The application can now:
+  - create identity
+  - secure identity
+  - authenticate users
+  - protect routes
+  - load authenticated users
+  - render authenticated experiences
+  - centralize authenticated user loading
+
+#### Important
+
+```text
+Authentication is no longer isolated route logic
+```
+
+#### Instead
+
+```text
+Authentication is becoming reusable infrastructure
+```
+
+#### System Design
+
+```text
+getCurrentUserId()
+  → Reads identity
+
+requireUserId()
+  → Enforces identity
+
+requireUser()
+  → Loads authenticated users
+
+Routes
+  → Consume authentication behavior
+
+UI
+  → Render authenticated experiences
+```
+
+> Good authentication systems become architectural infrastructure
+
+## Step 15: What Comes Next 🔮
+
+#### Remaining Problem
+
+- Routes can now easily access authenticated users.
+- But multiple components throughout the UI tree may eventually need:
+  - authenticated user information
+  - authenticated state awareness
+  - shared authenticated access
+
+#### Reality
+
+```text
+Authenticated user access may eventually spread throughout the UI tree
+```
+
+#### The Real Question
+
+> How can authenticated user data become available throughout the application?
+
+#### Next Lesson
+
+```text
+Lesson 22 → Sharing Authenticated User Data Across the Application
+```
+
+- The system will learn:
+  - how authenticated data flows through layouts
+  - how shared route data works
+  - how authenticated application state evolves
+  - how authenticated UI architecture scales
+
+> - Identity exists
+> - Protection enforces boundaries
+> - Authenticated users reach the application
+> - Authenticated user loading became reusable
+> - Next: Authenticated user data becomes shared application architecture

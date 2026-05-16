@@ -22,6 +22,7 @@ import passwordHashingSecureCredentials from '~/learn/build-for-the-web/images/0
 import redirectingAuthenticatedUsers from '~/learn/build-for-the-web/images/018-redirecting-authenticated-users/thumbnail/018-redirecting-authenticated-users.png?url'
 import centralizingRouteProtection from '~/learn/build-for-the-web/images/019-centralizing-route-protection/thumbnail/019-centralizing-route-protection.png?url'
 import loadingTheAuthenticatedUser from '~/learn/build-for-the-web/images/020-loading-the-authenticated-user/thumbnail/020-loading-the-authenticated-user.png?url'
+import centralizingAuthenticatedUserLoading from '~/learn/build-for-the-web/images/021-centralizing-authenticated-user-loading/thumbnail/021-centralizing-authenticated-user-loading.png?url'
 
 /**
  * Client-side lesson registry
@@ -228,6 +229,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Loading the Authenticated User',
 			lessonNumber: 20,
+			published: true,
+		},
+	},
+	'centralizing-authenticated-user-loading': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/021-centralizing-authenticated-user-loading.mdx'),
+		thumbnail: centralizingAuthenticatedUserLoading,
+		frontmatter: {
+			title: 'Centralizing Authenticated User Loading',
+			lessonNumber: 21,
 			published: true,
 		},
 	},
