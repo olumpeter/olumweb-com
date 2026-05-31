@@ -1,0 +1,1228 @@
+---
+title: 'Sharing Authenticated User Data Across the Application'
+slug: 'sharing-authenticated-user-data-across-the-application'
+series: 'build-for-the-web'
+lessonNumber: 22
+path: '/learn/build-for-the-web/sharing-authenticated-user-data-across-the-application'
+publish: true
+readingTime: '45 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 21, the system learned how to:
+  - centralize authenticated user loading
+  - reuse authentication behavior
+  - reduce duplicated authentication logic
+  - simplify protected route architecture
+
+```text
+Request
+  → requireUser()
+  → Authenticated User
+  → Route Data
+  → UI
+```
+
+- The application can now:
+  - authenticate users
+  - protect routes
+  - load authenticated users
+  - centralize authentication behavior
+  - render authenticated experiences
+
+#### Important
+
+```text
+Authentication is becoming shared application infrastructure
+```
+
+#### But another architectural problem now exists.
+
+#### The Problem
+
+- Right now:
+  - protected routes can load authenticated users
+  - authenticated pages can render authenticated UI
+  - routes can access authenticated application data
+
+#### But the UI tree is growing.
+
+#### Example
+
+```text
+Navbar
+Sidebar
+Account Menu
+Dashboard Layout
+Settings Layout
+```
+
+#### Reality
+
+```text
+Many UI components may eventually need authenticated user access
+```
+
+#### Example
+
+- A navbar may eventually need:
+
+```text
+Authenticated avatar
+Authenticated name
+Authenticated navigation
+```
+
+#### Problem
+
+- Right now:
+  - authenticated user data only exists inside route loaders
+
+#### Example
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const user = await requireUser(request)
+
+	return { user }
+}
+```
+
+#### Reality
+
+```text
+Authenticated user data is still isolated inside individual routes
+```
+
+> Shared application UI eventually needs shared authenticated data
+
+- We are still not building:
+  - Redux
+  - Zustand
+  - global React Context authentication systems
+  - websocket synchronization
+  - client-side authentication caching
+  - complex global state management
+
+- We are building:
+
+```text
+Shared authenticated route data
+```
+
+> This lesson is about sharing authenticated user data through route architecture.
+
+## Mental Model 🧠
+
+#### Before
+
+```text
+Each protected route
+  → Loaded authenticated users independently
+```
+
+#### After
+
+```text
+Shared parent route
+  → Provides authenticated user data
+```
+
+#### System Shift
+
+```text
+Authenticated route data
+  → Shared application architecture
+```
+
+#### Core Idea
+
+```text
+Shared layouts should provide shared authenticated data
+```
+
+#### Even Simpler
+
+```text
+One authenticated user
+  → Many authenticated UI components
+```
+
+> Shared route boundaries naturally become shared data boundaries
+
+## Step 1: Observe the Current User Loading Flow 🔍
+
+- Open:
+
+```text
+app/routes/home.tsx
+```
+
+#### Current Loader
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const user = await requireUser(request)
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				userId,
+				isFollowing: false,
+			},
+		})
+	}
+
+	return { user, messages, profile }
+}
+```
+
+#### Important
+
+- The route currently:
+  - protects authenticated access
+  - loads authenticated users
+  - loads authenticated application data
+  - renders authenticated UI
+
+#### Example
+
+```ts
+const user = await requireUser(request)
+```
+
+#### Reality
+
+```text
+Authenticated user data currently lives inside this route
+```
+
+#### Important
+
+- Right now:
+  - this works correctly
+  - the architecture is still manageable
+  - the UI tree is still relatively small
+
+#### But another problem is slowly appearing.
+
+#### Problem
+
+```text
+Authenticated user access may eventually spread throughout the UI tree
+```
+
+> Working architecture can still evolve into fragmented architecture
+
+## Step 2: Observe the UI Tree Growth 🧩
+
+#### Imagine a Larger Application
+
+```text
+Root Layout
+  → Navbar
+  → Sidebar
+  → Main Content
+  → Account Menu
+  → Settings Navigation
+```
+
+#### Important
+
+- Multiple UI components may eventually need:
+
+```text
+Authenticated user information
+```
+
+#### Example
+
+```text
+Navbar
+  → User avatar
+
+Sidebar
+  → User role
+
+Account Menu
+  → User profile information
+```
+
+#### Reality
+
+```text
+Authenticated UI behavior is starting to spread throughout the application
+```
+
+#### But another problem now appears.
+
+#### Problem
+
+- The authenticated user currently only exists inside:
+
+```text
+Route loaders
+```
+
+#### Example
+
+```ts
+return { user }
+```
+
+#### Reality
+
+```text
+Shared UI components cannot automatically access authenticated user data
+```
+
+> Shared UI eventually needs shared application data
+
+## Step 3: Observe the Repetition Pressure 🧩
+
+#### Imagine Another Route
+
+```text
+app/routes/settings.tsx
+```
+
+#### Example
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const user = await requireUser(request)
+
+	return { user }
+}
+```
+
+#### Then Another Route
+
+```text
+app/routes/profile.tsx
+```
+
+#### Example
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const user = await requireUser(request)
+
+	return { user }
+}
+```
+
+#### Important
+
+- The authenticated user is now repeating across routes.
+
+#### Reality
+
+```text
+Authenticated application state is starting to duplicate itself
+```
+
+#### Problem
+
+- Repetition eventually creates:
+  - duplicated authenticated state
+  - inconsistent authenticated UI
+  - fragmented application architecture
+
+#### Example
+
+- One route may eventually return:
+
+```ts
+return { user }
+```
+
+#### Another Route May Forget
+
+```ts
+return {}
+```
+
+#### Another Route May Eventually Return Partial Data
+
+```ts
+return {
+	user: {
+		name: user.name,
+	},
+}
+```
+
+#### Reality
+
+```text
+Authenticated application state can slowly become inconsistent across routes
+```
+
+#### Important
+
+- The deeper problem is NOT only:
+  - repeated code
+
+#### The deeper problem is:
+
+```text
+Authenticated application state is becoming fragmented
+```
+
+> Shared application behavior should eventually become centralized
+
+## Step 4: Understand the Responsibility Problem 🧠
+
+#### Current Route Responsibilities
+
+```text
+Routes
+  → Protect authenticated access
+  → Load authenticated users
+  → Load route data
+  → Render authenticated UI
+```
+
+#### Important
+
+- Routes are now handling:
+  - authentication behavior
+  - authenticated state loading
+  - application behavior
+  - UI rendering
+
+#### Reality
+
+```text
+Authenticated application responsibilities are expanding inside routes
+```
+
+#### Mental Model
+
+```text
+Routes should focus on:
+  → Route-specific application behavior
+```
+
+#### Example
+
+```text
+Messages
+Settings
+Dashboard data
+Profile data
+```
+
+#### NOT Eventually Handling
+
+```text
+Shared authenticated application infrastructure
+```
+
+#### System Shift
+
+```text
+Routes
+  → Consume authenticated application state
+
+Shared parent routes
+  → Provide authenticated application state
+```
+
+> Good architecture separates shared responsibilities clearly
+
+## Step 5: Observe the Root Route 🛠️
+
+- Open:
+
+```text
+app/root.tsx
+```
+
+#### Current Structure
+
+```tsx
+export default function App() {
+	return <Outlet />
+}
+```
+
+#### Important
+
+- The root route currently:
+  - renders the application
+  - renders child routes
+  - controls the application shell
+
+#### But parent routes can also:
+
+```text
+Load shared application data
+```
+
+#### Reality
+
+```text
+Parent routes can share data with child routes
+```
+
+#### Mental Model
+
+```text
+Root route
+  → Shared application boundary
+```
+
+#### Important
+
+- The root route naturally controls:
+  - shared layouts
+  - shared navigation
+  - shared application structure
+  - shared authenticated experiences
+
+#### Example
+
+```text
+Navbar
+Sidebar
+Application Shell
+```
+
+#### Reality
+
+```text
+Shared layouts naturally become shared data boundaries
+```
+
+> Parent routes naturally provide shared application state
+
+## Step 6: Add a Shared Root Loader ⚡
+
+- Open:
+
+```text
+app/root.tsx
+```
+
+- #### Current Structure
+
+```tsx
+export default function App() {
+	return <Outlet />
+}
+```
+
+#### Important
+
+- Right now:
+  - the root route renders the application
+  - the root route renders child routes
+  - the root route controls the application shell
+
+#### But the root route still does NOT load:
+
+```text
+Shared authenticated application data
+```
+
+#### Problem
+
+```text
+The root layout still does not understand authenticated state
+```
+
+#### Reality
+
+- Shared UI components may eventually need:
+  - authenticated user information
+  - authenticated navigation
+  - authenticated application state
+
+#### Example
+
+```text
+Navbar
+Sidebar
+Account Menu
+```
+
+#### But the root route currently has no authenticated data.
+
+#### Mental Model
+
+```text
+Shared layouts should own shared authenticated data
+```
+
+> - Shared UI eventually needs shared state ownership
+> - Shared application UI eventually needs shared application state
+
+- Inside:
+
+```text
+app/root.tsx
+```
+
+- Add these imports:
+
+```tsx
+import {
+	getCurrentUserId,
+	requireUser,
+} from '~/data/auth.server'
+```
+
+#### Then Add a Root Loader
+
+```tsx
+export async function loader({
+	request,
+}: Route.LoaderArgs) {
+	const userId = await getCurrentUserId(request)
+
+	if (!userId) {
+		return {
+			user: null,
+		}
+	}
+
+	const user = await requireUser(request)
+
+	return {
+		user,
+	}
+}
+```
+
+#### Important
+
+- The root route now:
+  - reads authenticated identity
+  - loads authenticated users
+  - provides shared authenticated application data
+
+#### Reality
+
+```text
+The root route now owns shared authenticated state
+```
+
+#### Important
+
+- The root loader uses:
+
+```ts
+getCurrentUserId(request)
+```
+
+#### Instead of:
+
+```ts
+requireUserId(request)
+```
+
+#### Why?
+
+- Because:
+  - public routes still exist
+  - unauthenticated users may still visit the application
+
+#### Example
+
+```text
+/login
+/register
+```
+
+#### Reality
+
+```text
+The root route must support both authenticated and unauthenticated
+application states
+```
+
+#### Mental Model
+
+```text
+Root route
+  → Shared authenticated application boundary
+```
+
+> Parent routes naturally provide shared application state
+
+## Step 7: Use the Shared Data 🔄
+
+- Inside:
+
+```text
+app/root.tsx
+```
+
+#### Current Imports
+
+```tsx
+import {
+	isRouteErrorResponse,
+	Links,
+	Meta,
+	Outlet,
+	Scripts,
+	ScrollRestoration,
+} from 'react-router'
+```
+
+#### Add
+
+```tsx
+useLoaderData
+```
+
+#### Updated Imports
+
+```
+import {
+	isRouteErrorResponse,
+	Links,
+	Meta,
+	Outlet,
+	Scripts,
+	ScrollRestoration,
+	useLoaderData,
+} from 'react-router'
+```
+
+#### Then Update the Layout Component
+
+```tsx
+export function Layout({
+	children,
+}: {
+	children: React.ReactNode
+}) {
+	const { user } = useLoaderData<typeof loader>()
+
+	return (
+		<html lang='en'>
+			<head>
+				<meta charSet='utf-8' />
+
+				<meta
+					name='viewport'
+					content='width=device-width, initial-scale=1'
+				/>
+
+				<Meta />
+
+				<Links />
+			</head>
+
+			<body>
+				<header>
+					{user ? (
+						<p>
+							Welcome back, {user.name}
+						</p>
+					) : (
+						<p>
+							Welcome to the application
+						</p>
+					)}
+				</header>
+
+				{children}
+
+				<ScrollRestoration />
+
+				<Scripts />
+			</body>
+		</html>
+	)
+}
+```
+
+#### Important
+
+- `useLoaderData()` works here because:
+  - the loader exists inside `app/root.tsx`
+  - the layout belongs to the root route
+  - the layout and loader belong to the same route module
+  - the root route owns the shared authenticated data
+
+#### Mental Model
+
+```text
+loader()
+  → Creates route data
+
+useLoaderData()
+  → Reads route data
+```
+
+#### Important
+
+- The layout does NOT import loaders from child routes.
+
+#### Example
+
+```tsx
+import { loader } from './routes/home'
+```
+
+#### This would be incorrect because:
+
+```text
+Parent routes should not depend on child route loaders
+```
+
+#### Reality
+
+```text
+Route hierarchy flows downward through parent routes
+```
+
+#### Important
+
+- The shared authenticated UI now lives inside:
+
+```text
+Layout()
+```
+
+#### Instead of:
+
+```text
+App()
+```
+
+#### Why?
+
+- Because the layout already controls:
+  - the application shell
+  - shared application structure
+  - global application UI
+  - shared rendering boundaries
+
+#### Important
+
+- The `App()` component still remains simple:
+
+```tsx
+export default function App() {
+	return <Outlet />
+}
+```
+
+#### Mental Model
+
+```text
+Layout()
+  → Shared authenticated application UI
+
+App()
+  → Route rendering
+```
+
+#### Reality
+
+```text
+The application shell now understands authenticated state
+```
+
+> Shared layouts naturally become shared authenticated architecture
+
+## Step 8: Observe What Just Changed 🧠
+
+#### Before
+
+```text
+Authenticated user data
+  → Only existed inside protected routes
+```
+
+#### Example
+
+```ts
+const user = await requireUser(request)
+
+return { user }
+```
+
+#### Reality
+
+```text
+Each route controlled authenticated user access independently
+```
+
+#### After
+
+```text
+Authenticated user data
+  → Exists at the application root
+```
+
+#### Example
+
+```ts
+export async function loader({
+	request,
+}: Route.LoaderArgs) {
+	return {
+		user,
+	}
+}
+```
+
+#### Reality
+
+```text
+The root route now provides shared authenticated data
+```
+
+#### Important
+
+- Shared UI components no longer need:
+  - route-specific user loading
+  - duplicated authenticated state
+  - independent authentication awareness
+
+#### System Shift
+
+```text
+Per-route authenticated state
+  → Shared authenticated application state
+```
+
+> Shared parent routes reduce repeated application behavior
+
+## Step 9: Observe the Full Flow 🔄
+
+#### Current Architecture
+
+```text
+Request
+  → Root Loader
+  → getCurrentUserId()
+  → Optional Authentication
+  → requireUser()
+  → Authenticated User
+  → Shared Route Data
+  → Layout()
+  → Child Routes
+  → UI
+```
+
+#### Important
+
+- The system now supports:
+  - centralized authentication enforcement
+  - centralized authenticated user loading
+  - shared authenticated application state
+  - shared authenticated rendering
+
+#### Reality
+
+```text
+Authenticated user data is becoming shared application infrastructure
+```
+
+> Shared systems become easier to maintain
+
+## Step 10: Observe the New Responsibility Boundaries 🧩
+
+#### Before
+
+```text
+Routes
+  → Loaded authenticated users
+  → Rendered authenticated UI
+  → Managed authenticated state
+```
+
+#### After
+
+```text
+Root Route
+  → Provides authenticated state
+
+Child Routes
+  → Consume authenticated state
+```
+
+#### Important
+
+- Responsibilities are becoming clearer.
+
+#### Mental Model
+
+```text
+Root Route
+  → Shared responsibilities
+
+Child Routes
+  → Route-specific responsibilities
+```
+
+#### Example
+
+```text
+Root Route
+  → Authenticated User
+
+Home Route
+  → Messages
+
+Settings Route
+  → Settings Data
+
+Profile Route
+  → Profile Data
+```
+
+#### Reality
+
+```text
+Shared state and route state are becoming separated
+```
+
+> Good architecture separates shared behavior from route behavior
+
+## Step 11: Understand Why Layouts Matter 🧠
+
+#### Important
+
+- Layouts naturally control:
+
+```text
+Navigation
+Application Shell
+Shared UI
+Shared Application State
+```
+
+#### Example
+
+```text
+Navbar
+Sidebar
+Account Menu
+```
+
+#### Reality
+
+- These components often need:
+
+```text
+Authenticated User Information
+```
+
+#### Mental Model
+
+```text
+Shared layouts
+  → Shared data
+
+Route pages
+  → Route data
+```
+
+#### System Shift
+
+```text
+Authenticated pages
+  → Authenticated application shell
+```
+
+> Layouts naturally become shared application boundaries
+
+## Step 12: Observe the Route Hierarchy 🔍
+
+#### React Router Uses Route Hierarchies
+
+```text
+Root Route
+  → Child Route
+  → Nested Route
+```
+
+#### Important
+
+- Parent routes can:
+  - load data
+  - render layouts
+  - provide shared application state
+
+#### Reality
+
+```text
+Route hierarchy naturally creates data hierarchy
+```
+
+#### Example
+
+```text
+Root Route
+  → Authenticated User
+
+Child Route
+  → Messages
+
+Nested Route
+  → Message Details
+```
+
+#### Mental Model
+
+```text
+Higher routes
+  → Shared data
+
+Lower routes
+  → Specific data
+```
+
+> Shared route data follows shared route structure
+
+## Step 13: Why This Matters 💡
+
+- Without shared authenticated application state:
+  - authentication spreads across routes
+  - duplicated behavior appears
+  - authenticated UI becomes fragmented
+  - maintenance becomes harder
+
+#### With shared authenticated application state
+
+- Applications gain:
+  - centralized authenticated rendering
+  - reusable authenticated architecture
+  - cleaner layouts
+  - clearer responsibilities
+
+#### Example
+
+```text
+One authenticated user source
+  → Many authenticated UI components
+```
+
+#### Mental Model
+
+```text
+Good abstractions reduce duplication while improving consistency
+```
+
+> Shared systems improve application architecture
+
+## Step 14: The Big Idea 🧠
+
+- The application can now:
+  - create identity
+  - secure identity
+  - authenticate users
+  - protect routes
+  - centralize authentication behavior
+  - load authenticated users
+  - share authenticated application state
+
+#### Important
+
+```text
+Authentication is no longer isolated route behavior
+```
+
+#### Instead
+
+```text
+Authentication is becoming shared application architecture
+```
+
+#### System Design
+
+```text
+getCurrentUserId()
+  → Reads identity
+
+requireUserId()
+  → Protects identity
+
+requireUser()
+  → Loads authenticated users
+
+Root Route
+  → Provides shared authenticated state
+
+Layout()
+  → Renders shared authenticated UI
+
+Child Routes
+  → Consume shared application data
+```
+
+> Good authentication systems evolve into application infrastructure
+
+## Step 15: What Comes Next 🔮
+
+#### Remaining Problem
+
+- The application can now:
+  - share authenticated user data
+  - render authenticated layouts
+  - centralize authenticated application state
+
+#### But another challenge now appears.
+
+#### Problem
+
+```text
+Child routes may eventually need direct access to parent route data
+```
+
+#### Example
+
+```text
+Dashboard Layout
+Sidebar Navigation
+Profile Menu
+Nested Routes
+```
+
+#### Reality
+
+```text
+Shared authenticated data may eventually need to flow through nested route hierarchies
+```
+
+#### The Real Question
+
+> How can child routes access data loaded by parent routes?
+
+#### Next Lesson
+
+```text
+Lesson 23 → Accessing Parent Route Data with useRouteLoaderData()
+```
+
+- The system will learn:
+  - how route hierarchy shares data
+  - how parent route data flows downward
+  - how useRouteLoaderData() works
+  - how nested authenticated architecture scales
+
+> - Authentication became reusable
+> - Authenticated users became shared application state
+> - Shared layouts now understand authentication
+> - Next: Child routes consume parent route data

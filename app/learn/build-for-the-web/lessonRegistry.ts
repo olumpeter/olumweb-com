@@ -23,6 +23,7 @@ import redirectingAuthenticatedUsers from '~/learn/build-for-the-web/images/018-
 import centralizingRouteProtection from '~/learn/build-for-the-web/images/019-centralizing-route-protection/thumbnail/019-centralizing-route-protection.png?url'
 import loadingTheAuthenticatedUser from '~/learn/build-for-the-web/images/020-loading-the-authenticated-user/thumbnail/020-loading-the-authenticated-user.png?url'
 import centralizingAuthenticatedUserLoading from '~/learn/build-for-the-web/images/021-centralizing-authenticated-user-loading/thumbnail/021-centralizing-authenticated-user-loading.png?url'
+import sharingAuthenticatedUserDataAcrossTheApplication from '~/learn/build-for-the-web/images/022-sharing-authenticated-user-data-across-the-application/thumbnail/022-sharing-authenticated-user-data-across-the-application.png?url'
 
 /**
  * Client-side lesson registry
@@ -238,6 +239,16 @@ export const lessonRegistry = {
 		thumbnail: centralizingAuthenticatedUserLoading,
 		frontmatter: {
 			title: 'Centralizing Authenticated User Loading',
+			lessonNumber: 21,
+			published: true,
+		},
+	},
+	'sharing-authenticated-user-data-across-the-application': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/022-sharing-authenticated-user-data-across-the-application.mdx'),
+		thumbnail: sharingAuthenticatedUserDataAcrossTheApplication,
+		frontmatter: {
+			title: 'Sharing Authenticated User Data Across the Application',
 			lessonNumber: 21,
 			published: true,
 		},
