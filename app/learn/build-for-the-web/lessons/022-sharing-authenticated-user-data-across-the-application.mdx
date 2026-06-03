@@ -113,6 +113,8 @@ Shared authenticated route data
 
 > This lesson is about sharing authenticated user data through route architecture.
 
+<hr className='my-8' />
+
 ## Mental Model 🧠
 
 #### Before
@@ -150,6 +152,8 @@ One authenticated user
 ```
 
 > Shared route boundaries naturally become shared data boundaries
+
+<hr className='my-8' />
 
 ## Step 1: Observe the Current User Loading Flow 🔍
 
@@ -226,6 +230,8 @@ Authenticated user access may eventually spread throughout the UI tree
 
 > Working architecture can still evolve into fragmented architecture
 
+<hr className='my-8' />
+
 ## Step 2: Observe the UI Tree Growth 🧩
 
 #### Imagine a Larger Application
@@ -289,6 +295,8 @@ Shared UI components cannot automatically access authenticated user data
 ```
 
 > Shared UI eventually needs shared application data
+
+<hr className='my-8' />
 
 ## Step 3: Observe the Repetition Pressure 🧩
 
@@ -384,6 +392,8 @@ Authenticated application state is becoming fragmented
 
 > Shared application behavior should eventually become centralized
 
+<hr className='my-8' />
+
 ## Step 4: Understand the Responsibility Problem 🧠
 
 #### Current Route Responsibilities
@@ -443,6 +453,8 @@ Shared parent routes
 ```
 
 > Good architecture separates shared responsibilities clearly
+
+<hr className='my-8' />
 
 ## Step 5: Observe the Root Route 🛠️
 
@@ -509,6 +521,8 @@ Shared layouts naturally become shared data boundaries
 ```
 
 > Parent routes naturally provide shared application state
+
+<hr className='my-8' />
 
 ## Step 6: Add a Shared Root Loader ⚡
 
@@ -663,6 +677,8 @@ Root route
 ```
 
 > Parent routes naturally provide shared application state
+
+<hr className='my-8' />
 
 ## Step 7: Use the Shared Data 🔄
 
@@ -844,6 +860,8 @@ The application shell now understands authenticated state
 
 > Shared layouts naturally become shared authenticated architecture
 
+<hr className='my-8' />
+
 ## Step 8: Observe What Just Changed 🧠
 
 #### Before
@@ -908,6 +926,8 @@ Per-route authenticated state
 
 > Shared parent routes reduce repeated application behavior
 
+<hr className='my-8' />
+
 ## Step 9: Observe the Full Flow 🔄
 
 #### Current Architecture
@@ -940,6 +960,8 @@ Authenticated user data is becoming shared application infrastructure
 ```
 
 > Shared systems become easier to maintain
+
+<hr className='my-8' />
 
 ## Step 10: Observe the New Responsibility Boundaries 🧩
 
@@ -999,6 +1021,8 @@ Shared state and route state are becoming separated
 ```
 
 > Good architecture separates shared behavior from route behavior
+
+<hr className='my-8' />
 
 ## Step 11: Understand Why Layouts Matter 🧠
 
@@ -1096,6 +1120,8 @@ Lower routes
 
 > Shared route data follows shared route structure
 
+<hr className='my-8' />
+
 ## Step 13: Why This Matters 💡
 
 - Without shared authenticated application state:
@@ -1126,6 +1152,8 @@ Good abstractions reduce duplication while improving consistency
 ```
 
 > Shared systems improve application architecture
+
+<hr className='my-8' />
 
 ## Step 14: The Big Idea 🧠
 
@@ -1173,6 +1201,8 @@ Child Routes
 ```
 
 > Good authentication systems evolve into application infrastructure
+
+<hr className='my-8' />
 
 ## Step 15: What Comes Next 🔮
 

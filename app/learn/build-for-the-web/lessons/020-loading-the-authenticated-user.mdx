@@ -84,6 +84,8 @@ Authenticated user data has not reached the UI
 
 > Authentication identifies users, but applications still need user data
 
+<hr className='my-8' />
+
 ## The Constraint 🧩
 
 - We are still not building:
@@ -100,6 +102,8 @@ Authenticated user data has not reached the UI
 
 > This lesson is about turning authenticated identity into usable
 > application data
+
+<hr className='my-8' />
 
 ## Mental Model 🧠
 
@@ -136,6 +140,8 @@ Identity → User
 ```
 
 > Identity alone is not enough for real applications
+
+<hr className='my-8' />
 
 ## Step 1: Observe the Current Authentication Flow 🔍
 
@@ -235,6 +241,8 @@ Authenticated user information is not reaching the UI
 > The application knows who is authenticated, but the UI still does not
 > use authenticated user data
 
+<hr className='my-8' />
+
 ## Step 2: Observe the Database Limitation 🧩
 
 - Open:
@@ -293,6 +301,8 @@ Applications can only render the user information the database actually stores
 
 > Database design affects application capabilities
 
+<hr className='my-8' />
+
 ## Step 3: Expand the User Model 🛠️
 
 - Then add:
@@ -337,6 +347,8 @@ Applications can only render the user information the database actually stores
 #### username
 
 - Introduces public-facing identity.
+
+<hr className='my-8' />
 
 ## Step 4: Understand Why the User Model Changed 🧠
 
@@ -400,6 +412,8 @@ Application requirements shape database design
 ```
 
 > Databases evolve alongside application capabilities
+
+<hr className='my-8' />
 
 ## Step 5: Create a Database Migration ⚡
 
@@ -484,6 +498,8 @@ Schema changes
 
 > The Prisma client reflects the current database structure
 
+<hr className='my-8' />
+
 ## Step 6: Understand What Just Changed in the Database 🗄️
 
 #### Before
@@ -528,6 +544,8 @@ The database can now support authenticated UI experiences
 ```
 
 > The backend now supports richer frontend behavior
+
+<hr className='my-8' />
 
 ## Step 7: Add User Information to the Database 🗄️
 
@@ -624,6 +642,8 @@ Store authenticated user information in the database
 ```
 
 > The UI can only render the information the database actually contains
+
+<hr className='my-8' />
 
 ## Step 8: Load the Authenticated User 🔍
 
@@ -730,6 +750,8 @@ Identity is now becoming usable application information
 
 > Authentication now powers application behavior
 
+<hr className='my-8' />
+
 ## Step 9: Access the User Inside the Component 🎨
 
 #### Before
@@ -762,6 +784,8 @@ Component
 ```
 
 > Route loaders connect backend identity to frontend UI
+
+<hr className='my-8' />
 
 ## Step 10: Replace the Hardcoded UI 🖥️
 
@@ -921,6 +945,8 @@ Database null values
 > Real applications render authenticated user information directly from
 > the database
 
+<hr className='my-8' />
+
 ## Step 11: Understand the Architectural Shift 🧠
 
 #### Before
@@ -965,6 +991,8 @@ Authentication system
 
 > Identity is now flowing through the application architecture
 
+<hr className='my-8' />
+
 ## Step 12: The Full Flow Now 🔄
 
 #### Current Architecture
@@ -1008,6 +1036,8 @@ Authenticated identity
 ```
 
 > Authentication is now becoming application behavior
+
+<hr className='my-8' />
 
 ## Step 13: Understand the Responsibility Separation 🧩
 
@@ -1059,6 +1089,8 @@ UI
 
 > Good systems separate responsibilities clearly
 
+<hr className='my-8' />
+
 ## Step 14: What Just Changed in the Architecture 🏗️
 
 #### Lesson 16
@@ -1105,6 +1137,8 @@ Identity
 
 > The authentication system is becoming part of the application architecture
 
+<hr className='my-8' />
+
 ## Step 15: Why This Matters 💡
 
 - Without authenticated user loading:
@@ -1134,6 +1168,8 @@ Authentication becomes useful when user data reaches the UI
 ```
 
 > Protected systems become meaningful when identity becomes usable
+
+<hr className='my-8' />
 
 ## Step 16: The Big Idea 🧠
 
@@ -1174,6 +1210,8 @@ UI
 ```
 
 > Modern applications connect authentication directly to user experiences
+
+<hr className='my-8' />
 
 ## Step 17: What Comes Next 🔮
 

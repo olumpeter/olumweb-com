@@ -24,6 +24,7 @@ import centralizingRouteProtection from '~/learn/build-for-the-web/images/019-ce
 import loadingTheAuthenticatedUser from '~/learn/build-for-the-web/images/020-loading-the-authenticated-user/thumbnail/020-loading-the-authenticated-user.png?url'
 import centralizingAuthenticatedUserLoading from '~/learn/build-for-the-web/images/021-centralizing-authenticated-user-loading/thumbnail/021-centralizing-authenticated-user-loading.png?url'
 import sharingAuthenticatedUserDataAcrossTheApplication from '~/learn/build-for-the-web/images/022-sharing-authenticated-user-data-across-the-application/thumbnail/022-sharing-authenticated-user-data-across-the-application.png?url'
+import accessingParentRouteDataWithUseRouteLoaderData from '~/learn/build-for-the-web/images/023-accessing-parent-route-data-with-userouteloaderdata/thumbnail/023-accessing-parent-route-data-with-userouteloaderdata.png?url'
 
 /**
  * Client-side lesson registry
@@ -249,7 +250,17 @@ export const lessonRegistry = {
 		thumbnail: sharingAuthenticatedUserDataAcrossTheApplication,
 		frontmatter: {
 			title: 'Sharing Authenticated User Data Across the Application',
-			lessonNumber: 21,
+			lessonNumber: 22,
+			published: true,
+		},
+	},
+	'accessing-parent-route-data-with-userouteloaderdata': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/023-accessing-parent-route-data-with-userouteloaderdata.mdx'),
+		thumbnail: accessingParentRouteDataWithUseRouteLoaderData,
+		frontmatter: {
+			title: 'Accessing Parent Route Data with useRouteLoaderData()',
+			lessonNumber: 23,
 			published: true,
 		},
 	},

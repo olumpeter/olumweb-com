@@ -1,0 +1,786 @@
+---
+title: 'Accessing Parent Route Data with useRouteLoaderData()'
+slug: 'accessing-parent-route-data-with-userouteloaderdata'
+series: 'build-for-the-web'
+lessonNumber: 23
+path: '/learn/build-for-the-web/accessing-parent-route-data-with-userouteloaderdata'
+publish: true
+readingTime: '45 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 22, the system learned how to:
+  - move authenticated user loading into the root route
+  - create shared authenticated application state
+  - provide authenticated data through shared layouts
+  - centralize authenticated application infrastructure
+
+```text
+Request
+  → Root Loader
+  → Authenticated User
+  → Shared Route Data
+  → Layout()
+  → Child Routes
+```
+
+#### Important
+
+```text
+Authenticated user data now lives at the application root
+```
+
+#### But another architectural problem now exists.
+
+#### The Problem
+
+- Right now:
+  - the root route loads authenticated users
+  - the root route provides shared authenticated data
+  - the layout understands authenticated state
+
+#### But child routes still exist.
+
+#### Example
+
+```text
+Home Route
+Settings Route
+Profile Route
+Dashboard Route
+```
+
+#### Reality
+
+```text
+Child routes may eventually need authenticated user access
+```
+
+#### Example
+
+```text
+Profile Header
+Account Settings
+Sidebar Navigation
+Dashboard Widgets
+```
+
+#### Problem
+
+- Right now:
+  - the root route owns authenticated data
+  - child routes do not automatically receive direct access
+
+#### Reality
+
+```text
+Shared authenticated data still needs a consumption mechanism
+```
+
+> Shared application state is only useful if other routes can access it
+
+- We are still not building:
+  - Redux
+  - Zustand
+  - React Context authentication systems
+  - global state stores
+  - client-side caching systems
+
+- We are building:
+
+```text
+Route hierarchy data sharing
+```
+
+> This lesson is about accessing parent route data through route architecture.
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+#### Before
+
+```text
+Root Route
+  → user
+
+Child Route
+  → Cannot directly access user
+```
+
+#### After
+
+```text
+Root Route
+  → user
+
+Child Route
+  → useRouteLoaderData()
+  → user
+```
+
+#### System Shift
+
+```text
+Shared route data
+  → Shared route consumption
+```
+
+#### Core Idea
+
+```text
+Parent routes can provide data
+
+Child routes can consume data
+```
+
+#### Even Simpler
+
+```text
+One parent loader
+  → Many child consumers
+```
+
+> Route hierarchy naturally creates data hierarchy
+
+<hr className='my-8' />
+
+## Step 1: Observe the Current User Loading Flow 🔍
+
+- Open:
+
+```text
+app/routes/home.tsx
+```
+
+#### Current Loader
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const user = await requireUser(request)
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				userId,
+				isFollowing: false,
+			},
+		})
+	}
+
+	return { user, messages, profile }
+}
+```
+
+#### Important
+
+- Right now:
+  - the root route loads authenticated users
+  - the home route also loads authenticated users
+  - authenticated user data exists in multiple places
+
+#### Reality
+
+```text
+The same authenticated user is now being loaded twice
+```
+
+#### Problem
+
+```text
+Shared authenticated state is starting to duplicate itself
+```
+
+#### Example
+
+```text
+Root Route
+  → user
+
+Home Route
+  → user
+```
+
+#### Reality
+
+```text
+The Home route still owns data that now belongs to the Root route
+```
+
+> Shared state should not require repeated loading
+
+<hr className='my-8' />
+
+## Step 2: Observe What the Home Route Actually Needs 🧩
+
+#### Current Return Value
+
+```ts
+return { user, messages, profile }
+```
+
+#### Important
+
+- The Home route owns:
+
+```text
+Messages
+Profile
+```
+
+#### Example
+
+```ts
+const messages = await prisma.message.findMany(...)
+```
+
+```ts
+let profile = await prisma.profile.findUnique(...)
+```
+
+#### Reality
+
+```text
+Messages and profiles belong to the Home route
+```
+
+#### But the user now belongs to:
+
+```text
+Root Route
+```
+
+#### Mental Model
+
+```text
+Root Route
+  → user
+
+Home Route
+  → messages
+  → profile
+```
+
+> Data should belong to the route that owns the responsibility
+
+<hr className='my-8' />
+
+## Step 3: Remove User Loading from Home 🛠️
+
+- Inside:
+
+```text
+app/routes/home.tsx
+```
+
+#### Current Code
+
+```ts
+const user = await requireUser(request)
+```
+
+#### Remove It
+
+```ts
+// Remove this line
+const user = await requireUser(request)
+```
+
+#### Then Update the Return Value
+
+#### Before
+
+```ts
+return { user, messages, profile }
+```
+
+#### After
+
+```ts
+return { messages, profile }
+```
+
+#### Updated Loader
+
+```ts
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
+
+	const messages = await prisma.message.findMany({
+		where: { userId },
+		orderBy: { createdAt: 'asc' },
+	})
+
+	let profile = await prisma.profile.findUnique({
+		where: { userId },
+	})
+
+	if (!profile) {
+		profile = await prisma.profile.create({
+			data: {
+				userId,
+				isFollowing: false,
+			},
+		})
+	}
+
+	return { messages, profile }
+}
+```
+
+#### Reality
+
+```text
+The Home route no longer loads authenticated users
+```
+
+#### System Shift
+
+```text
+Home Route
+  → Owns route data
+
+Root Route
+  → Owns authenticated users
+```
+
+> Shared responsibilities should move upward
+
+<hr className='my-8' />
+
+## Step 4: Observe What Breaks 🧠
+
+#### Current Component
+
+```ts
+const { user, messages, profile } = loaderData
+```
+
+#### Problem
+
+- The loader no longer returns:
+
+```text
+user
+```
+
+#### Reality
+
+```text
+The component still needs authenticated user access
+```
+
+#### Example
+
+```tsx
+<img src={user.avatarUrl} />
+
+<h2>{user.name}</h2>
+
+<p>{user.role}</p>
+```
+
+#### But:
+
+```text
+The Home loader no longer provides user
+```
+
+#### Question
+
+```text
+How can the component access Root Route data?
+```
+
+> Shared data needs a shared access mechanism
+
+<hr className='my-8' />
+
+## Step 5: Introduce useRouteLoaderData() ⚡
+
+- React Router provides:
+
+```tsx
+useRouteLoaderData()
+```
+
+#### Add Import
+
+```tsx
+import {
+	useRouteLoaderData,
+} from 'react-router'
+```
+
+#### Important
+
+- Unlike:
+
+```tsx
+useLoaderData()
+```
+
+- `useRouteLoaderData()` can access:
+
+```text
+Data loaded by another route
+```
+
+#### Reality
+
+```text
+Child routes can read parent route data
+```
+
+#### Mental Model
+
+```text
+useLoaderData()
+  → Current route
+
+useRouteLoaderData()
+  → Another route
+```
+
+> Route hierarchy can become data hierarchy
+
+<hr className='my-8' />
+
+## Step 6: Access the Root Loader 🔍
+
+#### Inside Home
+
+```tsx
+const rootData =
+	useRouteLoaderData('root')
+```
+
+#### Then
+
+```tsx
+const user = rootData?.user
+```
+
+#### Important
+
+- React Router uses:
+
+```text
+root
+```
+
+to locate:
+
+```text
+app/root.tsx
+```
+
+#### Reality
+
+```text
+The Home route can now access Root Route data
+```
+
+#### Mental Model
+
+```text
+Route ID
+  → Route Data
+```
+
+> Route IDs allow shared data access
+
+<hr className='my-8' />
+
+## Step 7: Update Home Component Data Flow 🔄
+
+#### Before
+
+```tsx
+const { user, messages, profile } = loaderData
+```
+
+#### After
+
+```tsx
+const { messages, profile } = loaderData
+
+const rootData =
+	useRouteLoaderData('root')
+
+const user = rootData?.user
+```
+
+#### Important
+
+- Messages still come from:
+
+```text
+Home Loader
+```
+
+#### User now comes from:
+
+```text
+Root Loader
+```
+
+#### Reality
+
+```text
+The component is now consuming shared authenticated state
+```
+
+> Ownership and consumption are becoming separated
+
+<hr className='my-8' />
+
+## Step 8: Observe the UI 🔍
+
+#### Existing UI Still Works
+
+```tsx
+<h2>{user?.name}</h2>
+```
+
+```tsx
+<p>{user?.role}</p>
+```
+
+```tsx
+<p>{user?.bio}</p>
+```
+
+```tsx
+<img
+	src={user?.avatarUrl || undefined}
+	alt={user?.name ?? 'Profile avatar'}
+/>
+```
+
+#### Important
+
+- The UI still renders:
+
+```text
+Avatar
+Name
+Role
+Bio
+```
+
+#### But the source changed.
+
+#### Before
+
+```text
+Home Loader
+  → user
+```
+
+#### After
+
+```text
+Root Loader
+  → user
+```
+
+#### Reality
+
+```text
+The UI no longer depends on duplicated authenticated state
+```
+
+> Shared UI should consume shared state
+
+<hr className='my-8' />
+
+## Step 9: Observe What Just Changed 🧠
+
+#### Before
+
+```text
+Root Route
+  → user
+
+Home Route
+  → user
+  → messages
+  → profile
+```
+
+#### After
+
+```text
+Root Route
+  → user
+
+Home Route
+  → messages
+  → profile
+
+Home Component
+  → useRouteLoaderData()
+  → user
+```
+
+#### Reality
+
+```text
+Authenticated user loading is now centralized
+```
+
+#### System Shift
+
+```text
+Repeated user loading
+  → Shared user consumption
+```
+
+> Shared systems reduce duplication
+
+<hr className='my-8' />
+
+## Step 10: Observe the Full Flow 🔄
+
+#### Current Architecture
+
+```text
+Request
+  → Root Loader
+  → requireUser()
+  → user
+  → Shared Route Data
+
+Home Route
+  → messages
+  → profile
+
+Home Component
+  → useRouteLoaderData('root')
+  → user
+
+UI
+```
+
+#### Important
+
+- The system now supports:
+  - centralized user loading
+  - shared authenticated state
+  - route-specific data ownership
+  - parent route consumption
+
+#### Reality
+
+```text
+Authenticated state now flows through the route hierarchy
+```
+
+> Parent routes can support many child routes
+
+<hr className='my-8' />
+
+## Step 11: The Big Idea 🧠
+
+- The application can now:
+  - authenticate users
+  - protect routes
+  - load authenticated users
+  - centralize authenticated state
+  - share authenticated data
+  - consume parent route data
+
+#### System Design
+
+```text
+Root Loader
+  → Owns user
+
+Home Loader
+  → Owns messages
+  → Owns profile
+
+useRouteLoaderData()
+  → Accesses user
+
+UI
+  → Renders user
+```
+
+#### Important
+
+```text
+Shared authenticated state is no longer duplicated
+```
+
+> Good architecture centralizes ownership while distributing access
+
+<hr className='my-8' />
+
+## Step 12: What Comes Next 🔮
+
+#### Remaining Problem
+
+- The application can now:
+  - access Root Route data
+  - consume shared authenticated users
+  - avoid duplicated user loading
+
+#### But another challenge now appears.
+
+#### Problem
+
+```text
+useRouteLoaderData('root')
+may eventually appear throughout the application
+```
+
+#### Example
+
+```text
+Navbar
+Sidebar
+Profile Menu
+Dashboard
+Settings
+```
+
+#### Reality
+
+```text
+Repeated route data access may eventually create repeated code
+```
+
+#### The Real Question
+
+> How can we create a reusable way to access authenticated users?
+
+#### Next Lesson
+
+```text
+Lesson 24 → Creating a Reusable useUser() Hook
+```
+
+- The system will learn:
+  - how custom hooks reduce repetition
+  - how useUser() works
+  - how authenticated data access becomes reusable
+  - how route data consumption becomes cleaner
+
+> - Authentication became shared state
+> - Shared state became accessible
+> - Child routes can now consume parent route data
+> - Next: Create reusable authenticated user hooks

@@ -77,6 +77,8 @@ Authenticated user → Still sees login/signup
 
 > This lesson is about controlling user flow
 
+<hr className='my-8' />
+
 ## The Constraint 🧩
 
 - We are still not building full production routing systems.
@@ -90,6 +92,8 @@ Authenticated user → Still sees login/signup
   - Improve navigation logic
 
 > This lesson is about flow control, not full authorization systems
+
+<hr className='my-8' />
 
 ## Mental Model 🧠
 
@@ -128,6 +132,8 @@ Authenticated → No auth pages → Redirect
 > Systems respond to authentication state
 > Not just data, not just users
 
+<hr className='my-8' />
+
 ## Step 1: The Current Flow Problem 🏁
 
 - Right now:
@@ -151,6 +157,8 @@ Authenticated → No auth pages → Redirect
 #### Why this matters
 
 > Systems should respond to user state
+
+<hr className='my-8' />
 
 ## Step 2: Define Expected Behavior 🎯
 
@@ -182,6 +190,8 @@ Authenticated → No auth pages → Redirect
 
 > The system should guide the user forward
 
+<hr className='my-8' />
+
 ## Step 3: Where This Logic Lives 📍
 
 - This logic should happen:
@@ -210,6 +220,8 @@ Request → Loader → Session Check → Authentication State → Decision
 ```
 
 > Flow control belongs where the request is handled
+
+<hr className='my-8' />
 
 ## Step 4: Redirect Authenticated Users from Login 🔐
 
@@ -320,6 +332,8 @@ Session → Identity in use
 
 > Authentication is about the session, not just the user record
 
+<hr className='my-8' />
+
 ## Step 5: Apply the Same Logic to Signup 🧾
 
 - Open:
@@ -411,6 +425,8 @@ Authenticated → Already has identity → No signup → Redirect
 
 > Signup now respects authentication state
 
+<hr className='my-8' />
+
 ## Step 6: Understand the Shift 🧠
 
 #### Important Distinction
@@ -436,6 +452,8 @@ Session → Represents active identity
 
 > Authentication is about the session
 
+<hr className='my-8' />
+
 ## Step 7: The Full Flow Now 🔄
 
 #### Login
@@ -458,6 +476,8 @@ Authenticated   → Redirected
 Request → Session → Auth State → Decision → Redirect or Continue
 ```
 
+<hr className='my-8' />
+
 ## Step 8: Why This Matters 💡
 
 - Without this:
@@ -471,6 +491,8 @@ Request → Session → Auth State → Decision → Redirect or Continue
 ```text
 Good systems guide users
 ```
+
+<hr className='my-8' />
 
 ## Step 9: What Just Changed 🧠
 
@@ -492,6 +514,8 @@ Authentication drives flow decisions
 
 > Identity now shapes experience
 
+<hr className='my-8' />
+
 ## Step 10: The Big Idea 💡
 
 - You now have:
@@ -499,6 +523,8 @@ Authentication drives flow decisions
 ```text
 Ownership → Authentication → Flow → Verification → Creation → Security → Navigation Control
 ```
+
+<hr className='my-8' />
 
 ## Step 11: What This Enables 🚀
 
@@ -510,6 +536,8 @@ Ownership → Authentication → Flow → Verification → Creation → Security
 ```text
 User → Authenticated → Guided → Directed
 ```
+
+<hr className='my-8' />
 
 ## Step 12: What Comes Next 🔮
 

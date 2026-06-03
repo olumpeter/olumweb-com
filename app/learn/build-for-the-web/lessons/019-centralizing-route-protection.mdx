@@ -27,6 +27,8 @@ Request → Session → Authentication State → Redirect Decision
 
 - But another problem now exists.
 
+<hr className='my-8' />
+
 ## The Problem
 
 - Right now:
@@ -88,6 +90,8 @@ Route → Authentication Check → Repeated Logic
 Authentication Check → Reusable Protection System
 ```
 
+<hr className='my-8' />
+
 ## The Constraint 🧩
 
 - We are still not building:
@@ -102,6 +106,8 @@ Reusable authentication enforcement
 ```
 
 > This lesson is about centralizing protection logic
+
+<hr className='my-8' />
 
 ## Mental Model 🧠
 
@@ -136,6 +142,8 @@ Protect once → Reuse everywhere
 ```
 
 > Good systems centralize important rules
+
+<hr className='my-8' />
 
 ## Step 1: Understand the Current Repetition 🔁
 
@@ -188,6 +196,8 @@ Every protected route must be updated manually
 
 > Repeated security logic becomes difficult to maintain
 
+<hr className='my-8' />
+
 ## Step 2: Understand the Real Goal 🎯
 
 - The goal is NOT:
@@ -223,6 +233,8 @@ Route → require protection → System enforces rules
 ```
 
 > Routes should not manage security details themselves
+
+<hr className='my-8' />
 
 ## Step 3: Create requireUserId() 🛡️
 
@@ -295,6 +307,8 @@ Unauthenticated → Redirect
 ```
 
 > Authentication enforcement now belongs to the authentication system itself
+
+<hr className='my-8' />
 
 ## Step 4: Understand the Architectural Shift 🧠
 
@@ -371,6 +385,8 @@ Repeated auth checks → Shared authentication enforcement
 ```
 
 > Good systems centralize important rules
+
+<hr className='my-8' />
 
 ## Step 5: Observe Centralized Protection in the Application 🔍
 
@@ -514,6 +530,8 @@ Route Actions
 
 > Good systems separate responsibilities clearly
 
+<hr className='my-8' />
+
 ## Step 6: Understand getCurrentUserId() vs requireUserId() 🔍
 
 #### Important Distinction
@@ -571,6 +589,8 @@ Reading state and enforcing rules are different responsibilities
 
 > Good naming reflects system behavior clearly
 
+<hr className='my-8' />
+
 ## Step 7: Why throw redirect()? ⚡
 
 #### Important
@@ -604,6 +624,8 @@ Protection logic controls flow immediately
 ```
 
 > Enforcement should stop invalid execution as early as possible
+
+<hr className='my-8' />
 
 ## Step 8: The Full Flow Now 🔄
 
@@ -681,6 +703,8 @@ Creation
 
 > The authentication system is becoming architectural
 
+<hr className='my-8' />
+
 ## Step 10: Why This Matters 💡
 
 - Without centralized protection:
@@ -705,6 +729,8 @@ Centralized systems scale better
 ```
 
 > Reusability is one of the foundations of scalable software systems
+
+<hr className='my-8' />
 
 ## Step 11: The Big Idea 🧠
 
@@ -735,6 +761,8 @@ Authentication System
 ```
 
 > The application now protects routes through shared architectural rules
+
+<hr className='my-8' />
 
 ## Step 12: What Comes Next 🔮
 
