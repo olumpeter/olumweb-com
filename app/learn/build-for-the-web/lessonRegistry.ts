@@ -25,6 +25,7 @@ import loadingTheAuthenticatedUser from '~/learn/build-for-the-web/images/020-lo
 import centralizingAuthenticatedUserLoading from '~/learn/build-for-the-web/images/021-centralizing-authenticated-user-loading/thumbnail/021-centralizing-authenticated-user-loading.png?url'
 import sharingAuthenticatedUserDataAcrossTheApplication from '~/learn/build-for-the-web/images/022-sharing-authenticated-user-data-across-the-application/thumbnail/022-sharing-authenticated-user-data-across-the-application.png?url'
 import accessingParentRouteDataWithUseRouteLoaderData from '~/learn/build-for-the-web/images/023-accessing-parent-route-data-with-userouteloaderdata/thumbnail/023-accessing-parent-route-data-with-userouteloaderdata.png?url'
+import creatingAReusableUseUserHook from '~/learn/build-for-the-web/images/024-creating-a-reusable-useuser-hook/thumbnail/024-creating-a-reusable-useuser-hook.png?url'
 
 /**
  * Client-side lesson registry
@@ -261,6 +262,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Accessing Parent Route Data with useRouteLoaderData()',
 			lessonNumber: 23,
+			published: true,
+		},
+	},
+	'creating-a-reusable-useuser-hook': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/024-creating-a-reusable-useuser-hook.mdx'),
+		thumbnail: creatingAReusableUseUserHook,
+		frontmatter: {
+			title: 'Creating a Reusable useUser() Hook',
+			lessonNumber: 24,
 			published: true,
 		},
 	},

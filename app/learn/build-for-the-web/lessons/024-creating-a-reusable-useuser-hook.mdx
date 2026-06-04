@@ -1,0 +1,659 @@
+---
+title: 'Creating a Reusable useUser() Hook'
+slug: 'creating-a-reusable-useuser-hook'
+series: 'build-for-the-web'
+lessonNumber: 24
+path: '/learn/build-for-the-web/creating-a-reusable-useuser-hook'
+publish: true
+readingTime: '45 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 23, the system learned how to:
+  - centralize authenticated user loading
+  - access parent route data
+  - use useRouteLoaderData()
+  - consume shared authenticated state
+
+```text
+Root Loader
+  → user
+
+Child Route
+  → useRouteLoaderData('root')
+  → user
+```
+
+#### Important
+
+```text
+Authenticated user access now works
+```
+
+#### But another architectural problem now appears.
+
+#### The Problem
+
+#### The Problem
+
+- Right now:
+
+```tsx
+const rootData =
+	useRouteLoaderData('root')
+
+const user = rootData?.user
+```
+
+#### Reality
+
+```text
+This code may eventually appear everywhere
+```
+
+#### Example
+
+```text
+Navbar
+Sidebar
+Profile Menu
+Dashboard
+Settings
+Notifications
+```
+
+#### Problem
+
+```text
+Repeated user access creates repeated code
+```
+
+> Shared data should eventually have shared access patterns
+
+- We are still not building:
+  - Redux
+  - Zustand
+  - React Context authentication systems
+  - global state stores
+
+- We are building:
+
+```text
+Reusable route data access
+```
+
+> This lesson is about creating a reusable authenticated user hook.
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+#### Before
+
+```text
+Component
+  → useRouteLoaderData('root')
+  → user
+
+Component
+  → useRouteLoaderData('root')
+  → user
+
+Component
+  → useRouteLoaderData('root')
+  → user
+```
+
+#### After
+
+```text
+Component
+  → useUser()
+  → user
+```
+
+#### System Shift
+
+```text
+Repeated route access
+  → Reusable route access
+```
+
+#### Core Idea
+
+```text
+Hide complexity
+
+Expose simplicity
+```
+
+> Good hooks create simple APIs
+
+<hr className='my-8' />
+
+## Step 1: Observe the Current Pattern 🔍
+
+#### Current Home Route
+
+```tsx
+const rootData =
+	useRouteLoaderData('root')
+
+const user = rootData?.user
+```
+
+#### Reality
+
+```text
+The pattern works
+```
+
+#### But imagine:
+
+```text
+Navbar
+Sidebar
+Settings
+Dashboard
+Profile
+```
+
+#### Example
+
+```tsx
+const rootData =
+	useRouteLoaderData('root')
+
+const user = rootData?.user
+```
+
+```tsx
+const rootData =
+	useRouteLoaderData('root')
+
+const user = rootData?.user
+```
+
+```tsx
+const rootData =
+	useRouteLoaderData('root')
+
+const user = rootData?.user
+```
+
+#### Problem
+
+```text
+The same logic may eventually repeat itself
+```
+
+> Repetition usually signals abstraction opportunities
+
+<hr className='my-8' />
+
+## Step 2: Identify the Real Responsibility 🧩
+
+#### Question
+
+What are components actually trying to do?
+
+#### Answer
+
+```text
+Access the authenticated user
+```
+
+#### Components Do Not Care About:
+
+```text
+Route IDs
+
+Root Loader Names
+
+Loader Architecture
+```
+
+#### Components Care About:
+
+```text
+User
+```
+
+#### Reality
+
+```text
+Components want users
+
+Not route implementation details
+```
+
+#### Mental Model
+
+```text
+Implementation
+  → Hidden
+
+User Access
+  → Exposed
+```
+
+> Components should consume business concepts, not infrastructure details
+
+<hr className='my-8' />
+
+## Step 3: Create a Hooks Folder 🛠️
+
+#### Create
+
+```text
+app/hooks
+```
+
+#### Then Create
+
+```text
+app/hooks/useUser.ts
+```
+
+#### Reality
+
+```text
+Custom hooks often live inside a shared hooks directory
+```
+
+#### Mental Model
+
+```text
+Shared logic
+  → Shared hook
+```
+
+> Reusable logic deserves a reusable home
+
+<hr className='my-8' />
+
+## Step 4: Create the Hook ⚡
+
+#### Inside
+
+```text
+app/hooks/useUser.ts
+```
+
+#### Add
+
+```tsx
+import { useRouteLoaderData } from 'react-router'
+
+export function useUser() {
+	const rootData =
+		useRouteLoaderData('root')
+
+	return rootData?.user
+}
+```
+
+#### Important
+
+- The hook now:
+  - accesses the root route
+  - retrieves root data
+  - returns the authenticated user
+
+#### Reality
+
+```text
+The implementation is now centralized
+```
+
+> One hook can replace many repeated code blocks
+
+<hr className='my-8' />
+
+## Step 5: Observe What the Hook Hides 🔍
+
+#### Before
+
+```tsx
+const rootData =
+	useRouteLoaderData('root')
+
+const user = rootData?.user
+```
+
+#### After
+
+```tsx
+const user = useUser()
+```
+
+#### Reality
+
+```text
+Route architecture disappears
+```
+
+#### Mental Model
+
+```text
+Complexity
+  → Hidden
+
+User Access
+  → Visible
+```
+
+> Good APIs remove unnecessary knowledge
+
+<hr className='my-8' />
+
+## Step 6: Use the Hook Inside Home 🔄
+
+#### Import
+
+```tsx
+import { useUser } from '~/hooks/useUser'
+```
+
+#### Then Replace
+
+#### Before
+
+```tsx
+const rootData =
+	useRouteLoaderData('root')
+
+const user = rootData?.user
+```
+
+#### After
+
+```tsx
+const user = useUser()
+```
+
+#### Reality
+
+```text
+The component becomes easier to read
+```
+
+#### Mental Model
+
+```text
+Home Component
+  → useUser()
+  → user
+```
+
+> Cleaner code is easier to maintain
+
+<hr className='my-8' />
+
+## Step 7: Observe the UI 🔍
+
+#### Existing UI Still Works
+
+```tsx
+<h2>{user?.name}</h2>
+```
+
+```tsx
+<p>{user?.role}</p>
+```
+
+```tsx
+<p>{user?.bio}</p>
+```
+
+```tsx
+<img
+	src={user?.avatarUrl || undefined}
+	alt={user?.name ?? 'Profile avatar'}
+/>
+```
+
+#### Important
+
+```text
+Nothing changed visually
+```
+
+#### But the architecture changed.
+
+#### Before
+
+```text
+Component
+  → Route Access
+  → User
+```
+
+#### After
+
+```text
+Component
+  → useUser()
+  → User
+```
+
+#### Reality
+
+```text
+The same result now comes from a cleaner abstraction
+```
+
+> Better architecture often produces the same UI
+
+<hr className='my-8' />
+
+## Step 8: Observe Reusability 🧠
+
+#### Example
+
+Navbar
+
+```tsx
+const user = useUser()
+```
+
+#### Sidebar
+
+```tsx
+const user = useUser()
+```
+
+#### Profile Menu
+
+```tsx
+const user = useUser()
+```
+
+#### Dashboard
+
+```tsx
+const user = useUser()
+```
+
+#### Reality
+
+```text
+Every component now shares the same access pattern
+```
+
+#### System Shift
+
+```text
+Repeated code
+  → Shared hook
+```
+
+> Reusable systems scale better
+
+<hr className='my-8' />
+
+## Step 9: Observe What Just Changed 🧠
+
+#### Before
+
+```text
+Component
+  → useRouteLoaderData('root')
+  → user
+```
+
+#### After
+
+```text
+Component
+  → useUser()
+  → user
+```
+
+#### Reality
+
+```text
+Authenticated user access is now standardized
+```
+
+#### Mental Model
+
+```text
+One hook
+
+Many consumers
+```
+
+> Consistency improves maintainability
+
+<hr className='my-8' />
+
+## Step 10: Observe the Full Flow 🔄
+
+#### Current Architecture
+
+```text
+Request
+  → Root Loader
+  → user
+
+useUser()
+  → useRouteLoaderData('root')
+  → user
+
+Component
+  → user
+
+UI
+```
+
+#### Important
+
+- The application now supports:
+  - centralized user loading
+  - shared authenticated state
+  - route hierarchy access
+  - reusable user consumption
+
+#### Reality
+
+```text
+Authenticated users now flow through a reusable hook
+```
+
+> Reusable abstractions simplify application architecture
+
+<hr className='my-8' />
+
+## Step 11: The Big Idea 🧠
+
+#### Current System
+
+```text
+Root Loader
+  → Owns user
+
+useUser()
+  → Accesses user
+
+Components
+  → Consume user
+```
+
+#### Important
+
+```text
+User access is now reusable
+```
+
+#### System Design
+
+```text
+Ownership
+  → Root Loader
+
+Consumption
+  → useUser()
+
+Rendering
+  → Components
+```
+
+> Good architecture separates ownership from consumption
+
+<hr className='my-8' />
+
+## Step 12: What Comes Next 🔮
+
+#### Remaining Problem
+
+- The application can now:
+  - centralize authenticated users
+  - share authenticated state
+  - reuse authenticated access
+
+#### But another challenge now appears.
+
+#### Problem
+
+```text
+Some routes should only be visible to specific users
+```
+
+#### Example
+
+```text
+Admin Dashboard
+
+Admin Settings
+
+User Management
+```
+
+#### Reality
+
+```text
+Authentication and authorization are different concepts
+```
+
+#### The Real Question
+
+> How can we control what authenticated users are allowed to access?
+
+#### Next Lesson
+
+```text
+Lesson 25 → Introducing Authorization and User Roles
+```
+
+- The system will learn:
+  - authentication vs authorization
+  - role-based access control
+  - protecting admin routes
+  - enforcing permissions
+
+> - User loading became centralized
+> - Shared state became reusable
+> - Reusable access became a custom hook
+> - Next: Control who can access what
