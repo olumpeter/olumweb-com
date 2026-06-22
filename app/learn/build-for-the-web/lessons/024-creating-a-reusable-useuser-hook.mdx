@@ -35,8 +35,6 @@ Authenticated user access now works
 
 #### The Problem
 
-#### The Problem
-
 - Right now:
 
 ```tsx
@@ -69,7 +67,7 @@ Notifications
 Repeated user access creates repeated code
 ```
 
-> Shared data should eventually have shared access patterns
+> Shared data deserves a shared API.
 
 - We are still not building:
   - Redux
@@ -123,12 +121,29 @@ Repeated route access
 #### Core Idea
 
 ```text
-Hide complexity
-
-Expose simplicity
+Component
+  → useUser()
+  → user
 ```
 
-> Good hooks create simple APIs
+```text
+useUser()
+  → Route Architecture
+  → Root Loader
+  → user
+```
+
+#### Reality
+
+```text
+Implementation
+  → Hidden
+
+User Access
+  → Exposed
+```
+
+> Good hooks hide complexity and expose simplicity.
 
 <hr className='my-8' />
 
@@ -331,7 +346,7 @@ const user = useUser()
 #### Reality
 
 ```text
-Route architecture disappears
+Route architecture is now hidden
 ```
 
 #### Mental Model
@@ -373,21 +388,30 @@ const user = rootData?.user
 const user = useUser()
 ```
 
-#### Reality
+#### Before
 
 ```text
-The component becomes easier to read
+Component
+  → Route Architecture
+  → user
 ```
 
-#### Mental Model
+#### After
 
 ```text
-Home Component
+Component
   → useUser()
   → user
 ```
 
-> Cleaner code is easier to maintain
+#### Reality
+
+```text
+The component no longer needs
+to know how the user was loaded
+```
+
+> Good abstractions hide unnecessary knowledge.
 
 <hr className='my-8' />
 
@@ -450,27 +474,33 @@ The same result now comes from a cleaner abstraction
 
 ## Step 8: Observe Reusability 🧠
 
-#### Example
+#### Today
 
-Navbar
-
-```tsx
-const user = useUser()
-```
-
-#### Sidebar
+Home Route
 
 ```tsx
 const user = useUser()
 ```
 
-#### Profile Menu
+#### Tomorrow
+
+Admin Route
 
 ```tsx
 const user = useUser()
 ```
 
-#### Dashboard
+#### Later
+
+Settings Route
+
+```tsx
+const user = useUser()
+```
+
+#### Future
+
+Profile Route
 
 ```tsx
 const user = useUser()
@@ -479,17 +509,21 @@ const user = useUser()
 #### Reality
 
 ```text
-Every component now shares the same access pattern
+Every route can now
+share the same access pattern
 ```
 
 #### System Shift
 
 ```text
-Repeated code
-  → Shared hook
+One route
+  → One hook
+
+Many routes
+  → Same hook
 ```
 
-> Reusable systems scale better
+> Reusable APIs make applications easier to scale.
 
 <hr className='my-8' />
 
@@ -535,16 +569,15 @@ Many consumers
 
 ```text
 Request
-  → Root Loader
-  → user
-
+  ↓
+Root Loader
+  ↓
+user
+  ↓
 useUser()
-  → useRouteLoaderData('root')
-  → user
-
+  ↓
 Component
-  → user
-
+  ↓
 UI
 ```
 
@@ -575,10 +608,10 @@ Root Loader
   → Owns user
 
 useUser()
-  → Accesses user
+  → Provides user
 
 Components
-  → Consume user
+  → Render user
 ```
 
 #### Important
@@ -587,20 +620,20 @@ Components
 User access is now reusable
 ```
 
-#### System Design
+#### Reality
 
 ```text
 Ownership
   → Root Loader
 
-Consumption
+Access
   → useUser()
 
 Rendering
   → Components
 ```
 
-> Good architecture separates ownership from consumption
+> Good architecture separates ownership from access and rendering.
 
 <hr className='my-8' />
 
@@ -618,7 +651,8 @@ Rendering
 #### Problem
 
 ```text
-Some routes should only be visible to specific users
+Administrators need tools that
+regular users do not.
 ```
 
 #### Example
@@ -626,34 +660,33 @@ Some routes should only be visible to specific users
 ```text
 Admin Dashboard
 
-Admin Settings
-
 User Management
 ```
 
 #### Reality
 
 ```text
-Authentication and authorization are different concepts
+Our application needs
+a dedicated administrative area.
 ```
 
 #### The Real Question
 
-> How can we control what authenticated users are allowed to access?
+> How can we build an interface that allows administrators to manage users?
 
 #### Next Lesson
 
 ```text
-Lesson 25 → Introducing Authorization and User Roles
+Lesson 25 → Building an Admin Dashboard
 ```
 
 - The system will learn:
-  - authentication vs authorization
-  - role-based access control
-  - protecting admin routes
-  - enforcing permissions
+  - creating a new route
+  - loading all users
+  - building a Tailwind table
+  - preparing for user management
 
 > - User loading became centralized
 > - Shared state became reusable
 > - Reusable access became a custom hook
-> - Next: Control who can access what
+> - Next: Build our first Admin Dashboard

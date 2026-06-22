@@ -26,6 +26,7 @@ import centralizingAuthenticatedUserLoading from '~/learn/build-for-the-web/imag
 import sharingAuthenticatedUserDataAcrossTheApplication from '~/learn/build-for-the-web/images/022-sharing-authenticated-user-data-across-the-application/thumbnail/022-sharing-authenticated-user-data-across-the-application.png?url'
 import accessingParentRouteDataWithUseRouteLoaderData from '~/learn/build-for-the-web/images/023-accessing-parent-route-data-with-userouteloaderdata/thumbnail/023-accessing-parent-route-data-with-userouteloaderdata.png?url'
 import creatingAReusableUseUserHook from '~/learn/build-for-the-web/images/024-creating-a-reusable-useuser-hook/thumbnail/024-creating-a-reusable-useuser-hook.png?url'
+import buildingAnAdminDashboard from '~/learn/build-for-the-web/images/025-building-an-admin-dashboard/thumbnail/025-building-an-admin-dashboard.png?url'
 
 /**
  * Client-side lesson registry
@@ -272,6 +273,16 @@ export const lessonRegistry = {
 		frontmatter: {
 			title: 'Creating a Reusable useUser() Hook',
 			lessonNumber: 24,
+			published: true,
+		},
+	},
+	'building-an-admin-dashboard': {
+		import: () =>
+			import('~/learn/build-for-the-web/lessons/025-building-an-admin-dashboard.mdx'),
+		thumbnail: buildingAnAdminDashboard,
+		frontmatter: {
+			title: 'Building an Admin Dashboard',
+			lessonNumber: 25,
 			published: true,
 		},
 	},
