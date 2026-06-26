@@ -1,0 +1,2448 @@
+---
+title: 'Protecting the Admin Dashboard'
+slug: 'protecting-the-admin-dashboard'
+series: 'build-for-the-web'
+lessonNumber: 26
+path: '/learn/build-for-the-web/protecting-the-admin-dashboard'
+publish: true
+readingTime: '45 min'
+---
+
+## Introduction 🧭
+
+- In Lesson 25, the system learned how to:
+  - build an Admin Dashboard
+  - organize administrative routes
+  - create a shared Admin Layout
+  - separate Dashboard, Users, Messages, Profiles, and Settings
+  - provide administrators with application management tools
+
+```text
+Admin Layout
+
+↓
+
+Dashboard
+
+Users
+
+Messages
+
+Profiles
+
+Settings
+```
+
+#### Important
+
+```text
+The application now
+has administrative tools
+```
+
+#### But another application problem now appears.
+
+#### The Problem
+
+Right now, anyone can visit
+
+```text
+/admin
+
+/admin/users
+
+/admin/messages
+
+/admin/profiles
+
+/admin/settings
+```
+
+#### Reality
+
+```text
+The application currently
+protects nothing
+inside the Admin area
+```
+
+#### But imagine our application grows.
+
+```text
+Peter
+  → Administrator
+
+Jane
+  → User
+
+John
+  → User
+
+Mary
+  → User
+
+David
+  → User
+
+...
+```
+
+#### Question
+
+Who should manage the application?
+
+#### Example
+
+```text
+Manage Users
+
+Manage Messages
+
+Manage Profiles
+```
+
+#### Problem
+
+```text
+Administrative tools
+must be protected
+```
+
+> Applications are not only concerned with what exists;
+> they are also concerned with who is allowed to access it.
+
+- We are still not building:
+  - enterprise security policies
+  - role hierarchies
+  - complex permission systems
+
+- We are building:
+
+```text
+Our first Authorization System
+```
+
+> This lesson is about protecting the Admin Dashboard and controlling who
+> is allowed to access and manage the application's resources.
+
+<hr className='my-8' />
+
+## Mental Model 🧠
+
+#### Before
+
+```text
+Application
+
+↓
+
+Admin Dashboard
+
+↓
+
+Everyone
+```
+
+#### After
+
+```text
+Application
+
+↓
+
+Admin Dashboard
+
+↓
+
+Authorized Users
+```
+
+#### System Shift
+
+```text
+Open access
+  → Controlled access
+```
+
+#### Core Idea
+
+```text
+Authentication
+  → Who are you?
+```
+
+```text
+Authorization
+  → What are you allowed to do?
+```
+
+#### Reality
+
+```text
+Resources
+  → Need protection
+
+Users
+  → Need permissions
+```
+
+> As applications grow, not everyone should have access to everything.
+
+<hr className='my-8' />
+
+## Step 1: Protect the Admin Area from Anonymous Visitors 🔐
+
+#### Current Experience
+
+An anonymous visitor can visit
+
+```text
+/admin
+```
+
+and access
+
+```text
+Dashboard
+
+Users
+
+Messages
+
+Profiles
+
+Settings
+```
+
+#### Question
+
+Should anonymous visitors be able to manage the application?
+
+#### Answer
+
+```text
+No
+```
+
+#### Desired Experience
+
+Anonymous visitors should be redirected to
+
+```text
+/login
+```
+
+before seeing the Admin Dashboard.
+
+#### Question
+
+Where should this protection live?
+
+#### Reality
+
+All administrative pages already share the same parent.
+
+```text
+Admin Layout
+
+↓
+
+Dashboard
+
+Users
+
+Messages
+
+Profiles
+
+Settings
+```
+
+#### Therefore
+
+the Admin Layout is a good place to provide the protection.
+
+#### Open
+
+```text
+app/routes/admin.tsx
+```
+
+#### Observe
+
+The file already contains a loader.
+
+```tsx
+export async function loader() {
+	const users = await prisma.user.findMany()
+
+	return {
+		users,
+	}
+}
+```
+
+#### Question
+
+What happens when someone visits
+
+```text
+/admin
+```
+
+#### Answer
+
+The loader immediately fetches users.
+
+```text
+Request
+
+↓
+
+Fetch Users
+
+↓
+
+Admin Dashboard
+```
+
+#### But another question appears.
+
+Should the application fetch users before knowing who is making the request?
+
+#### Answer
+
+```text
+No
+```
+
+#### Instead, we want
+
+```text
+Request
+
+↓
+
+Current User
+
+↓
+
+Fetch Users
+
+↓
+
+Admin Dashboard
+```
+
+#### We already solved the problem of obtaining the current user in earlier lessons.
+
+#### Open
+
+```text
+app/data/auth.server.ts
+```
+
+#### Observe
+
+We already have
+
+```tsx
+export async function requireUser(request: Request) {
+	...
+
+	return user
+}
+```
+
+#### Therefore
+
+the Admin route needs access to
+
+```tsx
+requireUser()
+```
+
+#### Open
+
+```text
+app/routes/admin.tsx
+```
+
+#### Add
+
+```tsx
+import { requireUser } from '~/data/auth.server'
+```
+
+#### The imports should now look like
+
+```tsx
+import { NavLink, Outlet } from 'react-router'
+
+import type { Route } from './+types/admin'
+
+import { prisma } from '~/data/prisma.server'
+import { requireUser } from '~/data/auth.server'
+
+...
+```
+
+#### Question
+
+How can the loader access the current request?
+
+#### Answer
+
+React Router provides the request through
+
+```tsx
+Route.LoaderArgs
+```
+
+#### Before
+
+```tsx
+export async function loader() {
+	const users = await prisma.user.findMany()
+
+	return {
+		users,
+	}
+}
+```
+
+#### Add
+
+```tsx
+{
+	request,
+}: Route.LoaderArgs
+```
+
+#### The loader should now look like
+
+```tsx
+export async function loader({
+	request,
+}: Route.LoaderArgs) {
+	const users = await prisma.user.findMany()
+
+	return {
+		users,
+	}
+}
+```
+
+#### Question
+
+How do we obtain the current user?
+
+#### Answer
+
+We already taught the application how to do that.
+
+#### Add
+
+```tsx
+const currentUser = await requireUser(request)
+```
+
+#### The loader should now look like
+
+```tsx
+export async function loader({
+	request,
+}: Route.LoaderArgs) {
+	const currentUser = await requireUser(request)
+
+	const users = await prisma.user.findMany()
+
+	return {
+		users,
+	}
+}
+```
+
+#### Question
+
+Why are we fetching the current user before fetching users?
+
+#### Compare
+
+Before
+
+```text
+Request
+
+↓
+
+Fetch Users
+
+↓
+
+Admin Dashboard
+```
+
+After
+
+```text
+Request
+
+↓
+
+Current User
+
+↓
+
+Fetch Users
+
+↓
+
+Admin Dashboard
+```
+
+#### Verify
+
+Sign out.
+
+Visit
+
+```text
+/admin
+```
+
+#### Reality
+
+You should now be redirected to
+
+```text
+/login
+```
+
+#### Likewise
+
+visiting
+
+```text
+/ admin/users
+
+/ admin/messages
+
+/ admin/profiles
+
+/ admin/settings
+```
+
+should also redirect to
+
+```text
+/login
+```
+
+#### Problem Solved
+
+```text
+Anonymous visitors
+
+can no longer access
+
+the Admin area.
+```
+
+#### But another problem appears.
+
+```text
+Peter
+  → Administrator
+
+Jane
+  → User
+```
+
+Both are authenticated.
+
+Both can access
+
+```text
+/admin
+```
+
+#### Question
+
+Should every authenticated user manage the application?
+
+Notice that we already have
+
+```tsx
+const currentUser = await requireUser(request)
+```
+
+available.
+
+Perhaps we can use it.
+
+```jsx
+<hr className='my-8' />
+```
+
+## Step 2: Introduce Administrators 👮
+
+#### We solved one problem.
+
+Anonymous visitors can no longer access the Admin area.
+
+```text
+Anonymous Visitor
+
+↓
+
+Login Page
+```
+
+#### But another problem appears.
+
+Consider two authenticated users.
+
+```text
+Peter
+```
+
+```text
+Jane
+```
+
+#### Reality
+
+The application currently treats them exactly the same.
+
+```text
+Authenticated User
+
+↓
+
+Admin Dashboard
+```
+
+#### Question
+
+How can the application distinguish someone who manages the application from
+someone who simply uses it?
+
+#### Before we answer that question, let's inspect our application.
+
+#### Open
+
+```text
+prisma/schema.prisma
+```
+
+#### Observe
+
+The `User` model currently contains
+
+```prisma
+model User {
+	id       String  @id @default(cuid())
+	name     String
+	username String? @unique
+	email    String? @unique
+	password String?
+
+	role      String?
+	bio       String?
+	avatarUrl String?
+
+	messages Message[]
+	profile  Profile?
+}
+```
+
+#### Question
+
+Can we use
+
+```prisma
+role
+```
+
+to determine who can access the Admin Dashboard?
+
+#### Before deciding, let's see how the application already uses this field.
+
+#### Open
+
+```text
+app/routes/home.tsx
+```
+
+#### Observe
+
+The profile card displays
+
+```tsx
+<p className='text-sm text-slate-500'>{user.role}</p>
+```
+
+#### Reality
+
+The existing
+
+```prisma
+role
+```
+
+field already describes the user's profile.
+
+#### Mental Model
+
+```text
+Profile Card
+
+↓
+
+role
+
+↓
+
+Who is this person?
+```
+
+Examples
+
+```text
+Software Engineer
+
+Teacher
+
+Designer
+
+Lawyer
+```
+
+#### But authorization asks a different question.
+
+```text
+What is this person allowed to access?
+```
+
+#### Therefore
+
+using the same field for both purposes would mix two different responsibilities.
+
+```text
+Profile Information
+
+≠
+
+Access Control
+```
+
+#### Instead
+
+the application needs a dedicated field for administrative access.
+
+#### Open
+
+```text
+prisma/schema.prisma
+```
+
+#### Add
+
+```prisma
+isAdmin Boolean @default(false)
+```
+
+#### The `User` model should now look like
+
+```prisma
+model User {
+	id       String  @id @default(cuid())
+	name     String
+	username String? @unique
+	email    String? @unique
+	password String?
+
+	role      String?
+	bio       String?
+	avatarUrl String?
+
+	isAdmin Boolean @default(false)
+
+	messages Message[]
+	profile  Profile?
+}
+```
+
+#### Question
+
+Why default to
+
+```text
+false
+```
+
+#### Answer
+
+Because most users should not automatically become administrators.
+
+Every newly registered user should begin as a regular user unless we
+explicitly decide otherwise.
+
+#### Question
+
+Have we finished?
+
+#### Answer
+
+```text
+No
+```
+
+#### Reality
+
+So far, only the Prisma schema has changed.
+
+```text
+Schema
+
+↓
+
+Database
+
+↓
+
+Prisma Client
+
+↓
+
+Application
+```
+
+#### Therefore
+
+the database needs to learn about the new field.
+
+#### Run
+
+```bash
+npx prisma migrate dev --name add-is-admin-to-user
+```
+
+#### Reality
+
+Prisma will
+
+```text
+Create a migration
+
+↓
+
+Apply the migration to the database
+
+↓
+
+Usually regenerate the Prisma Client
+```
+
+#### However
+
+In practice, there are occasions where the generated Prisma Client does not
+immediately reflect the latest schema.
+
+Rather than spending time diagnosing whether the generated client is out of sync,
+we'll regenerate it explicitly.
+
+#### Run
+
+```bash
+npx prisma generate
+```
+
+#### Why?
+
+This guarantees that the generated Prisma Client matches the current Prisma schema.
+
+#### Verify
+
+Open
+
+```text
+app/generated/prisma
+```
+
+#### Search for
+
+```text
+User
+```
+
+#### Reality
+
+The generated `User` type should now contain
+
+```ts
+isAdmin: boolean
+```
+
+#### Compare
+
+Before
+
+```text
+User
+
+↓
+
+Profile Information
+```
+
+After
+
+```text
+User
+
+↓
+
+Profile Information
+
+↓
+
+Administrative Access
+```
+
+#### Problem Solved
+
+The application now has a dedicated place to record whether someone is an
+administrator.
+
+```text
+User
+
+↓
+
+isAdmin
+
+↓
+
+true | false
+```
+
+#### But another problem appears.
+
+Every existing user currently has
+
+```text
+isAdmin = false
+```
+
+#### Question
+
+How can we create our first administrator?
+
+```jsx
+<hr className='my-8' />
+```
+
+## Step 3: Create the First Administrator 👮
+
+#### We solved another problem.
+
+The application can now distinguish administrators from regular users.
+
+```text
+User
+
+↓
+
+isAdmin
+
+↓
+
+true | false
+```
+
+#### But another problem appears.
+
+Every user currently has
+
+```text
+isAdmin
+
+↓
+
+false
+```
+
+#### Question
+
+How can we create our first administrator?
+
+#### Answer
+
+For now, we'll update our user directly.
+
+Later, we'll build proper tools for managing administrators.
+
+#### Open
+
+```bash
+npx prisma studio
+```
+
+#### Reality
+
+Prisma Studio should open in your browser.
+
+#### Open
+
+```text
+User
+```
+
+#### Locate
+
+your user account.
+
+#### Observe
+
+The
+
+```text
+isAdmin
+```
+
+column currently contains
+
+```text
+0
+```
+
+#### Question
+
+Why
+
+```text
+0
+```
+
+instead of
+
+```text
+false
+```
+
+#### Answer
+
+Our application uses SQLite.
+
+Although Prisma models
+
+```prisma
+isAdmin
+```
+
+as a Boolean,
+
+SQLite stores Boolean values internally as integers.
+
+#### Mental Model
+
+```text
+Prisma Schema
+
+Boolean
+
+↓
+
+SQLite
+
+0 | 1
+
+↓
+
+Prisma Client
+
+true | false
+```
+
+#### Therefore
+
+change
+
+```text
+0
+```
+
+to
+
+```text
+1
+```
+
+#### Save
+
+the row.
+
+#### Verify
+
+Refresh Prisma Studio.
+
+#### Reality
+
+Your user should now contain
+
+```text
+isAdmin
+
+↓
+
+1
+```
+
+#### Important
+
+Although Prisma Studio displays
+
+```text
+1
+```
+
+the Prisma Client still exposes
+
+```ts
+currentUser.isAdmin
+```
+
+as
+
+```ts
+true
+```
+
+Your application never needs to work with
+
+```text
+0
+```
+
+or
+
+```text
+1
+```
+
+directly.
+
+#### Problem Solved
+
+The application now has its first administrator.
+
+#### But another problem appears.
+
+Although the application now knows who the administrator is,
+
+the Admin route still doesn't use
+
+```text
+isAdmin
+```
+
+to decide who gets access.
+
+#### Question
+
+How can we protect the Admin Dashboard so that only administrators can access it?
+
+<hr className='my-8' />
+
+## Step 4: Restrict the Admin Area to Administrators 🚫
+
+#### We solved another problem.
+
+The application now has its first administrator.
+
+```text
+Peter
+
+↓
+
+isAdmin
+
+↓
+
+1
+```
+
+#### But another problem appears.
+
+The Admin route still allows every authenticated user to access
+
+```text
+/admin
+```
+
+#### Question
+
+How can the Admin route distinguish administrators from regular users?
+
+#### Open
+
+```text
+app/routes/admin.tsx
+```
+
+#### Observe
+
+The loader currently looks like
+
+```tsx
+export async function loader({
+	request,
+}: Route.LoaderArgs) {
+	const currentUser = await requireUser(request)
+
+	const users = await prisma.user.findMany()
+
+	return {
+		users,
+	}
+}
+```
+
+#### Reality
+
+The loader already knows who is making the request.
+
+```tsx
+const currentUser = await requireUser(request)
+```
+
+#### Question
+
+What information do we already have that can help us make an authorization
+decision?
+
+#### Answer
+
+```tsx
+currentUser.isAdmin
+```
+
+#### Question
+
+What should happen when
+
+```tsx
+currentUser.isAdmin
+```
+
+is
+
+```text
+false
+```
+
+#### Answer
+
+The application should stop processing the request and redirect the user to
+the Home page.
+
+#### We already know how to redirect users.
+
+#### Add
+
+```tsx
+redirect
+```
+
+#### The imports should now look like
+
+```tsx
+import {
+	NavLink,
+	Outlet,
+	redirect,
+} from 'react-router'
+
+...
+```
+
+#### Question
+
+Where should the authorization check happen?
+
+#### Possible Answers
+
+```text
+After fetching users
+```
+
+```text
+Before fetching users
+```
+
+#### Answer
+
+```text
+Before fetching users
+```
+
+#### Why?
+
+Because users who are not administrators should never receive administrative data.
+
+#### Add
+
+```tsx
+if (!currentUser.isAdmin) {
+	throw redirect('/')
+}
+```
+
+#### The loader should now look like
+
+```tsx
+export async function loader({
+	request,
+}: Route.LoaderArgs) {
+	const currentUser = await requireUser(request)
+
+	if (!currentUser.isAdmin) {
+		throw redirect('/')
+	}
+
+	const users = await prisma.user.findMany()
+
+	return {
+		users,
+	}
+}
+```
+
+#### Compare
+
+Before
+
+```text
+Request
+
+↓
+
+Current User
+
+↓
+
+Fetch Users
+
+↓
+
+Admin Dashboard
+```
+
+After
+
+```text
+Request
+
+↓
+
+Current User
+
+↓
+
+Administrator?
+```
+
+```text
+No
+
+↓
+
+Redirect
+
+↓
+
+Home Page
+```
+
+```text
+Yes
+
+↓
+
+Fetch Users
+
+↓
+
+Admin Dashboard
+```
+
+#### Verify
+
+Open
+
+```bash
+npx prisma studio
+```
+
+#### Locate
+
+your user.
+
+#### Change
+
+```text
+isAdmin
+
+↓
+
+1
+```
+
+to
+
+```text
+0
+```
+
+#### Save
+
+the row.
+
+#### Visit
+
+```text
+/admin
+```
+
+#### Reality
+
+You should be redirected to
+
+```text
+/
+```
+
+#### Verify Again
+
+Return to
+
+```bash
+npx prisma studio
+```
+
+#### Change
+
+```text
+isAdmin
+
+↓
+
+0
+```
+
+to
+
+```text
+1
+```
+
+#### Save
+
+the row.
+
+#### Visit
+
+```text
+/admin
+```
+
+#### Reality
+
+The Admin Dashboard should appear again.
+
+#### Problem Solved
+
+Only administrators can now access the Admin Dashboard.
+
+#### But another problem appears.
+
+The authorization logic now lives inside
+
+```text
+app/routes/admin.tsx
+```
+
+#### Question
+
+What happens if another route also needs administrator access?
+
+Will we duplicate this logic?
+
+Or can we teach the application to reuse it?
+
+<hr className='my-8' />
+
+## Step 5: Reuse Authorization Logic ♻️
+
+#### We solved another problem.
+
+Only administrators can now access the Admin Dashboard.
+
+#### But another problem appears.
+
+The authorization logic now lives inside
+
+```text
+app/routes/admin.tsx
+```
+
+#### Observe
+
+The loader currently contains
+
+```tsx
+const currentUser = await requireUser(request)
+
+if (!currentUser.isAdmin) {
+	throw redirect('/')
+}
+
+const users = await prisma.user.findMany()
+```
+
+#### Question
+
+What happens if another route also needs administrator access?
+
+For example,
+
+```text
+/admin/reports
+```
+
+or
+
+```text
+/admin/audit-logs
+```
+
+#### One option
+
+Copy
+
+```tsx
+const currentUser = await requireUser(request)
+
+if (!currentUser.isAdmin) {
+	throw redirect('/')
+}
+```
+
+into every administrative route.
+
+#### But another question appears.
+
+Would copying this code make our application easier to maintain?
+
+#### Answer
+
+```text
+No
+```
+
+#### Why?
+
+If the authorization rules ever change,
+
+every copied version must also change.
+
+#### Mental Model
+
+Instead of
+
+```text
+One Change
+
+↓
+
+Many Files
+```
+
+we want
+
+```text
+One Change
+
+↓
+
+One File
+```
+
+#### We already solved a similar problem.
+
+Earlier in the course, we packaged
+
+```text
+Get Current User
+
+↓
+
+Redirect to Login
+```
+
+into
+
+```tsx
+requireUser()
+```
+
+#### Perhaps we can do the same for administrators.
+
+#### Open
+
+```text
+app/data/auth.server.ts
+```
+
+#### Observe
+
+The file currently contains
+
+```tsx
+export async function requireUser(request: Request) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	})
+
+	if (!user) {
+		throw redirect('/login')
+	}
+
+	return user
+}
+```
+
+#### Add
+
+```tsx
+export async function requireAdmin(request: Request) {
+	const currentUser = await requireUser(request)
+
+	if (!currentUser.isAdmin) {
+		throw redirect('/')
+	}
+
+	return currentUser
+}
+```
+
+#### The file should now look like
+
+```tsx
+...
+
+export async function requireUser(request: Request) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	})
+
+	if (!user) {
+		throw redirect('/login')
+	}
+
+	return user
+}
+
+export async function requireAdmin(request: Request) {
+	const currentUser = await requireUser(request)
+
+	if (!currentUser.isAdmin) {
+		throw redirect('/')
+	}
+
+	return currentUser
+}
+```
+
+#### Question
+
+What changed?
+
+#### Before
+
+Every route had to remember
+
+```tsx
+const currentUser = await requireUser(request)
+
+if (!currentUser.isAdmin) {
+	throw redirect('/')
+}
+```
+
+#### After
+
+Every route can simply ask for
+
+```tsx
+requireAdmin()
+```
+
+#### Open
+
+```text
+app/routes/admin.tsx
+```
+
+#### Observe
+
+The loader currently looks like
+
+```tsx
+export async function loader({
+	request,
+}: Route.LoaderArgs) {
+	const currentUser = await requireUser(request)
+
+	if (!currentUser.isAdmin) {
+		throw redirect('/')
+	}
+
+	const users = await prisma.user.findMany()
+
+	return {
+		users,
+	}
+}
+```
+
+#### Replace
+
+```tsx
+const currentUser = await requireUser(request)
+
+if (!currentUser.isAdmin) {
+	throw redirect('/')
+}
+```
+
+with
+
+```tsx
+const currentUser = await requireAdmin(request)
+```
+
+#### The loader should now look like
+
+```tsx
+export async function loader({
+	request,
+}: Route.LoaderArgs) {
+	const currentUser = await requireAdmin(request)
+
+	const users = await prisma.user.findMany()
+
+	return {
+		users,
+	}
+}
+```
+
+#### One more change.
+
+The route no longer uses
+
+```tsx
+requireUser()
+```
+
+#### Remove
+
+```tsx
+requireUser
+```
+
+#### Add
+
+```tsx
+requireAdmin
+```
+
+#### The imports should now look like
+
+```tsx
+import { requireAdmin } from '~/data/auth.server'
+```
+
+#### Verify
+
+Visit
+
+```text
+/admin
+```
+
+while
+
+```text
+isAdmin = 1
+```
+
+#### Reality
+
+The Admin Dashboard should appear.
+
+#### Change
+
+```text
+isAdmin
+
+↓
+
+0
+```
+
+in Prisma Studio.
+
+#### Visit
+
+```text
+/ admin
+```
+
+#### Reality
+
+You should be redirected to
+
+```text
+/
+```
+
+#### Problem Solved
+
+Administrator authorization is now implemented in one place.
+
+Every route can reuse the same logic.
+
+#### But another problem appears.
+
+Right now,
+
+every administrator has exactly the same permissions.
+
+#### Question
+
+What if, in the future, we want different administrators to have different permissions?
+
+<hr className='my-8' />
+
+## Step 5: Reuse Authorization Logic ♻️
+
+#### We solved another problem.
+
+Only administrators can now access the Admin Dashboard.
+
+#### But another problem appears.
+
+The authorization logic now lives inside
+
+```text
+app/routes/admin.tsx
+```
+
+#### Observe
+
+The loader currently contains
+
+```tsx
+const currentUser = await requireUser(request)
+
+if (!currentUser.isAdmin) {
+	throw redirect('/')
+}
+
+const users = await prisma.user.findMany()
+```
+
+#### Question
+
+What happens if another route also needs administrator access?
+
+For example,
+
+```text
+/admin/reports
+```
+
+or
+
+```text
+/admin/audit-logs
+```
+
+#### One option
+
+Copy
+
+```tsx
+const currentUser = await requireUser(request)
+
+if (!currentUser.isAdmin) {
+	throw redirect('/')
+}
+```
+
+into every administrative route.
+
+#### But another question appears.
+
+Would copying this code make our application easier to maintain?
+
+#### Answer
+
+```text
+No
+```
+
+#### Why?
+
+If the authorization rules ever change,
+
+every copied version must also change.
+
+#### Mental Model
+
+Instead of
+
+```text
+One Change
+
+↓
+
+Many Files
+```
+
+we want
+
+```text
+One Change
+
+↓
+
+One File
+```
+
+#### We already solved a similar problem.
+
+Earlier in the course, we packaged
+
+```text
+Get Current User
+
+↓
+
+Redirect to Login
+```
+
+into
+
+```tsx
+requireUser()
+```
+
+#### Perhaps we can do the same for administrators.
+
+#### Open
+
+```text
+app/data/auth.server.ts
+```
+
+#### Observe
+
+The file currently contains
+
+```tsx
+export async function requireUser(request: Request) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	})
+
+	if (!user) {
+		throw redirect('/login')
+	}
+
+	return user
+}
+```
+
+#### Add
+
+```tsx
+export async function requireAdmin(request: Request) {
+	const currentUser = await requireUser(request)
+
+	if (!currentUser.isAdmin) {
+		throw redirect('/')
+	}
+
+	return currentUser
+}
+```
+
+#### The file should now look like
+
+```tsx
+...
+
+export async function requireUser(request: Request) {
+	const userId = await requireUserId(request)
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	})
+
+	if (!user) {
+		throw redirect('/login')
+	}
+
+	return user
+}
+
+export async function requireAdmin(request: Request) {
+	const currentUser = await requireUser(request)
+
+	if (!currentUser.isAdmin) {
+		throw redirect('/')
+	}
+
+	return currentUser
+}
+```
+
+#### Question
+
+What changed?
+
+#### Before
+
+Every route had to remember
+
+```tsx
+const currentUser = await requireUser(request)
+
+if (!currentUser.isAdmin) {
+	throw redirect('/')
+}
+```
+
+#### After
+
+Every route can simply ask for
+
+```tsx
+requireAdmin()
+```
+
+#### Open
+
+```text
+app/routes/admin.tsx
+```
+
+#### Observe
+
+The loader currently looks like
+
+```tsx
+export async function loader({
+	request,
+}: Route.LoaderArgs) {
+	const currentUser = await requireUser(request)
+
+	if (!currentUser.isAdmin) {
+		throw redirect('/')
+	}
+
+	const users = await prisma.user.findMany()
+
+	return {
+		users,
+	}
+}
+```
+
+#### Replace
+
+```tsx
+const currentUser = await requireUser(request)
+
+if (!currentUser.isAdmin) {
+	throw redirect('/')
+}
+```
+
+with
+
+```tsx
+const currentUser = await requireAdmin(request)
+```
+
+#### The loader should now look like
+
+```tsx
+export async function loader({
+	request,
+}: Route.LoaderArgs) {
+	const currentUser = await requireAdmin(request)
+
+	const users = await prisma.user.findMany()
+
+	return {
+		users,
+	}
+}
+```
+
+#### One more change.
+
+The route no longer uses
+
+```tsx
+requireUser()
+```
+
+#### Remove
+
+```tsx
+requireUser
+```
+
+#### Add
+
+```tsx
+requireAdmin
+```
+
+#### The imports should now look like
+
+```tsx
+import { requireAdmin } from '~/data/auth.server'
+```
+
+#### Verify
+
+Visit
+
+```text
+/admin
+```
+
+while
+
+```text
+isAdmin = 1
+```
+
+#### Reality
+
+The Admin Dashboard should appear.
+
+#### Change
+
+```text
+isAdmin
+
+↓
+
+0
+```
+
+in Prisma Studio.
+
+#### Visit
+
+```text
+/ admin
+```
+
+#### Reality
+
+You should be redirected to
+
+```text
+/
+```
+
+#### Problem Solved
+
+Administrator authorization is now implemented in one place.
+
+Every route can reuse the same logic.
+
+#### But another problem appears.
+
+Right now,
+
+every administrator has exactly the same permissions.
+
+#### Question
+
+What if, in the future, we want different administrators to have different
+permissions?
+
+<hr className='my-8' />
+
+## Step 6: Protecting the Entire Admin Dashboard 🛡️
+
+#### We solved another problem.
+
+Administrator authorization now lives in one place.
+
+```text
+requireAdmin()
+```
+
+#### But another question appears.
+
+What about the other administrative pages?
+
+```text
+Dashboard
+
+Users
+
+Messages
+
+Profiles
+
+Settings
+```
+
+#### Question
+
+Do all of these pages need their own
+
+```tsx
+requireAdmin()
+```
+
+check?
+
+#### Before we answer that question, let's inspect our route configuration.
+
+#### Open
+
+```text
+app/routes.ts
+```
+
+#### Observe
+
+The Admin routes are configured like this.
+
+```tsx
+route('/admin', 'routes/admin.tsx', [
+	index('routes/admin/dashboard.tsx'),
+	route('users', 'routes/admin/users.tsx', [
+		route(':userId', 'routes/admin/users/userDetails.tsx'),
+	]),
+	route('messages', 'routes/admin/messages.tsx'),
+	route('profiles', 'routes/admin/profiles.tsx'),
+	route('settings', 'routes/admin/settings.tsx'),
+])
+```
+
+#### Question
+
+Which route is the parent?
+
+#### Answer
+
+```text
+routes/admin.tsx
+```
+
+#### Reality
+
+Every administrative page is a child of
+
+```text
+routes/admin.tsx
+```
+
+#### Mental Model
+
+```text
+Admin Layout
+
+↓
+
+Dashboard
+
+Users
+
+Messages
+
+Profiles
+
+Settings
+```
+
+#### Earlier in this lesson,
+
+we added
+
+```tsx
+requireAdmin()
+```
+
+to the loader inside
+
+```text
+routes/admin.tsx
+```
+
+#### Therefore
+
+every request to an administrative page must first pass through
+
+```tsx
+requireAdmin()
+```
+
+before reaching its destination.
+
+#### Mental Model
+
+```text
+Request
+
+↓
+
+requireAdmin()
+
+↓
+
+Dashboard
+
+Users
+
+Messages
+
+Profiles
+
+Settings
+```
+
+#### Verify
+
+Set
+
+```text
+isAdmin
+
+↓
+
+0
+```
+
+Visit each of the following routes.
+
+```text
+/admin
+
+/admin/users
+
+/admin/messages
+
+/admin/profiles
+
+/admin/settings
+```
+
+#### Reality
+
+Each request should be redirected to
+
+```text
+/
+```
+
+#### Verify Again
+
+Change
+
+```text
+isAdmin
+
+↓
+
+1
+```
+
+Visit the same routes again.
+
+#### Reality
+
+Every administrative page should now be accessible.
+
+#### Compare
+
+Before Lesson 26
+
+```text
+Anonymous Visitors
+
+↓
+
+Admin Dashboard
+```
+
+After Lesson 26
+
+```text
+Anonymous Visitors
+
+↓
+
+Login
+```
+
+```text
+Authenticated Users
+
+↓
+
+Home
+```
+
+```text
+Administrators
+
+↓
+
+Admin Dashboard
+```
+
+#### Congratulations! 🎉
+
+In this lesson, you taught the application how to
+
+- authenticate users before entering the Admin area.
+- distinguish administrators from regular users.
+- authorize access to administrative resources.
+- reuse authorization logic with `requireAdmin()`.
+- protect every administrative route from a single parent loader.
+
+The Admin Dashboard you built in Lesson 25 is now fully protected.
+
+<hr className='my-8' />
